@@ -2,9 +2,19 @@
     <div class="my-team p-6 bg-gray-100 rounded-lg shadow-md">
       <h2 class="text-2xl font-bold mb-4 text-gray-800">My Team</h2>
       
+      <!-- Search Input -->
+      <div class="mb-4">
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          placeholder="Search players..." 
+          class="w-full p-2 border rounded focus:ring focus:ring-blue-300"
+        >
+      </div>
+      
       <!-- Player List -->
       <TransitionGroup name="list" tag="ul" class="space-y-2">
-        <li v-for="player in players" :key="player.id" 
+        <li v-for="player in filteredPlayers" :key="player.id" 
             class="bg-white p-3 rounded shadow flex justify-between items-center transition duration-300 ease-in-out hover:bg-gray-50">
           <span>{{ player.name }} - #{{ player.shirtNumber }} - {{ player.role }}</span>
           <div>
@@ -63,12 +73,13 @@
   </template>
   
   <script>
-  import { ref } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   
   export default {
     name: 'MyTeam',
     setup() {
       const players = ref([]);
+      const searchQuery = ref('');
       const currentPlayer = ref({
         id: null,
         name: '',
@@ -84,6 +95,17 @@
         }, 3000);
       };
   
+      const loadPlayers = () => {
+        const storedPlayers = localStorage.getItem('players');
+        if (storedPlayers) {
+          players.value = JSON.parse(storedPlayers);
+        }
+      };
+  
+      const savePlayers = () => {
+        localStorage.setItem('players', JSON.stringify(players.value));
+      };
+  
       const savePlayer = () => {
         if (currentPlayer.value.id) {
           const index = players.value.findIndex(p => p.id === currentPlayer.value.id);
@@ -96,6 +118,7 @@
           });
           showNotification('Player added successfully');
         }
+        savePlayers();
         resetForm();
       };
   
@@ -105,6 +128,7 @@
   
       const removePlayer = (player) => {
         players.value = players.value.filter(p => p.id !== player.id);
+        savePlayers();
         showNotification('Player removed successfully');
       };
   
@@ -131,6 +155,7 @@
           try {
             const importedPlayers = JSON.parse(e.target.result);
             players.value = importedPlayers;
+            savePlayers();
             showNotification('Players imported successfully');
           } catch (error) {
             console.error('Error parsing JSON:', error);
@@ -140,10 +165,24 @@
         reader.readAsText(file);
       };
   
+      const filteredPlayers = computed(() => {
+        return players.value.filter(player => 
+          player.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          player.shirtNumber.toString().includes(searchQuery.value) ||
+          player.role.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      });
+  
+      onMounted(() => {
+        loadPlayers();
+      });
+  
       return {
         players,
+        searchQuery,
         currentPlayer,
         notification,
+        filteredPlayers,
         savePlayer,
         editPlayer,
         removePlayer,
@@ -151,7 +190,7 @@
         importPlayers
       };
     }
-  }
+  };
   </script>
   
   <style scoped>
