@@ -1,5 +1,11 @@
+import '../src/assets/tailwind.css'
 import { createApp } from 'vue'
 import App from './App.vue'
-import './assets/tailwind.css'
+import router from './router'
+import { defineRule } from 'vee-validate';
+import { required, numeric } from '@vee-validate/rules';
 
-createApp(App).mount('#app')
+defineRule('required', required);
+defineRule('numeric', numeric);
+
+createApp(App).use(router).mount('#app')
