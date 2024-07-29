@@ -24,26 +24,6 @@
                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
         </div>
   
-        <!-- Game Rules -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Game Rules</label>
-          <div class="mt-2 space-y-2">
-            <div>
-              <label for="numberOfSets" class="block text-sm text-gray-600">Number of Sets</label>
-              <select id="numberOfSets" v-model="numberOfSets"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                <option value="3">Best of 3</option>
-                <option value="5">Best of 5</option>
-              </select>
-            </div>
-            <div>
-              <label for="pointsPerSet" class="block text-sm text-gray-600">Points per Set</label>
-              <input type="number" id="pointsPerSet" v-model="pointsPerSet" min="15" max="30"
-                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-            </div>
-          </div>
-        </div>
-  
         <!-- Player Selection -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Select Players (minimum 6)</label>
@@ -63,13 +43,53 @@
   
         <!-- Initial Rotation -->
         <div v-if="selectedPlayers.length >= 6">
-          <label class="block text-sm font-medium text-gray-700">Set Initial Rotation</label>
-          <div class="mt-2 grid grid-cols-3 gap-4">
-            <div v-for="position in 6" :key="position" class="text-center">
-              <label :for="'position-' + position" class="block text-xs font-medium text-gray-700">Position {{ position }}</label>
-              <select :id="'position-' + position" v-model="initialRotation[position - 1]"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                <option value="">Select player</option>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Set Initial Rotation</label>
+          <div class="relative w-full aspect-[3/2] bg-blue-100 border-2 border-blue-500 rounded-lg">
+            <!-- Back Row -->
+            <div class="absolute top-[10%] left-[10%] w-[25%]">
+              <select v-model="initialRotation[0]" class="w-full p-1 text-sm rounded">
+                <option value="">Position 1</option>
+                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
+                  {{ getPlayerName(playerId) }}
+                </option>
+              </select>
+            </div>
+            <div class="absolute top-[10%] left-[37.5%] w-[25%]">
+              <select v-model="initialRotation[5]" class="w-full p-1 text-sm rounded">
+                <option value="">Position 6</option>
+                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
+                  {{ getPlayerName(playerId) }}
+                </option>
+              </select>
+            </div>
+            <div class="absolute top-[10%] right-[10%] w-[25%]">
+              <select v-model="initialRotation[4]" class="w-full p-1 text-sm rounded">
+                <option value="">Position 5</option>
+                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
+                  {{ getPlayerName(playerId) }}
+                </option>
+              </select>
+            </div>
+            <!-- Front Row -->
+            <div class="absolute bottom-[10%] left-[10%] w-[25%]">
+              <select v-model="initialRotation[1]" class="w-full p-1 text-sm rounded">
+                <option value="">Position 2</option>
+                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
+                  {{ getPlayerName(playerId) }}
+                </option>
+              </select>
+            </div>
+            <div class="absolute bottom-[10%] left-[37.5%] w-[25%]">
+              <select v-model="initialRotation[2]" class="w-full p-1 text-sm rounded">
+                <option value="">Position 3</option>
+                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
+                  {{ getPlayerName(playerId) }}
+                </option>
+              </select>
+            </div>
+            <div class="absolute bottom-[10%] right-[10%] w-[25%]">
+              <select v-model="initialRotation[3]" class="w-full p-1 text-sm rounded">
+                <option value="">Position 4</option>
                 <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
                   {{ getPlayerName(playerId) }}
                 </option>
@@ -114,8 +134,6 @@
       const gameName = ref('');
       const gameDate = ref('');
       const opponentTeam = ref('');
-      const numberOfSets = ref('3');
-      const pointsPerSet = ref(25);
       const players = ref([]);
       const selectedPlayers = ref([]);
       const initialRotation = ref(Array(6).fill(''));
@@ -159,8 +177,6 @@
           name: gameName.value,
           date: gameDate.value,
           opponentTeam: opponentTeam.value,
-          numberOfSets: parseInt(numberOfSets.value),
-          pointsPerSet: pointsPerSet.value,
           players: selectedPlayers.value,
           initialRotation: initialRotation.value,
           sets: [],
@@ -174,15 +190,13 @@
         localStorage.setItem('games', JSON.stringify(games));
   
         // Navigate to the game page
-        router.push({ name: 'Game', params: { id: gameData.id } });
+        router.push({ name: 'GameView', params: { id: gameData.id } });
       };
   
       return {
         gameName,
         gameDate,
         opponentTeam,
-        numberOfSets,
-        pointsPerSet,
         players,
         selectedPlayers,
         initialRotation,
