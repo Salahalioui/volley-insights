@@ -1,17 +1,17 @@
 <template>
-    <div class="home bg-gray-100 min-h-screen p-6 md:p-10">
-      <h1 class="text-4xl font-bold mb-8 text-center text-blue-600 md:text-5xl">
+    <div class="home bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen p-4 md:p-8">
+      <h1 class="text-3xl md:text-5xl font-bold mb-6 text-center text-blue-600 animate-fade-in">
         Welcome to Volley Insights
       </h1>
   
-      <div class="max-w-4xl mx-auto">
+      <div class="max-w-4xl mx-auto space-y-6">
         <!-- App Description -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-8 md:mb-10">
-          <div class="flex items-center mb-4 md:mb-6">
-            <img src="@/assets/logo.png" alt="Volleyball" class="w-12 h-12 mr-4" />
-            <h2 class="text-2xl font-semibold">Elevate Your Volleyball Analysis</h2>
+        <div class="bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105">
+          <div class="flex items-center mb-4">
+            <img src="@/assets/logo.png" alt="Volleyball" class="w-12 h-12 mr-4 animate-bounce" />
+            <h2 class="text-2xl font-semibold text-blue-700">Elevate Your Volleyball Analysis</h2>
           </div>
-          <p class="text-gray-700 text-lg">
+          <p class="text-gray-700 text-lg leading-relaxed">
             Volley Insights is your comprehensive tool for volleyball match analysis.
             Record games, track player performance, and gain valuable insights to
             improve your team's strategy.
@@ -19,68 +19,63 @@
         </div>
   
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 md:mb-10">
-          <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold mb-4">Start a New Game</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105">
+            <h3 class="text-xl font-semibold mb-4 text-blue-600">Start a New Game</h3>
             <p class="text-gray-700 mb-4">
               Record a new match with real-time event tracking and advanced statistics.
             </p>
-            <BaseButton @click="navigateToCreateGame" class="w-full">Create New Game</BaseButton>
+            <BaseButton @click="navigateToCreateGame" class="w-full bg-blue-500 hover:bg-blue-600 text-white">
+              Create New Game
+            </BaseButton>
           </div>
-          <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold mb-4">Manage Your Team</h3>
+          <div class="bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105">
+            <h3 class="text-xl font-semibold mb-4 text-blue-600">Manage Your Team</h3>
             <p class="text-gray-700 mb-4">
               Update your roster, add players, and manage team information.
             </p>
-            <BaseButton @click="navigateToTeam" class="w-full">Go to My Team</BaseButton>
+            <BaseButton @click="navigateToTeam" class="w-full bg-green-500 hover:bg-green-600 text-white">
+              Go to My Team
+            </BaseButton>
           </div>
         </div>
   
         <!-- Recent Games -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-8 md:mb-10">
-          <h3 class="text-xl font-semibold mb-4">Recent Games</h3>
-          <div v-if="recentGames.length > 0">
-            <div v-for="game in recentGames" :key="game.id" class="mb-4 p-4 bg-gray-100 rounded flex justify-between items-center">
-              <div class="flex items-center">
-                <span class="text-gray-700 mr-4">{{ game.name }}</span>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-semibold mb-4 text-blue-600">Recent Games</h3>
+          <div v-if="recentGames.length > 0" class="space-y-4">
+            <div v-for="game in recentGames" :key="game.id" 
+                 class="p-4 bg-gray-50 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
+              <div class="flex flex-col sm:flex-row sm:items-center">
+                <span class="text-gray-700 font-semibold mr-4">{{ game.name }}</span>
                 <span class="text-gray-500 text-sm">{{ formatDate(game.date) }}</span>
               </div>
-              <div>
-                <BaseButton v-if="game.status === 'completed'" @click="viewGameStats(game.id)" size="small" class="mr-2">
+              <div class="flex space-x-2">
+                <BaseButton v-if="game.status === 'completed'" @click="viewGameStats(game.id)" 
+                            size="small" class="bg-blue-500 hover:bg-blue-600 text-white">
                   View Stats
                 </BaseButton>
-                <BaseButton v-else @click="continueGame(game.id)" size="small">
+                <BaseButton v-else @click="continueGame(game.id)" 
+                            size="small" class="bg-green-500 hover:bg-green-600 text-white">
                   Continue Game
                 </BaseButton>
               </div>
             </div>
           </div>
           <p v-else class="text-gray-700">No recent games. Start by creating a new game!</p>
-          <BaseButton @click="navigateToResults" class="mt-4 w-full">
+          <BaseButton @click="navigateToResults" class="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white">
             View All Games
           </BaseButton>
         </div>
   
         <!-- Quick Stats -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <h3 class="text-xl font-semibold mb-4">Team Overview</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="text-center">
-              <p class="text-2xl font-bold text-blue-600">{{ totalGames }}</p>
-              <p class="text-gray-700 text-lg">Total Games</p>
-            </div>
-            <div class="text-center">
-              <p class="text-2xl font-bold text-green-600">{{ winPercentage }}%</p>
-              <p class="text-gray-700 text-lg">Win Percentage</p>
-            </div>
-            <div class="text-center">
-              <p class="text-2xl font-bold text-purple-600">{{ totalPlayers }}</p>
-              <p class="text-gray-700 text-lg">Players</p>
-            </div>
-            <div class="text-center">
-              <p class="text-2xl font-bold text-red-600">{{ topScorer.name }}</p>
-              <p class="text-gray-700 text-lg">Top Scorer</p>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-semibold mb-4 text-blue-600">Team Overview</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <StatCard title="Total Games" :value="totalGames" color="blue" />
+            <StatCard title="Win Percentage" :value="`${winPercentage}%`" color="green" />
+            <StatCard title="Players" :value="totalPlayers" color="purple" />
+            <StatCard title="Top Scorer" :value="topScorer.name" color="red" />
           </div>
         </div>
       </div>
@@ -91,11 +86,13 @@
   import { ref, onMounted, computed } from 'vue';
   import { useRouter } from 'vue-router';
   import BaseButton from '@/components/common/BaseButton.vue';
+  import StatCard from '@/components/common/StatCard.vue';
   
   export default {
     name: 'HomeView',
     components: {
-      BaseButton
+      BaseButton,
+      StatCard
     },
     setup() {
       const router = useRouter();
@@ -173,4 +170,24 @@
     }
   };
   </script>
+
+  <style scoped>
+  .animate-fade-in {
+    animation: fadeIn 1s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .animate-bounce {
+    animation: bounce 1s infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateY(-10%); }
+    50% { transform: translateY(0); }
+  }
+  </style>
   

@@ -1,20 +1,81 @@
 <template>
-  <div id="app">
-    <nav class="bg-gray-800 text-white p-4">
-      <router-link to="/" class="mr-4">Home</router-link>
-      <router-link to="/team" class="mr-4">My Team</router-link>
-      <router-link to="/create-game" class="mr-4">Create Game</router-link>
-      <router-link to="/results" class="mr-4">Results</router-link>
-      <router-link to="/about">About</router-link>
-    </nav>
-    <main class="container mx-auto mt-4 p-4">
-      <router-view></router-view>
+  <div id="app" class="min-h-screen flex flex-col bg-gray-100">
+    <header class="bg-blue-600 text-white shadow-md">
+      <div class="container mx-auto px-4">
+        <nav class="flex items-center justify-between flex-wrap py-4">
+          <div class="flex items-center flex-shrink-0 mr-6">
+            <img src="@/assets/logo.png" alt="Volley Insights Logo" class="w-8 h-8 mr-2">
+            <span class="font-semibold text-xl">Volley Insights</span>
+          </div>
+          <div class="block lg:hidden">
+            <button @click="toggleMenu" class="flex items-center px-3 py-2 border rounded text-white border-white hover:text-blue-200 hover:border-blue-200">
+              <svg class="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <title>Menu</title>
+                <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
+              </svg>
+            </button>
+          </div>
+          <div :class="{'hidden': !isMenuOpen, 'block': isMenuOpen}" class="w-full flex-grow lg:flex lg:items-center lg:w-auto">
+            <div class="text-sm lg:flex-grow">
+              <router-link v-for="(link, index) in navLinks" :key="index" :to="link.path" 
+                           class="block mt-4 lg:inline-block lg:mt-0 hover:text-blue-200 mr-4" 
+                           active-class="font-bold text-blue-200">
+                {{ link.name }}
+              </router-link>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <main class="flex-grow container mx-auto mt-6 px-4 sm:px-6 lg:px-8">
+      <transition name="fade" mode="out-in">
+        <router-view></router-view>
+      </transition>
     </main>
+    <footer class="bg-gray-800 text-white py-4 mt-8">
+      <div class="container mx-auto text-center">
+        <p>&copy; 2023 Volley Insights. All rights reserved.</p>
+      </div>
+    </footer>
   </div>
 </template>
 
 <script>
+import { ref } from 'vue';
+
 export default {
-  name: 'App'
+  name: 'App',
+  setup() {
+    const isMenuOpen = ref(false);
+    const navLinks = [
+      { name: 'Home', path: '/' },
+      { name: 'My Team', path: '/team' },
+      { name: 'Create Game', path: '/create-game' },
+      { name: 'Results', path: '/results' },
+      { name: 'About', path: '/about' }
+    ];
+
+    const toggleMenu = () => {
+      isMenuOpen.value = !isMenuOpen.value;
+    };
+
+    return {
+      isMenuOpen,
+      navLinks,
+      toggleMenu
+    };
+  }
 }
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

@@ -1,10 +1,10 @@
 <template>
-    <div class="about-screen p-4 sm:p-6 bg-gray-100 min-h-screen">
-      <div class="max-w-4xl mx-auto">
-        <h1 class="text-4xl font-bold mb-10 text-center text-blue-600">About Volley Insights</h1>
+    <div class="about-screen bg-gradient-to-b from-blue-50 to-white min-h-screen">
+      <div class="max-w-4xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-8 text-center text-blue-600">About Volley Insights</h1>
   
         <!-- App Description -->
-        <section class="mb-8 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 class="text-2xl font-semibold mb-4 flex items-center text-blue-700">
             <i class="fas fa-info-circle mr-3 text-blue-500"></i>
             What is Volley Insights?
@@ -18,13 +18,13 @@
         </section>
   
         <!-- Key Features -->
-        <section class="mb-8 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 class="text-2xl font-semibold mb-6 flex items-center text-yellow-600">
             <i class="fas fa-star mr-3 text-yellow-500"></i>
             Key Features
           </h2>
-          <ul class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <li v-for="feature in features" :key="feature.text" class="flex items-start">
+          <ul class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <li v-for="feature in features" :key="feature.text" class="flex items-start p-3 bg-gray-50 rounded-lg">
               <i :class="['fas', feature.icon, 'mt-1', 'mr-3', 'text-green-500']"></i>
               <span class="text-gray-700">{{ feature.text }}</span>
             </li>
@@ -32,24 +32,28 @@
         </section>
   
         <!-- Version Info -->
-        <section class="mb-8 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 class="text-2xl font-semibold mb-4 flex items-center text-purple-700">
             <i class="fas fa-code-branch mr-3 text-purple-500"></i>
             Version Information
           </h2>
-          <p class="text-gray-700 mb-2">
-            <strong>Current Version:</strong> {{ appVersion }}
-          </p>
-          <p class="text-gray-700 mb-4">
-            <strong>Last Updated:</strong> {{ lastUpdated }}
-          </p>
-          <button @click="showChangeLog" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
-            View Changelog
-          </button>
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+            <div>
+              <p class="text-gray-700 mb-2">
+                <strong>Current Version:</strong> {{ appVersion }}
+              </p>
+              <p class="text-gray-700">
+                <strong>Last Updated:</strong> {{ lastUpdated }}
+              </p>
+            </div>
+            <button @click="showChangeLog" class="mt-4 sm:mt-0 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+              View Changelog
+            </button>
+          </div>
         </section>
   
         <!-- Contact Information -->
-        <section class="mb-8 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 class="text-2xl font-semibold mb-6 flex items-center text-red-700">
             <i class="fas fa-envelope mr-3 text-red-500"></i>
             Contact Us
@@ -71,7 +75,7 @@
         </section>
   
         <!-- Acknowledgments -->
-        <section class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+        <section class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 class="text-2xl font-semibold mb-4 flex items-center text-yellow-700">
             <i class="fas fa-award mr-3 text-yellow-600"></i>
             Acknowledgments

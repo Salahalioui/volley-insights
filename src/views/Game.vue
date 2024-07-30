@@ -1,30 +1,32 @@
 <template>
     <div v-if="game" class="game-page p-2 md:p-4 max-w-4xl mx-auto">
-      <h1 class="text-2xl md:text-3xl font-bold mb-4">{{ game.name }}</h1>
+      <h1 class="text-2xl md:text-3xl font-bold mb-4 text-center">{{ game.name }}</h1>
       
       <!-- Game Info and Controls -->
-      <div class="game-info-controls mb-4 flex flex-col md:flex-row justify-between items-start md:items-center">
-        <div class="game-info p-2 md:p-4 bg-gray-100 rounded-lg mb-2 md:mb-0">
+      <div class="game-info-controls mb-4 flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-100 rounded-lg p-4">
+        <div class="game-info mb-2 md:mb-0">
           <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
           <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
           <p><strong>Status:</strong> {{ game.status }}</p>
         </div>
-        <div class="game-controls flex flex-wrap justify-start md:justify-end">
-          <button @click="undoLastEvent" class="bg-yellow-500 text-white p-2 rounded mr-2 mb-2 md:mb-0" :disabled="!canUndo">Undo</button>
-          <button @click="redoLastEvent" class="bg-green-500 text-white p-2 rounded mr-2 mb-2 md:mb-0" :disabled="!canRedo">Redo</button>
-          <button @click="toggleGameStatus" class="bg-blue-500 text-white p-2 rounded mb-2 md:mb-0">
+        <div class="game-controls flex flex-wrap justify-center md:justify-end mt-2 md:mt-0">
+          <button @click="undoLastEvent" class="btn btn-yellow mr-2 mb-2" :disabled="!canUndo">Undo</button>
+          <button @click="redoLastEvent" class="btn btn-green mr-2 mb-2" :disabled="!canRedo">Redo</button>
+          <button @click="toggleGameStatus" class="btn btn-blue mb-2">
             {{ game.status === 'in_progress' ? 'Pause Game' : 'Resume Game' }}
           </button>
         </div>
       </div>
   
       <!-- Scoreboard -->
-      <div v-if="currentSet" class="scoreboard mb-4 p-2 md:p-4 bg-blue-100 rounded-lg flex justify-between items-center">
+      <div v-if="currentSet" class="scoreboard mb-4 p-4 bg-blue-100 rounded-lg flex justify-between items-center">
         <div class="team-score text-center">
           <h2 class="text-lg md:text-xl font-bold">Our Team</h2>
           <p class="text-3xl md:text-4xl font-bold">{{ currentSet.teamScore }}</p>
-          <button @click="adjustScore('team', 1)" class="bg-green-500 text-white p-1 rounded mr-1">+</button>
-          <button @click="adjustScore('team', -1)" class="bg-red-500 text-white p-1 rounded">-</button>
+          <div class="flex justify-center mt-2">
+            <button @click="adjustScore('team', 1)" class="btn btn-green mr-1">+</button>
+            <button @click="adjustScore('team', -1)" class="btn btn-red">-</button>
+          </div>
         </div>
         <div class="set-info text-center">
           <p class="text-xl md:text-2xl font-bold">Set {{ game.currentSet }}</p>
@@ -33,68 +35,70 @@
         <div class="opponent-score text-center">
           <h2 class="text-lg md:text-xl font-bold">{{ game.opponentTeam }}</h2>
           <p class="text-3xl md:text-4xl font-bold">{{ currentSet.opponentScore }}</p>
-          <button @click="adjustScore('opponent', 1)" class="bg-green-500 text-white p-1 rounded mr-1">+</button>
-          <button @click="adjustScore('opponent', -1)" class="bg-red-500 text-white p-1 rounded">-</button>
+          <div class="flex justify-center mt-2">
+            <button @click="adjustScore('opponent', 1)" class="btn btn-green mr-1">+</button>
+            <button @click="adjustScore('opponent', -1)" class="btn btn-red">-</button>
+          </div>
         </div>
       </div>
   
       <!-- Serving Team Switch -->
-      <div class="serving-indicator mb-4 text-center">
-        <p class="text-lg font-bold">
+      <div class="serving-indicator mb-4 text-center p-2 bg-purple-100 rounded-lg">
+        <p class="text-lg font-bold mb-2">
           Serving Team: {{ isOpponentServing ? game.opponentTeam : 'Our Team' }}
         </p>
-        <button @click="toggleServingTeam" class="bg-purple-500 text-white p-2 rounded mt-2">
+        <button @click="toggleServingTeam" class="btn btn-purple">
           Switch Serving Team
         </button>
       </div>
   
       <!-- Event Input Toggle -->
       <div class="mb-4 flex justify-center">
-        <button @click="toggleInputMethod" class="bg-purple-500 text-white p-2 rounded">
+        <button @click="toggleInputMethod" class="btn btn-purple">
           Switch to {{ isAdvancedInput ? 'Basic' : 'Advanced' }} Input
         </button>
       </div>
   
       <!-- Basic Event Input -->
-      <div v-if="!isAdvancedInput" class="event-input mb-4">
+      <div v-if="!isAdvancedInput" class="event-input mb-4 bg-gray-100 rounded-lg p-4">
         <h2 class="text-xl font-bold mb-2">Record Event</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
           <button v-for="playerId in currentRotation" :key="playerId"
                   @click="selectPlayer(playerId)"
-                  :class="['p-2 rounded text-white', currentEvent.player === playerId ? 'bg-blue-600' : 'bg-blue-400']">
+                  :class="['btn', currentEvent.player === playerId ? 'btn-blue-active' : 'btn-blue']">
             {{ getPlayerName(playerId) }}
           </button>
         </div>
-        <div class="grid grid-cols-3 gap-2 mt-2">
+        <div class="grid grid-cols-3 gap-2 mb-2">
           <button v-for="action in ['serve', 'receive', 'set', 'spike', 'block', 'dig']" :key="action"
                   @click="selectAction(action)"
-                  :class="['p-2 rounded text-white', currentEvent.action === action ? 'bg-green-600' : 'bg-green-400']">
+                  :class="['btn', currentEvent.action === action ? 'btn-green-active' : 'btn-green']">
             {{ action }}
           </button>
         </div>
-        <div class="grid grid-cols-3 gap-2 mt-2">
+        <div class="grid grid-cols-3 gap-2 mb-2">
           <button v-for="result in ['point', 'error', 'continue']" :key="result"
                   @click="selectResult(result)"
-                  :class="['p-2 rounded text-white', currentEvent.result === result ? 'bg-red-600' : 'bg-red-400']">
+                  :class="['btn', currentEvent.result === result ? 'btn-red-active' : 'btn-red']">
             {{ result }}
           </button>
         </div>
-        <button @click="recordEvent" class="mt-2 bg-purple-500 text-white p-2 rounded w-full">
+        <button @click="recordEvent" class="btn btn-purple w-full">
           Record Event
         </button>
       </div>
   
       <!-- Advanced Event Input -->
-      <div v-else class="event-input mb-4">
+      <div v-else class="event-input mb-4 bg-gray-100 rounded-lg p-4">
         <h2 class="text-xl font-bold mb-2">Advanced Event Input</h2>
-        <div class="grid grid-cols-2 gap-2">
-          <select v-model="currentEvent.player" class="p-2 border rounded">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <select v-model="currentEvent.player" class="form-select">
             <option value="">Select Player</option>
             <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
               {{ getPlayerName(playerId) }}
             </option>
           </select>
-          <select v-model="currentEvent.action" class="p-2 border rounded">
+          <select v-model="currentEvent.action" class="form-select">
             <option value="">Select Action</option>
             <option value="serve">Serve</option>
             <option value="receive">Receive</option>
@@ -103,56 +107,56 @@
             <option value="block">Block</option>
             <option value="dig">Dig</option>
           </select>
-          <select v-if="currentEvent.action" v-model="currentEvent.type" class="p-2 border rounded">
+          <select v-if="currentEvent.action" v-model="currentEvent.type" class="form-select">
             <option value="">Type of Action</option>
             <option v-for="type in getActionTypes" :key="type" :value="type">{{ type }}</option>
           </select>
-          <select v-if="currentEvent.action" v-model="currentEvent.evaluation" class="p-2 border rounded">
+          <select v-if="currentEvent.action" v-model="currentEvent.evaluation" class="form-select">
             <option value="">Evaluation</option>
             <option v-for="evaluation in getEvaluations" :key="evaluation" :value="evaluation">{{ evaluation }}</option>
           </select>
-          <select v-model="currentEvent.result" class="p-2 border rounded">
+          <select v-model="currentEvent.result" class="form-select">
             <option value="">Result</option>
             <option value="point">Point</option>
             <option value="error">Error</option>
             <option value="continue">Continue</option>
           </select>
-          <select v-if="['serve', 'spike', 'set'].includes(currentEvent.action)" v-model="currentEvent.target" class="p-2 border rounded">
+          <select v-if="['serve', 'spike', 'set'].includes(currentEvent.action)" v-model="currentEvent.target" class="form-select">
             <option value="">Target</option>
             <option v-for="target in getTargets" :key="target" :value="target">{{ target }}</option>
           </select>
         </div>
-        <button @click="recordAdvancedEvent" class="mt-2 bg-purple-500 text-white p-2 rounded w-full">
+        <button @click="recordAdvancedEvent" class="btn btn-purple w-full mt-2">
           Record Advanced Event
         </button>
       </div>
   
       <!-- Substitution Section -->
-      <div class="substitution mb-4">
+      <div class="substitution mb-4 bg-yellow-100 rounded-lg p-4">
         <h2 class="text-xl font-bold mb-2">Substitutions</h2>
-        <div class="grid grid-cols-2 gap-2">
-          <select v-model="substitution.outPlayer" class="p-2 border rounded">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <select v-model="substitution.outPlayer" class="form-select">
             <option value="">Player Out</option>
             <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
               {{ getPlayerName(playerId) }}
             </option>
           </select>
-          <select v-model="substitution.inPlayer" class="p-2 border rounded">
+          <select v-model="substitution.inPlayer" class="form-select">
             <option value="">Player In</option>
             <option v-for="playerId in benchPlayers" :key="playerId" :value="playerId">
               {{ getPlayerName(playerId) }}
             </option>
           </select>
         </div>
-        <button @click="makeSubstitution" class="mt-2 bg-yellow-500 text-white p-2 rounded w-full">
+        <button @click="makeSubstitution" class="btn btn-yellow w-full mt-2">
           Substitute
         </button>
       </div>
   
       <!-- Rotation Tracker -->
-      <div class="rotation-tracker mb-4">
+      <div class="rotation-tracker mb-4 bg-blue-100 rounded-lg p-4">
         <h2 class="text-xl font-bold mb-2">Current Rotation</h2>
-        <div class="relative w-full aspect-[3/2] bg-blue-100 border-2 border-blue-500 rounded-lg" style="max-height: 200px;">
+        <div class="relative w-full aspect-[3/2] border-2 border-blue-500 rounded-lg" style="max-height: 200px;">
           <!-- Back Row -->
           <div v-for="(position, index) in [1, 6, 5]" :key="position" 
                class="absolute w-[25%] text-center p-1"
@@ -176,17 +180,17 @@
             <p>{{ getPlayerName(currentRotation[position - 1]) }}</p>
           </div>
         </div>
-        <button @click="rotateManually" class="mt-2 bg-blue-500 text-white p-2 rounded w-full">
+        <button @click="rotateManually" class="btn btn-blue w-full mt-2">
           Rotate Manually
         </button>
       </div>
   
       <!-- Player Statistics -->
-      <div class="player-statistics mb-4">
+      <div class="player-statistics mb-4 bg-gray-100 rounded-lg p-4">
         <h2 class="text-xl font-bold mb-2">Player Statistics</h2>
         <div class="overflow-x-auto">
           <table class="min-w-full bg-white">
-            <thead class="bg-gray-100">
+            <thead class="bg-gray-200">
               <tr>
                 <th class="py-2 px-4 text-left">Player</th>
                 <th class="py-2 px-4 text-left">Points</th>
@@ -197,7 +201,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="playerId in game.players" :key="playerId">
+              <tr v-for="playerId in game.players" :key="playerId" class="border-b">
                 <td class="py-2 px-4">{{ getPlayerName(playerId) }}</td>
                 <td class="py-2 px-4">{{ getPlayerStat(playerId, 'points') }}</td>
                 <td class="py-2 px-4">{{ getPlayerStat(playerId, 'errors') }}</td>
@@ -211,10 +215,10 @@
       </div>
   
       <!-- Recent Events -->
-      <div class="recent-events">
+      <div class="recent-events bg-gray-100 rounded-lg p-4">
         <h2 class="text-xl font-bold mb-2">Recent Events</h2>
         <ul class="space-y-2">
-          <li v-for="event in recentEvents" :key="event.id" class="p-2 bg-gray-100 rounded text-sm">
+          <li v-for="event in recentEvents" :key="event.id" class="p-2 bg-white rounded text-sm shadow">
             <template v-if="event.type === 'substitution'">
               Substitution: {{ getPlayerName(event.outPlayer) }} out, {{ getPlayerName(event.inPlayer) }} in
             </template>
@@ -228,13 +232,14 @@
           </li>
         </ul>
       </div>
-      <!-- Add this button to toggle the stat screen -->
-  <button @click="toggleStatScreen" class="bg-blue-500 text-white p-2 rounded mt-4">
-    {{ showStatScreen ? 'Hide Stats' : 'Show Stats' }}
-  </button>
-
-  <!-- Add the StatScreen component -->
-  <StatScreen v-if="showStatScreen" :game="gameWithPlayerDetails" />
+  
+      <!-- Stat Screen Toggle -->
+      <button @click="toggleStatScreen" class="btn btn-blue mt-4 w-full">
+        {{ showStatScreen ? 'Hide Stats' : 'Show Stats' }}
+      </button>
+  
+      <!-- Stat Screen Component -->
+      <StatScreen v-if="showStatScreen" :game="gameWithPlayerDetails" />
     </div>
   </template>
   
@@ -685,3 +690,104 @@
   }
 };
 </script>
+<style scoped>
+.btn {
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.btn-yellow { background-color: #ecc94b; color: white; }
+.btn-yellow:hover { background-color: #d69e2e; }
+.btn-yellow-active { background-color: #d69e2e; color: white; }
+
+.btn-green { background-color: #48bb78; color: white; }
+.btn-green:hover { background-color: #38a169; }
+.btn-green-active { background-color: #38a169; color: white; }
+
+.btn-blue { background-color: #4299e1; color: white; }
+.btn-blue:hover { background-color: #3182ce; }
+.btn-blue-active { background-color: #3182ce; color: white; }
+
+.btn-red { background-color: #f56565; color: white; }
+.btn-red:hover { background-color: #e53e3e; }
+.btn-red-active { background-color: #e53e3e; color: white; }
+
+.btn-purple { background-color: #9f7aea; color: white; }
+.btn-purple:hover { background-color: #805ad5; }
+.btn-purple-active { background-color: #805ad5; color: white; }
+
+.form-select {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid #d2d6dc;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.form-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(164, 202, 254, 0.45);
+  border-color: #a4cafe;
+}
+
+.game-page {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .game-page {
+    padding: 1rem;
+  }
+}
+
+.game-info-controls,
+.scoreboard,
+.serving-indicator,
+.event-input,
+.substitution,
+.rotation-tracker,
+.player-statistics,
+.recent-events {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.game-info-controls { background-color: #f7fafc; }
+.scoreboard { background-color: #ebf8ff; }
+.serving-indicator { background-color: #faf5ff; }
+.event-input,
+.substitution,
+.player-statistics,
+.recent-events { background-color: #f7fafc; }
+.rotation-tracker { background-color: #ebf8ff; }
+
+.rotation-tracker .player-position {
+  position: absolute;
+  width: 25%;
+  text-align: center;
+  padding: 0.25rem;
+  font-size: 0.8rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+thead {
+  background-color: #edf2f7;
+}
+</style>

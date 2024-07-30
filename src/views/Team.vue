@@ -1,28 +1,44 @@
 <template>
     <div class="my-team p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
-      <h2 class="text-2xl font-bold mb-6 text-gray-800">My Team</h2>
+      <h2 class="text-3xl font-bold mb-6 text-gray-800">My Team</h2>
       
-      <!-- Search Input -->
-      <div class="mb-6">
+      <!-- Search and Filter -->
+      <div class="mb-6 flex flex-col sm:flex-row gap-4">
         <input 
           v-model="searchQuery" 
           type="text" 
           placeholder="Search players..." 
-          class="w-full p-3 border rounded-lg focus:ring focus:ring-blue-300 transition duration-300"
+          class="flex-grow p-3 border rounded-lg focus:ring focus:ring-blue-300 transition duration-300"
         >
+        <select 
+          v-model="roleFilter"
+          class="p-3 border rounded-lg focus:ring focus:ring-blue-300 transition duration-300"
+        >
+          <option value="">All Roles</option>
+          <option v-for="role in uniqueRoles" :key="role" :value="role">{{ role }}</option>
+        </select>
       </div>
       
       <!-- Player List -->
       <TransitionGroup name="list" tag="ul" class="space-y-3 mb-6">
         <li v-for="player in filteredPlayers" :key="player.id" 
             class="bg-white p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between items-start sm:items-center transition duration-300 ease-in-out hover:bg-gray-50">
-          <span class="mb-2 sm:mb-0">
-            <span class="font-semibold">{{ player.name }}</span>
-            <span class="text-gray-600 ml-2">#{{ player.shirtNumber }} - {{ player.role }}</span>
-          </span>
+          <div class="flex items-center mb-2 sm:mb-0">
+            <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center mr-3">
+              {{ player.name.charAt(0) }}
+            </div>
+            <span>
+              <span class="font-semibold">{{ player.name }}</span>
+              <span class="text-gray-600 ml-2">#{{ player.shirtNumber }} - {{ player.role }}</span>
+            </span>
+          </div>
           <div class="space-x-2">
-            <button @click="editPlayer(player)" class="text-blue-500 hover:text-blue-700 transition duration-300">Edit</button>
-            <button @click="removePlayer(player)" class="text-red-500 hover:text-red-700 transition duration-300">Remove</button>
+            <button @click="editPlayer(player)" class="text-blue-500 hover:text-blue-700 transition duration-300">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <button @click="confirmRemovePlayer(player)" class="text-red-500 hover:text-red-700 transition duration-300">
+              <i class="fas fa-trash"></i> Remove
+            </button>
           </div>
         </li>
       </TransitionGroup>
@@ -46,11 +62,7 @@
             <select id="playerRole" v-model="currentPlayer.role" required
                     class="w-full p-3 border rounded-lg focus:ring focus:ring-blue-300 transition duration-300">
               <option value="">Select Role</option>
-              <option value="Setter">Setter</option>
-              <option value="Outside Hitter">Outside Hitter</option>
-              <option value="Opposite">Opposite</option>
-              <option value="Middle Blocker">Middle Blocker</option>
-              <option value="Libero">Libero</option>
+              <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
             </select>
           </div>
         </div>
@@ -64,20 +76,35 @@
       <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
         <button @click="exportPlayers" 
                 class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300">
-          Export Players
+          <i class="fas fa-file-export mr-2"></i> Export Players
         </button>
         <label class="flex-1 bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition duration-300 cursor-pointer text-center">
-          Import Players
-          <input type="file" @change="importPlayers" accept=".json,.csv" class="hidden">
+          <i class="fas fa-file-import mr-2"></i> Import Players
+          <input type="file" @change="importPlayers" accept=".json" class="hidden">
         </label>
       </div>
   
       <!-- Notification -->
       <Transition name="fade">
-        <div v-if="notification" class="fixed bottom-4 right-4 bg-blue-500 text-white p-3 rounded-lg shadow-lg">
-          {{ notification }}
+        <div v-if="notification" 
+             :class="['fixed bottom-4 right-4 p-3 rounded-lg shadow-lg', 
+                      notification.type === 'success' ? 'bg-green-500' : 'bg-red-500', 
+                      'text-white']">
+          {{ notification.message }}
         </div>
       </Transition>
+  
+      <!-- Confirmation Modal -->
+      <div v-if="showConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+          <h3 class="text-xl font-bold mb-4">Confirm Removal</h3>
+          <p>Are you sure you want to remove {{ playerToRemove?.name }}?</p>
+          <div class="mt-4 flex justify-end space-x-3">
+            <button @click="cancelRemove" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
+            <button @click="removePlayer" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Remove</button>
+          </div>
+        </div>
+      </div>
     </div>
   </template>
   
@@ -89,18 +116,29 @@
     setup() {
       const players = ref([]);
       const searchQuery = ref('');
+      const roleFilter = ref('');
       const currentPlayer = ref({
         id: null,
         name: '',
         shirtNumber: '',
         role: ''
       });
-      const notification = ref('');
+      const notification = ref(null);
+      const showConfirmModal = ref(false);
+      const playerToRemove = ref(null);
   
-      const showNotification = (message) => {
-        notification.value = message;
+      const roles = [
+        'Setter',
+        'Outside Hitter',
+        'Opposite',
+        'Middle Blocker',
+        'Libero'
+      ];
+  
+      const showNotification = (message, type = 'success') => {
+        notification.value = { message, type };
         setTimeout(() => {
-          notification.value = '';
+          notification.value = null;
         }, 3000);
       };
   
@@ -135,10 +173,22 @@
         currentPlayer.value = { ...player };
       };
   
-      const removePlayer = (player) => {
-        players.value = players.value.filter(p => p.id !== player.id);
+      const confirmRemovePlayer = (player) => {
+        playerToRemove.value = player;
+        showConfirmModal.value = true;
+      };
+  
+      const removePlayer = () => {
+        players.value = players.value.filter(p => p.id !== playerToRemove.value.id);
         savePlayers();
         showNotification('Player removed successfully');
+        showConfirmModal.value = false;
+        playerToRemove.value = null;
+      };
+  
+      const cancelRemove = () => {
+        showConfirmModal.value = false;
+        playerToRemove.value = null;
       };
   
       const resetForm = () => {
@@ -146,7 +196,7 @@
       };
   
       const exportPlayers = () => {
-        const dataStr = JSON.stringify(players.value);
+        const dataStr = JSON.stringify(players.value, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
         const exportFileDefaultName = 'players.json';
   
@@ -168,7 +218,7 @@
             showNotification('Players imported successfully');
           } catch (error) {
             console.error('Error parsing JSON:', error);
-            showNotification('Error: Invalid JSON file');
+            showNotification('Error: Invalid JSON file', 'error');
           }
         };
         reader.readAsText(file);
@@ -176,10 +226,15 @@
   
       const filteredPlayers = computed(() => {
         return players.value.filter(player => 
-          player.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          player.shirtNumber.toString().includes(searchQuery.value) ||
-          player.role.toLowerCase().includes(searchQuery.value.toLowerCase())
+          (player.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+           player.shirtNumber.toString().includes(searchQuery.value) ||
+           player.role.toLowerCase().includes(searchQuery.value.toLowerCase())) &&
+          (roleFilter.value === '' || player.role === roleFilter.value)
         );
+      });
+  
+      const uniqueRoles = computed(() => {
+        return [...new Set(players.value.map(player => player.role))];
       });
   
       onMounted(() => {
@@ -189,12 +244,19 @@
       return {
         players,
         searchQuery,
+        roleFilter,
         currentPlayer,
         notification,
+        showConfirmModal,
+        playerToRemove,
         filteredPlayers,
+        uniqueRoles,
+        roles,
         savePlayer,
         editPlayer,
+        confirmRemovePlayer,
         removePlayer,
+        cancelRemove,
         exportPlayers,
         importPlayers
       };
@@ -202,26 +264,6 @@
   };
   </script>
   
-  <style scoped>
-  .list-enter-active,
-  .list-leave-active {
-    transition: all 0.5s ease;
-  }
-  .list-enter-from,
-  .list-leave-to {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.5s ease;
-  }
-  .fade-enter-from,
-  .fade-leave-to {
-    opacity: 0;
-  }
-  </style>
   <style scoped>
   .list-enter-active,
   .list-leave-active {
@@ -242,4 +284,3 @@
     opacity: 0;
   }
   </style>
-  
