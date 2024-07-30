@@ -38,11 +38,14 @@
         </div>
       </div>
   
-      <!-- Serving Indicator -->
+      <!-- Serving Team Switch -->
       <div class="serving-indicator mb-4 text-center">
         <p class="text-lg font-bold">
-          Serving Team: {{ servingTeam === 'team' ? 'Our Team' : game.opponentTeam }}
+          Serving Team: {{ isOpponentServing ? game.opponentTeam : 'Our Team' }}
         </p>
+        <button @click="toggleServingTeam" class="bg-purple-500 text-white p-2 rounded mt-2">
+          Switch Serving Team
+        </button>
       </div>
   
       <!-- Event Input Toggle -->
@@ -100,11 +103,11 @@
             <option value="block">Block</option>
             <option value="dig">Dig</option>
           </select>
-          <select v-model="currentEvent.type" class="p-2 border rounded">
+          <select v-if="currentEvent.action" v-model="currentEvent.type" class="p-2 border rounded">
             <option value="">Type of Action</option>
             <option v-for="type in getActionTypes" :key="type" :value="type">{{ type }}</option>
           </select>
-          <select v-model="currentEvent.evaluation" class="p-2 border rounded">
+          <select v-if="currentEvent.action" v-model="currentEvent.evaluation" class="p-2 border rounded">
             <option value="">Evaluation</option>
             <option v-for="evaluation in getEvaluations" :key="evaluation" :value="evaluation">{{ evaluation }}</option>
           </select>
@@ -114,7 +117,10 @@
             <option value="error">Error</option>
             <option value="continue">Continue</option>
           </select>
-          <input v-model="currentEvent.target" placeholder="Target (if needed)" class="p-2 border rounded">
+          <select v-if="['serve', 'spike', 'set'].includes(currentEvent.action)" v-model="currentEvent.target" class="p-2 border rounded">
+            <option value="">Target</option>
+            <option v-for="target in getTargets" :key="target" :value="target">{{ target }}</option>
+          </select>
         </div>
         <button @click="recordAdvancedEvent" class="mt-2 bg-purple-500 text-white p-2 rounded w-full">
           Record Advanced Event
@@ -170,6 +176,9 @@
             <p>{{ getPlayerName(currentRotation[position - 1]) }}</p>
           </div>
         </div>
+        <button @click="rotateManually" class="mt-2 bg-blue-500 text-white p-2 rounded w-full">
+          Rotate Manually
+        </button>
       </div>
   
       <!-- Player Statistics -->
@@ -223,7 +232,7 @@
   </template>
   
   <script>
-  import { ref, computed, onMounted, watch } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   
   export default {
@@ -238,7 +247,7 @@
       const undoStack = ref([]);
       const redoStack = ref([]);
       const isAdvancedInput = ref(false);
-      const servingTeam = ref('team');
+      const isOpponentServing = ref(false);
   
       onMounted(() => {
         const games = JSON.parse(localStorage.getItem('games') || '[]');
@@ -254,17 +263,16 @@
         if (game.value.sets.length === 0) {
           startNewSet();
         }
-  
         if (!game.value.currentRotation) {
-          game.value.currentRotation = [...game.value.initialRotation];
-        }
-  
-        if (!game.value.status) {
-          game.value.status = 'not_started';
-        }
-      });
-  
-      const currentSet = computed(() => {
+        game.value.currentRotation = [...game.value.initialRotation];
+      }
+
+      if (!game.value.status) {
+        game.value.status = 'not_started';
+      }
+    });
+
+    const currentSet = computed(() => {
       return game.value && game.value.sets[game.value.currentSet - 1] 
         ? game.value.sets[game.value.currentSet - 1] 
         : { teamScore: 0, opponentScore: 0, events: [] };
@@ -315,6 +323,15 @@
       return ['Perfect', 'Good', 'OK', 'Poor'];
     });
 
+    const getTargets = computed(() => {
+      if (['serve', 'spike'].includes(currentEvent.value.action)) {
+        return ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5', 'Zone 6'];
+      } else if (currentEvent.value.action === 'set') {
+        return ['2', '3', '4', 'Back Row'];
+      }
+      return [];
+    });
+
     const getPlayerName = (playerId) => {
       const player = players.value.find(p => p.id === playerId);
       return player ? player.name : 'Unknown Player';
@@ -338,11 +355,19 @@
 
     const rotateTeam = () => {
       if (!game.value || !game.value.currentRotation) return;
-      game.value.currentRotation.unshift(game.value.currentRotation.pop());
+      game.value.currentRotation = [
+        ...game.value.currentRotation.slice(1),
+        game.value.currentRotation[0]
+      ];
     };
 
-    const switchServingTeam = () => {
-      servingTeam.value = servingTeam.value === 'team' ? 'opponent' : 'team';
+    const rotateManually = () => {
+      rotateTeam();
+      saveGame();
+    };
+
+    const toggleServingTeam = () => {
+      isOpponentServing.value = !isOpponentServing.value;
     };
 
     const recordEvent = () => {
@@ -356,27 +381,28 @@
         ...currentEvent.value
       };
 
-      undoStack.value.push({ type: 'event', data: { ...currentSet.value, servingTeam: servingTeam.value } });
+      undoStack.value.push({ 
+        type: 'event', 
+        data: { 
+          set: { ...currentSet.value }, 
+          rotation: [...game.value.currentRotation],
+          isOpponentServing: isOpponentServing.value
+        } 
+      });
       redoStack.value = [];
 
       currentSet.value.events.push(event);
 
       if (event.result === 'point') {
-        if (servingTeam.value === 'team') {
-          currentSet.value.teamScore++;
-        } else {
-          currentSet.value.opponentScore++;
+        currentSet.value.teamScore++;
+        if (isOpponentServing.value) {
           rotateTeam();
-          switchServingTeam();
+          isOpponentServing.value = false;
         }
       } else if (event.result === 'error') {
-        if (servingTeam.value === 'team') {
-          currentSet.value.opponentScore++;
-          switchServingTeam();
-        } else {
-          currentSet.value.teamScore++;
-          rotateTeam();
-          switchServingTeam();
+        currentSet.value.opponentScore++;
+        if (!isOpponentServing.value) {
+          isOpponentServing.value = true;
         }
       }
 
@@ -482,11 +508,19 @@
       if (undoStack.value.length === 0) return;
 
       const lastAction = undoStack.value.pop();
-      redoStack.value.push({ type: lastAction.type, data: { ...currentSet.value, servingTeam: servingTeam.value } });
+      redoStack.value.push({ 
+        type: lastAction.type, 
+        data: { 
+          set: { ...currentSet.value }, 
+          rotation: [...game.value.currentRotation],
+          isOpponentServing: isOpponentServing.value
+        } 
+      });
 
-      if (lastAction.type === 'event') {
-        Object.assign(currentSet.value, lastAction.data);
-        servingTeam.value = lastAction.data.servingTeam;
+      if (lastAction.type === 'event' || lastAction.type === 'score') {
+        Object.assign(currentSet.value, lastAction.data.set);
+        game.value.currentRotation = [...lastAction.data.rotation];
+        isOpponentServing.value = lastAction.data.isOpponentServing;
       } else if (lastAction.type === 'substitution') {
         game.value.currentRotation = [...lastAction.data.rotation];
         currentSet.value.events = [...lastAction.data.events];
@@ -499,11 +533,19 @@
       if (redoStack.value.length === 0) return;
 
       const nextAction = redoStack.value.pop();
-      undoStack.value.push({ type: nextAction.type, data: { ...currentSet.value, servingTeam: servingTeam.value } });
+      undoStack.value.push({ 
+        type: nextAction.type, 
+        data: { 
+          set: { ...currentSet.value }, 
+          rotation: [...game.value.currentRotation],
+          isOpponentServing: isOpponentServing.value
+        } 
+      });
 
-      if (nextAction.type === 'event') {
-        Object.assign(currentSet.value, nextAction.data);
-        servingTeam.value = nextAction.data.servingTeam;
+      if (nextAction.type === 'event' || nextAction.type === 'score') {
+        Object.assign(currentSet.value, nextAction.data.set);
+        game.value.currentRotation = [...nextAction.data.rotation];
+        isOpponentServing.value = nextAction.data.isOpponentServing;
       } else if (nextAction.type === 'substitution') {
         game.value.currentRotation = [...nextAction.data.rotation];
         currentSet.value.events = [...nextAction.data.events];
@@ -513,13 +555,27 @@
     };
 
     const adjustScore = (team, amount) => {
-      undoStack.value.push({ type: 'score', data: { ...currentSet.value, servingTeam: servingTeam.value } });
+      undoStack.value.push({ 
+        type: 'score', 
+        data: { 
+          set: { ...currentSet.value }, 
+          rotation: [...game.value.currentRotation],
+          isOpponentServing: isOpponentServing.value
+        } 
+      });
       redoStack.value = [];
 
       if (team === 'team') {
         currentSet.value.teamScore += amount;
+        if (amount > 0 && isOpponentServing.value) {
+          rotateTeam();
+          isOpponentServing.value = false;
+        }
       } else {
         currentSet.value.opponentScore += amount;
+        if (amount > 0 && !isOpponentServing.value) {
+          isOpponentServing.value = true;
+        }
       }
 
       checkSetEnd();
@@ -543,7 +599,9 @@
         event.player === playerId && 
         (statType === 'points' ? event.result === 'point' :
          statType === 'errors' ? event.result === 'error' :
-         statType === event.action)
+         statType === 'serves' ? event.action === 'serve' :
+         statType === 'attacks' ? event.action === 'spike' :
+         statType === 'blocks' ? event.action === 'block' : false)
       ).length;
     };
 
@@ -563,13 +621,6 @@
       currentEvent.value.result = result;
     };
 
-    watch(() => game.value?.currentSet, (newSet, oldSet) => {
-      if (newSet !== oldSet) {
-        // Switch serving team at the start of a new set
-        switchServingTeam();
-      }
-    });
-
     return {
       game,
       currentEvent,
@@ -582,9 +633,10 @@
       canUndo,
       canRedo,
       isAdvancedInput,
-      servingTeam,
+      isOpponentServing,
       getActionTypes,
       getEvaluations,
+      getTargets,
       getPlayerName,
       formatDate,
       recordEvent,
@@ -598,10 +650,10 @@
       toggleInputMethod,
       selectPlayer,
       selectAction,
-      selectResult
+      selectResult,
+      rotateManually,
+      toggleServingTeam
     };
   }
 };
 </script>
-
-  
