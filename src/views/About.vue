@@ -61,11 +61,11 @@
           <div class="space-y-4">
             <a href="mailto:support@volleyinsights.com" class="flex items-center text-blue-500 hover:text-blue-600 transition duration-300">
               <i class="fas fa-envelope mr-3"></i>
-              support@volleyinsights.com
+              Test@volleyinsights.com
             </a>
             <a href="https://www.volleyinsights.com" target="_blank" rel="noopener noreferrer" class="flex items-center text-blue-500 hover:text-blue-600 transition duration-300">
               <i class="fas fa-globe mr-3"></i>
-              www.volleyinsights.com
+              www.Testvolleyinsights.com
             </a>
             <a href="https://twitter.com/VolleyInsights" target="_blank" rel="noopener noreferrer" class="flex items-center text-blue-500 hover:text-blue-600 transition duration-300">
               <i class="fab fa-twitter mr-3"></i>
@@ -81,7 +81,7 @@
             Acknowledgments
           </h2>
           <p class="text-gray-700 leading-relaxed">
-            Volley Insights was developed as part of a PhD thesis project at [University Name]. We would like to thank all the coaches, players, and volleyball enthusiasts who contributed to the development and testing of this app.
+            Volley Insights was developed as part of a PhD thesis project at Tissemsilt university. We would like to thank all the coaches, players, and volleyball enthusiasts who contributed to the development and testing of this app.
           </p>
         </section>
       </div>
