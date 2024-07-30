@@ -1,45 +1,64 @@
 <template>
-    <div class="home bg-gray-100 min-h-screen p-6">
-      <h1 class="text-4xl font-bold mb-6 text-center text-blue-600">Welcome to Volley Insights</h1>
-      
+    <div class="home bg-gray-100 min-h-screen p-6 md:p-10">
+      <h1 class="text-4xl font-bold mb-8 text-center text-blue-600 md:text-5xl">
+        Welcome to Volley Insights
+      </h1>
+  
       <div class="max-w-4xl mx-auto">
         <!-- App Description -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 class="text-2xl font-semibold mb-4">Elevate Your Volleyball Analysis</h2>
-          <p class="text-gray-700 mb-4">
-            Volley Insights is your comprehensive tool for volleyball match analysis. 
-            Record games, track player performance, and gain valuable insights to improve your team's strategy.
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8 md:mb-10">
+          <div class="flex items-center mb-4 md:mb-6">
+            <img src="@/assets/logo.png" alt="Volleyball" class="w-12 h-12 mr-4" />
+            <h2 class="text-2xl font-semibold">Elevate Your Volleyball Analysis</h2>
+          </div>
+          <p class="text-gray-700 text-lg">
+            Volley Insights is your comprehensive tool for volleyball match analysis.
+            Record games, track player performance, and gain valuable insights to
+            improve your team's strategy.
           </p>
         </div>
   
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 md:mb-10">
           <div class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-xl font-semibold mb-4">Start a New Game</h3>
-            <p class="text-gray-700 mb-4">Record a new match with real-time event tracking and advanced statistics.</p>
+            <p class="text-gray-700 mb-4">
+              Record a new match with real-time event tracking and advanced statistics.
+            </p>
             <BaseButton @click="navigateToCreateGame" class="w-full">Create New Game</BaseButton>
           </div>
           <div class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-xl font-semibold mb-4">Manage Your Team</h3>
-            <p class="text-gray-700 mb-4">Update your roster, add players, and manage team information.</p>
+            <p class="text-gray-700 mb-4">
+              Update your roster, add players, and manage team information.
+            </p>
             <BaseButton @click="navigateToTeam" class="w-full">Go to My Team</BaseButton>
           </div>
         </div>
   
         <!-- Recent Games -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8 md:mb-10">
           <h3 class="text-xl font-semibold mb-4">Recent Games</h3>
           <div v-if="recentGames.length > 0">
-            <div v-for="game in recentGames" :key="game.id" class="mb-2 p-2 bg-gray-100 rounded flex justify-between items-center">
-              <span>{{ game.name }} - {{ formatDate(game.date) }}</span>
+            <div v-for="game in recentGames" :key="game.id" class="mb-4 p-4 bg-gray-100 rounded flex justify-between items-center">
+              <div class="flex items-center">
+                <span class="text-gray-700 mr-4">{{ game.name }}</span>
+                <span class="text-gray-500 text-sm">{{ formatDate(game.date) }}</span>
+              </div>
               <div>
-                <BaseButton v-if="game.status === 'completed'" @click="viewGameStats(game.id)" size="small" class="mr-2">View Stats</BaseButton>
-                <BaseButton v-else @click="continueGame(game.id)" size="small">Continue Game</BaseButton>
+                <BaseButton v-if="game.status === 'completed'" @click="viewGameStats(game.id)" size="small" class="mr-2">
+                  View Stats
+                </BaseButton>
+                <BaseButton v-else @click="continueGame(game.id)" size="small">
+                  Continue Game
+                </BaseButton>
               </div>
             </div>
           </div>
           <p v-else class="text-gray-700">No recent games. Start by creating a new game!</p>
-          <BaseButton @click="navigateToResults" class="mt-4 w-full">View All Games</BaseButton>
+          <BaseButton @click="navigateToResults" class="mt-4 w-full">
+            View All Games
+          </BaseButton>
         </div>
   
         <!-- Quick Stats -->
@@ -48,19 +67,19 @@
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="text-center">
               <p class="text-2xl font-bold text-blue-600">{{ totalGames }}</p>
-              <p class="text-gray-700">Total Games</p>
+              <p class="text-gray-700 text-lg">Total Games</p>
             </div>
             <div class="text-center">
               <p class="text-2xl font-bold text-green-600">{{ winPercentage }}%</p>
-              <p class="text-gray-700">Win Percentage</p>
+              <p class="text-gray-700 text-lg">Win Percentage</p>
             </div>
             <div class="text-center">
               <p class="text-2xl font-bold text-purple-600">{{ totalPlayers }}</p>
-              <p class="text-gray-700">Players</p>
+              <p class="text-gray-700 text-lg">Players</p>
             </div>
             <div class="text-center">
               <p class="text-2xl font-bold text-red-600">{{ topScorer.name }}</p>
-              <p class="text-gray-700">Top Scorer</p>
+              <p class="text-gray-700 text-lg">Top Scorer</p>
             </div>
           </div>
         </div>
