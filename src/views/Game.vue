@@ -1,125 +1,172 @@
 <template>
-    <div v-if="game" class="game-page p-4 max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold mb-4">{{ game.name }}</h1>
+    <div v-if="game" class="game-page p-2 md:p-4 max-w-4xl mx-auto">
+      <h1 class="text-2xl md:text-3xl font-bold mb-4">{{ game.name }}</h1>
       
       <!-- Game Info and Controls -->
-      <div class="game-info-controls mb-6 flex justify-between items-center">
-        <div class="game-info p-4 bg-gray-100 rounded-lg">
+      <div class="game-info-controls mb-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div class="game-info p-2 md:p-4 bg-gray-100 rounded-lg mb-2 md:mb-0">
           <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
           <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
           <p><strong>Status:</strong> {{ game.status }}</p>
         </div>
-        <div class="game-controls">
-          <button @click="undoLastEvent" class="bg-yellow-500 text-white p-2 rounded mr-2" :disabled="!canUndo">Undo</button>
-          <button @click="redoLastEvent" class="bg-green-500 text-white p-2 rounded mr-2" :disabled="!canRedo">Redo</button>
-          <button @click="toggleGameStatus" class="bg-blue-500 text-white p-2 rounded">
+        <div class="game-controls flex flex-wrap justify-start md:justify-end">
+          <button @click="undoLastEvent" class="bg-yellow-500 text-white p-2 rounded mr-2 mb-2 md:mb-0" :disabled="!canUndo">Undo</button>
+          <button @click="redoLastEvent" class="bg-green-500 text-white p-2 rounded mr-2 mb-2 md:mb-0" :disabled="!canRedo">Redo</button>
+          <button @click="toggleGameStatus" class="bg-blue-500 text-white p-2 rounded mb-2 md:mb-0">
             {{ game.status === 'in_progress' ? 'Pause Game' : 'Resume Game' }}
           </button>
         </div>
       </div>
   
       <!-- Scoreboard -->
-      <div class="scoreboard mb-6 p-4 bg-blue-100 rounded-lg flex justify-between items-center">
+      <div class="scoreboard mb-4 p-2 md:p-4 bg-blue-100 rounded-lg flex justify-between items-center">
         <div class="team-score text-center">
-          <h2 class="text-xl font-bold">Our Team</h2>
-          <p class="text-4xl font-bold">{{ currentSet.teamScore }}</p>
+          <h2 class="text-lg md:text-xl font-bold">Our Team</h2>
+          <p class="text-3xl md:text-4xl font-bold">{{ currentSet.teamScore }}</p>
           <button @click="adjustScore('team', 1)" class="bg-green-500 text-white p-1 rounded mr-1">+</button>
           <button @click="adjustScore('team', -1)" class="bg-red-500 text-white p-1 rounded">-</button>
         </div>
         <div class="set-info text-center">
-          <p class="text-2xl font-bold">Set {{ game.currentSet }}</p>
-          <p class="text-xl">{{ setsWon.team }} - {{ setsWon.opponent }}</p>
+          <p class="text-xl md:text-2xl font-bold">Set {{ game.currentSet }}</p>
+          <p class="text-lg md:text-xl">{{ setsWon.team }} - {{ setsWon.opponent }}</p>
         </div>
         <div class="opponent-score text-center">
-          <h2 class="text-xl font-bold">{{ game.opponentTeam }}</h2>
-          <p class="text-4xl font-bold">{{ currentSet.opponentScore }}</p>
+          <h2 class="text-lg md:text-xl font-bold">{{ game.opponentTeam }}</h2>
+          <p class="text-3xl md:text-4xl font-bold">{{ currentSet.opponentScore }}</p>
           <button @click="adjustScore('opponent', 1)" class="bg-green-500 text-white p-1 rounded mr-1">+</button>
           <button @click="adjustScore('opponent', -1)" class="bg-red-500 text-white p-1 rounded">-</button>
         </div>
       </div>
   
-      <!-- Event Input and Substitution -->
-      <div class="flex space-x-4 mb-6">
-        <div class="event-input flex-1">
-          <h2 class="text-xl font-bold mb-2">Record Event</h2>
-          <div class="flex space-x-2">
-            <select v-model="currentEvent.player" class="p-2 border rounded flex-1">
-              <option value="">Select Player</option>
-              <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
-                {{ getPlayerName(playerId) }}
-              </option>
-            </select>
-            <select v-model="currentEvent.action" class="p-2 border rounded flex-1">
-              <option value="">Select Action</option>
-              <option value="serve">Serve</option>
-              <option value="receive">Receive</option>
-              <option value="set">Set</option>
-              <option value="spike">Spike</option>
-              <option value="block">Block</option>
-              <option value="dig">Dig</option>
-            </select>
-            <select v-model="currentEvent.result" class="p-2 border rounded flex-1">
-              <option value="">Select Result</option>
-              <option value="point">Point</option>
-              <option value="error">Error</option>
-              <option value="continue">Continue</option>
-            </select>
-            <button @click="recordEvent" class="bg-green-500 text-white p-2 rounded hover:bg-green-600 flex-1">
-              Record
-            </button>
-          </div>
+      <!-- Event Input Toggle -->
+      <div class="mb-4 flex justify-center">
+        <button @click="toggleInputMethod" class="bg-purple-500 text-white p-2 rounded">
+          Switch to {{ isAdvancedInput ? 'Basic' : 'Advanced' }} Input
+        </button>
+      </div>
+  
+      <!-- Basic Event Input -->
+      <div v-if="!isAdvancedInput" class="event-input mb-4">
+        <h2 class="text-xl font-bold mb-2">Record Event</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <button v-for="playerId in currentRotation" :key="playerId"
+                  @click="selectPlayer(playerId)"
+                  :class="['p-2 rounded text-white', currentEvent.player === playerId ? 'bg-blue-600' : 'bg-blue-400']">
+            {{ getPlayerName(playerId) }}
+          </button>
         </div>
-        <div class="substitution flex-1">
-          <h2 class="text-xl font-bold mb-2">Substitution</h2>
-          <div class="flex space-x-2">
-            <select v-model="substitution.outPlayer" class="p-2 border rounded flex-1">
-              <option value="">Player Out</option>
-              <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
-                {{ getPlayerName(playerId) }}
-              </option>
-            </select>
-            <select v-model="substitution.inPlayer" class="p-2 border rounded flex-1">
-              <option value="">Player In</option>
-              <option v-for="playerId in benchPlayers" :key="playerId" :value="playerId">
-                {{ getPlayerName(playerId) }}
-              </option>
-            </select>
-            <button @click="makeSubstitution" class="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600 flex-1">
-              Substitute
-            </button>
-          </div>
+        <div class="grid grid-cols-3 gap-2 mt-2">
+          <button v-for="action in ['serve', 'receive', 'set', 'spike', 'block', 'dig']" :key="action"
+                  @click="selectAction(action)"
+                  :class="['p-2 rounded text-white', currentEvent.action === action ? 'bg-green-600' : 'bg-green-400']">
+            {{ action }}
+          </button>
         </div>
+        <div class="grid grid-cols-3 gap-2 mt-2">
+          <button v-for="result in ['point', 'error', 'continue']" :key="result"
+                  @click="selectResult(result)"
+                  :class="['p-2 rounded text-white', currentEvent.result === result ? 'bg-red-600' : 'bg-red-400']">
+            {{ result }}
+          </button>
+        </div>
+        <button @click="recordEvent" class="mt-2 bg-purple-500 text-white p-2 rounded w-full">
+          Record Event
+        </button>
+      </div>
+  
+      <!-- Advanced Event Input -->
+      <div v-else class="event-input mb-4">
+        <h2 class="text-xl font-bold mb-2">Advanced Event Input</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <select v-model="currentEvent.player" class="p-2 border rounded">
+            <option value="">Select Player</option>
+            <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
+              {{ getPlayerName(playerId) }}
+            </option>
+          </select>
+          <select v-model="currentEvent.action" class="p-2 border rounded">
+            <option value="">Select Action</option>
+            <option value="serve">Serve</option>
+            <option value="receive">Receive</option>
+            <option value="set">Set</option>
+            <option value="spike">Spike</option>
+            <option value="block">Block</option>
+            <option value="dig">Dig</option>
+          </select>
+          <select v-model="currentEvent.type" class="p-2 border rounded">
+            <option value="">Type of Action</option>
+            <option v-for="type in getActionTypes" :key="type" :value="type">{{ type }}</option>
+          </select>
+          <select v-model="currentEvent.evaluation" class="p-2 border rounded">
+            <option value="">Evaluation</option>
+            <option v-for="evaluation in getEvaluations" :key="evaluation" :value="evaluation">{{ evaluation }}</option>
+          </select>
+          <select v-model="currentEvent.result" class="p-2 border rounded">
+            <option value="">Result</option>
+            <option value="point">Point</option>
+            <option value="error">Error</option>
+            <option value="continue">Continue</option>
+          </select>
+          <input v-model="currentEvent.target" placeholder="Target (if needed)" class="p-2 border rounded">
+        </div>
+        <button @click="recordAdvancedEvent" class="mt-2 bg-purple-500 text-white p-2 rounded w-full">
+          Record Advanced Event
+        </button>
+      </div>
+  
+      <!-- Substitution Section -->
+      <div class="substitution mb-4">
+        <h2 class="text-xl font-bold mb-2">Substitutions</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <select v-model="substitution.outPlayer" class="p-2 border rounded">
+            <option value="">Player Out</option>
+            <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
+              {{ getPlayerName(playerId) }}
+            </option>
+          </select>
+          <select v-model="substitution.inPlayer" class="p-2 border rounded">
+            <option value="">Player In</option>
+            <option v-for="playerId in benchPlayers" :key="playerId" :value="playerId">
+              {{ getPlayerName(playerId) }}
+            </option>
+          </select>
+        </div>
+        <button @click="makeSubstitution" class="mt-2 bg-yellow-500 text-white p-2 rounded w-full">
+          Substitute
+        </button>
       </div>
   
       <!-- Rotation Tracker -->
-      <div class="rotation-tracker mb-6">
+      <div class="rotation-tracker mb-4">
         <h2 class="text-xl font-bold mb-2">Current Rotation</h2>
-        <div class="relative w-full aspect-[3/2] bg-blue-100 border-2 border-blue-500 rounded-lg">
+        <div class="relative w-full aspect-[3/2] bg-blue-100 border-2 border-blue-500 rounded-lg" style="max-height: 200px;">
           <!-- Back Row -->
           <div v-for="(position, index) in [1, 6, 5]" :key="position" 
-               class="absolute w-[25%] text-center p-2"
+               class="absolute w-[25%] text-center p-1"
                :style="{
                  top: '10%',
-                 left: index === 0 ? '10%' : index === 1 ? '37.5%' : '65%'
+                 left: index === 0 ? '10%' : index === 1 ? '37.5%' : '65%',
+                 fontSize: '0.8rem'
                }">
-            <p class="font-bold">Position {{ position }}</p>
+            <p class="font-bold">P{{ position }}</p>
             <p>{{ getPlayerName(currentRotation[position - 1]) }}</p>
           </div>
           <!-- Front Row -->
           <div v-for="(position, index) in [2, 3, 4]" :key="position"
-               class="absolute w-[25%] text-center p-2"
+               class="absolute w-[25%] text-center p-1"
                :style="{
                  bottom: '10%',
-                 left: index === 0 ? '10%' : index === 1 ? '37.5%' : '65%'
+                 left: index === 0 ? '10%' : index === 1 ? '37.5%' : '65%',
+                 fontSize: '0.8rem'
                }">
-            <p class="font-bold">Position {{ position }}</p>
+            <p class="font-bold">P{{ position }}</p>
             <p>{{ getPlayerName(currentRotation[position - 1]) }}</p>
           </div>
         </div>
       </div>
   
       <!-- Player Statistics -->
-      <div class="player-statistics mb-6">
+      <div class="player-statistics mb-4">
         <h2 class="text-xl font-bold mb-2">Player Statistics</h2>
         <div class="overflow-x-auto">
           <table class="min-w-full bg-white">
@@ -151,12 +198,16 @@
       <div class="recent-events">
         <h2 class="text-xl font-bold mb-2">Recent Events</h2>
         <ul class="space-y-2">
-          <li v-for="event in recentEvents" :key="event.id" class="p-2 bg-gray-100 rounded">
+          <li v-for="event in recentEvents" :key="event.id" class="p-2 bg-gray-100 rounded text-sm">
             <template v-if="event.type === 'substitution'">
               Substitution: {{ getPlayerName(event.outPlayer) }} out, {{ getPlayerName(event.inPlayer) }} in
             </template>
             <template v-else>
-              {{ getPlayerName(event.player) }} - {{ event.action }} - {{ event.result }}
+              {{ getPlayerName(event.player) }} - {{ event.action }} 
+              <template v-if="event.type">- {{ event.type }}</template>
+              <template v-if="event.evaluation">- {{ event.evaluation }}</template>
+              - {{ event.result }}
+              <template v-if="event.target">- Target: {{ event.target }}</template>
             </template>
           </li>
         </ul>
@@ -174,11 +225,12 @@
       const route = useRoute();
       const router = useRouter();
       const game = ref(null);
-      const currentEvent = ref({ player: '', action: '', result: '' });
+      const currentEvent = ref({ player: '', action: '', type: '', evaluation: '', result: '', target: '' });
       const substitution = ref({ outPlayer: '', inPlayer: '' });
       const players = ref([]);
       const undoStack = ref([]);
       const redoStack = ref([]);
+      const isAdvancedInput = ref(false);
   
       onMounted(() => {
         const games = JSON.parse(localStorage.getItem('games') || '[]');
@@ -217,112 +269,145 @@
       });
   
       const setsWon = computed(() => {
-        const team = game.value.sets.filter(set => set.teamScore > set.opponentScore).length;
-        const opponent = game.value.sets.filter(set => set.opponentScore > set.teamScore).length;
-        return { team, opponent };
+      const team = game.value.sets.filter(set => set.teamScore > set.opponentScore).length;
+      const opponent = game.value.sets.filter(set => set.opponentScore > set.teamScore).length;
+      return { team, opponent };
+    });
+
+    const recentEvents = computed(() => {
+      return currentSet.value.events.slice(-5).reverse();
+    });
+
+    const canUndo = computed(() => undoStack.value.length > 0);
+    const canRedo = computed(() => redoStack.value.length > 0);
+
+    const getActionTypes = computed(() => {
+      switch (currentEvent.value.action) {
+        case 'serve':
+          return ['Float', 'Jump', 'Topspin'];
+        case 'receive':
+          return ['Forearm', 'Overhead'];
+        case 'set':
+          return ['Front', 'Back', 'Jump'];
+        case 'spike':
+          return ['Power', 'Off-speed', 'Tip'];
+        case 'block':
+          return ['Stuff', 'Soft'];
+        case 'dig':
+          return ['Forearm', 'Overhead', 'Dive'];
+        default:
+          return [];
+      }
+    });
+
+    const getEvaluations = computed(() => {
+      return ['Perfect', 'Good', 'OK', 'Poor'];
+    });
+
+    const getPlayerName = (playerId) => {
+      const player = players.value.find(p => p.id === playerId);
+      return player ? player.name : 'Unknown Player';
+    };
+
+    const formatDate = (dateString) => {
+      return new Date(dateString).toLocaleDateString();
+    };
+
+    const startNewSet = () => {
+      game.value.sets.push({
+        setNumber: game.value.sets.length + 1,
+        teamScore: 0,
+        opponentScore: 0,
+        events: []
       });
-  
-      const recentEvents = computed(() => {
-        return currentSet.value.events.slice(-5).reverse();
+      game.value.currentSet = game.value.sets.length;
+      saveGame();
+    };
+
+    const recordEvent = () => {
+      if (!currentEvent.value.player || !currentEvent.value.action || !currentEvent.value.result) {
+        alert('Please fill in all required event details');
+        return;
+      }
+
+      const event = {
+        id: Date.now(),
+        ...currentEvent.value
+      };
+
+      undoStack.value.push({ type: 'event', data: { ...currentSet.value } });
+      redoStack.value = [];
+
+      currentSet.value.events.push(event);
+
+      if (event.result === 'point') {
+        currentSet.value.teamScore++;
+        rotateTeam();
+      } else if (event.result === 'error') {
+        currentSet.value.opponentScore++;
+      }
+
+      checkSetEnd();
+
+      // Reset current event
+      currentEvent.value = { player: '', action: '', type: '', evaluation: '', result: '', target: '' };
+
+      saveGame();
+    };
+
+    const recordAdvancedEvent = () => {
+      if (!currentEvent.value.player || !currentEvent.value.action || !currentEvent.value.type || 
+          !currentEvent.value.evaluation || !currentEvent.value.result) {
+        alert('Please fill in all required event details');
+        return;
+      }
+
+      recordEvent(); // Use the same logic as basic event recording
+    };
+
+    const rotateTeam = () => {
+      game.value.currentRotation.unshift(game.value.currentRotation.pop());
+    };
+
+    const makeSubstitution = () => {
+      if (!substitution.value.outPlayer || !substitution.value.inPlayer) {
+        alert('Please select both players for substitution');
+        return;
+      }
+
+      const outIndex = currentRotation.value.indexOf(substitution.value.outPlayer);
+      if (outIndex === -1) {
+        alert('Selected player is not in the current rotation');
+        return;
+      }
+
+      undoStack.value.push({ 
+        type: 'substitution', 
+        data: { 
+          rotation: [...game.value.currentRotation],
+          events: [...currentSet.value.events]
+        } 
       });
-  
-      const canUndo = computed(() => undoStack.value.length > 0);
-      const canRedo = computed(() => redoStack.value.length > 0);
-  
-      const getPlayerName = (playerId) => {
-        const player = players.value.find(p => p.id === playerId);
-        return player ? player.name : 'Unknown Player';
-      };
-  
-      const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString();
-      };
-  
-      const startNewSet = () => {
-        game.value.sets.push({
-          setNumber: game.value.sets.length + 1,
-          teamScore: 0,
-          opponentScore: 0,
-          events: []
-        });
-        game.value.currentSet = game.value.sets.length;
-        saveGame();
-      };
-  
-      const recordEvent = () => {
-        if (!currentEvent.value.player || !currentEvent.value.action || !currentEvent.value.result) {
-          alert('Please fill in all event details');
-          return;
-        }
-  
-        const event = {
-          id: Date.now(),
-          ...currentEvent.value
-        };
-  
-        undoStack.value.push({ type: 'event', data: { ...currentSet.value } });
-        redoStack.value = [];
-  
-        currentSet.value.events.push(event);
-  
-        if (event.result === 'point') {
-          currentSet.value.teamScore++;
-          rotateTeam();
-        } else if (event.result === 'error') {
-          currentSet.value.opponentScore++;
-        }
-  
-        checkSetEnd();
-  
-        // Reset current event
-        currentEvent.value = { player: '', action: '', result: '' };
-  
-        saveGame();
-      };
-  
-      const rotateTeam = () => {
-        game.value.currentRotation.unshift(game.value.currentRotation.pop());
-      };
-  
-      const makeSubstitution = () => {
-        if (!substitution.value.outPlayer || !substitution.value.inPlayer) {
-          alert('Please select both players for substitution');
-          return;
-        }
-  
-        const outIndex = currentRotation.value.indexOf(substitution.value.outPlayer);
-        if (outIndex === -1) {
-          alert('Selected player is not in the current rotation');
-          return;
-        }
-  
-        undoStack.value.push({ 
-          type: 'substitution', 
-          data: { 
-            rotation: [...game.value.currentRotation],
-            events: [...currentSet.value.events]
-          } 
-        });
-        redoStack.value = [];
-  
-        // Update rotation
-        game.value.currentRotation[outIndex] = substitution.value.inPlayer;
-  
-        // Record substitution event
-        currentSet.value.events.push({
-          id: Date.now(),
-          type: 'substitution',
-          outPlayer: substitution.value.outPlayer,
-          inPlayer: substitution.value.inPlayer
-        });
-  
-        // Reset substitution form
-        substitution.value = { outPlayer: '', inPlayer: '' };
-  
-        saveGame();
-      };
-  
-      const checkSetEnd = () => {
+      redoStack.value = [];
+
+      // Update rotation
+      game.value.currentRotation[outIndex] = substitution.value.inPlayer;
+
+      // Record substitution event
+      currentSet.value.events.push({
+        id: Date.now(),
+        type: 'substitution',
+        outPlayer: substitution.value.outPlayer,
+        inPlayer: substitution.value.inPlayer
+      });
+
+      // Reset substitution form
+      substitution.value = { outPlayer: '', inPlayer: '' };
+
+      saveGame();
+    };
+
+    const checkSetEnd = () => {
       const { teamScore, opponentScore } = currentSet.value;
       const isRegularSet = game.value.currentSet < 5;
       const pointsToWin = isRegularSet ? 25 : 15;
@@ -429,6 +514,22 @@
       ).length;
     };
 
+    const toggleInputMethod = () => {
+      isAdvancedInput.value = !isAdvancedInput.value;
+    };
+
+    const selectPlayer = (playerId) => {
+      currentEvent.value.player = playerId;
+    };
+
+    const selectAction = (action) => {
+      currentEvent.value.action = action;
+    };
+
+    const selectResult = (result) => {
+      currentEvent.value.result = result;
+    };
+
     return {
       game,
       currentEvent,
@@ -440,15 +541,23 @@
       substitution,
       canUndo,
       canRedo,
+      isAdvancedInput,
+      getActionTypes,
+      getEvaluations,
       getPlayerName,
       formatDate,
       recordEvent,
+      recordAdvancedEvent,
       makeSubstitution,
       undoLastEvent,
       redoLastEvent,
       adjustScore,
       toggleGameStatus,
-      getPlayerStat
+      getPlayerStat,
+      toggleInputMethod,
+      selectPlayer,
+      selectAction,
+      selectResult
     };
   }
 };
