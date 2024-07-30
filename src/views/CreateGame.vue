@@ -1,37 +1,33 @@
 <template>
-    <div class="create-game p-6 bg-gray-100 rounded-lg shadow-md max-w-2xl mx-auto">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800">Create New Game</h2>
+    <div class="create-game p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-2xl mx-auto">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">Create New Game</h2>
       
       <form @submit.prevent="showConfirmationModal" class="space-y-6">
         <!-- Game Name -->
-        <div>
-          <label for="gameName" class="block text-sm font-medium text-gray-700">Game Name</label>
-          <input type="text" id="gameName" v-model="gameName" required
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+        <div class="form-group">
+          <label for="gameName" class="form-label">Game Name</label>
+          <input type="text" id="gameName" v-model="gameName" required class="form-input">
         </div>
   
         <!-- Game Date -->
-        <div>
-          <label for="gameDate" class="block text-sm font-medium text-gray-700">Game Date</label>
-          <input type="date" id="gameDate" v-model="gameDate" required
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+        <div class="form-group">
+          <label for="gameDate" class="form-label">Game Date</label>
+          <input type="date" id="gameDate" v-model="gameDate" required class="form-input">
         </div>
   
         <!-- Opponent Team Name -->
-        <div>
-          <label for="opponentTeam" class="block text-sm font-medium text-gray-700">Opponent Team Name</label>
-          <input type="text" id="opponentTeam" v-model="opponentTeam" required
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+        <div class="form-group">
+          <label for="opponentTeam" class="form-label">Opponent Team Name</label>
+          <input type="text" id="opponentTeam" v-model="opponentTeam" required class="form-input">
         </div>
   
         <!-- Player Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Select Players (minimum 6)</label>
-          <div class="mt-2 grid grid-cols-2 gap-2">
+        <div class="form-group">
+          <label class="form-label mb-2">Select Players (minimum 6)</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div v-for="player in players" :key="player.id" class="flex items-center">
-              <input type="checkbox" :id="'player-' + player.id" v-model="selectedPlayers" :value="player.id"
-                     class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-              <label :for="'player-' + player.id" class="ml-2 block text-sm text-gray-900">
+              <input type="checkbox" :id="'player-' + player.id" v-model="selectedPlayers" :value="player.id" class="form-checkbox">
+              <label :for="'player-' + player.id" class="ml-2 text-sm text-gray-900">
                 {{ player.name }} ({{ player.role }})
               </label>
             </div>
@@ -42,58 +38,19 @@
         </div>
   
         <!-- Initial Rotation -->
-        <div v-if="selectedPlayers.length >= 6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Set Initial Rotation</label>
-          <div class="relative w-full aspect-[3/2] bg-blue-100 border-2 border-blue-500 rounded-lg">
-            <!-- Back Row -->
-            <div class="absolute top-[10%] left-[10%] w-[25%]">
-              <select v-model="initialRotation[0]" class="w-full p-1 text-sm rounded">
-                <option value="">Position 1</option>
-                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
-                  {{ getPlayerName(playerId) }}
-                </option>
-              </select>
-            </div>
-            <div class="absolute top-[10%] left-[37.5%] w-[25%]">
-              <select v-model="initialRotation[5]" class="w-full p-1 text-sm rounded">
-                <option value="">Position 6</option>
-                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
-                  {{ getPlayerName(playerId) }}
-                </option>
-              </select>
-            </div>
-            <div class="absolute top-[10%] right-[10%] w-[25%]">
-              <select v-model="initialRotation[4]" class="w-full p-1 text-sm rounded">
-                <option value="">Position 5</option>
-                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
-                  {{ getPlayerName(playerId) }}
-                </option>
-              </select>
-            </div>
-            <!-- Front Row -->
-            <div class="absolute bottom-[10%] left-[10%] w-[25%]">
-              <select v-model="initialRotation[1]" class="w-full p-1 text-sm rounded">
-                <option value="">Position 2</option>
-                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
-                  {{ getPlayerName(playerId) }}
-                </option>
-              </select>
-            </div>
-            <div class="absolute bottom-[10%] left-[37.5%] w-[25%]">
-              <select v-model="initialRotation[2]" class="w-full p-1 text-sm rounded">
-                <option value="">Position 3</option>
-                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
-                  {{ getPlayerName(playerId) }}
-                </option>
-              </select>
-            </div>
-            <div class="absolute bottom-[10%] right-[10%] w-[25%]">
-              <select v-model="initialRotation[3]" class="w-full p-1 text-sm rounded">
-                <option value="">Position 4</option>
-                <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
-                  {{ getPlayerName(playerId) }}
-                </option>
-              </select>
+        <div v-if="selectedPlayers.length >= 6" class="form-group">
+          <label class="form-label mb-2">Set Initial Rotation</label>
+          <div class="relative w-full aspect-[3/2] bg-blue-100 border-2 border-blue-500 rounded-lg p-2">
+            <!-- Court layout -->
+            <div class="grid grid-cols-3 grid-rows-2 gap-2 h-full">
+              <div v-for="i in 6" :key="i" class="flex items-center justify-center">
+                <select v-model="initialRotation[i-1]" class="w-full p-1 text-sm rounded">
+                  <option value="">Position {{ i }}</option>
+                  <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
+                    {{ getPlayerName(playerId) }}
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
           <p v-if="!isRotationValid" class="mt-2 text-sm text-red-600">
@@ -103,15 +60,15 @@
   
         <button type="submit" 
                 :disabled="!isFormValid"
-                :class="['w-full p-2 rounded transition duration-300', 
+                :class="['w-full p-3 rounded transition duration-300', 
                          isFormValid ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed']">
           Create Game
         </button>
       </form>
   
       <!-- Confirmation Modal -->
-      <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-        <div class="bg-white p-5 rounded-lg shadow-xl max-w-md">
+      <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center p-4">
+        <div class="bg-white p-5 rounded-lg shadow-xl max-w-md w-full">
           <h3 class="text-lg font-bold mb-2">Confirm Game Creation</h3>
           <p class="mb-4">Are you sure you want to create this game?</p>
           <div class="flex justify-end space-x-2">
@@ -121,7 +78,7 @@
         </div>
       </div>
     </div>
-  </template>
+  </template>  
   
   <script>
   import { ref, computed, onMounted } from 'vue';
@@ -210,4 +167,47 @@
     }
   };
   </script>
+  <style scoped>
+  .form-group {
+    margin-bottom: 1rem;
+  }
   
+  .form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 0.25rem;
+  }
+  
+  .form-input {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #4a5568;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .form-input:focus {
+    border-color: #63b3ed;
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  }
+  
+  .form-checkbox {
+    border-radius: 0.25rem;
+    border-color: #e2e8f0;
+    color: #4299e1;
+  }
+  
+  .form-checkbox:focus {
+    border-color: #63b3ed;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  }
+  </style>

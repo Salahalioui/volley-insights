@@ -1,28 +1,41 @@
 <template>
-    <div class="results-screen p-4 bg-gray-100 rounded-lg shadow-md">
-      <h2 class="text-3xl font-bold mb-6 text-center">Recent Games</h2>
+    <div class="results-screen p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-6xl mx-auto">
+      <h2 class="text-3xl font-bold mb-8 text-center text-gray-800">Recent Games</h2>
   
       <!-- Search, Filter, Sort, and Import/Export Options -->
-      <div class="mb-4 space-y-4">
-        <div class="flex flex-wrap justify-between items-center">
-          <input v-model="searchQuery" placeholder="Search games..." class="p-2 border rounded w-full sm:w-auto mb-2 sm:mb-0">
-          <div class="flex space-x-2">
-            <select v-model="statusFilter" class="p-2 border rounded">
+      <div class="mb-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+          <input 
+            v-model="searchQuery" 
+            placeholder="Search games..." 
+            class="p-3 border rounded-lg w-full sm:w-64 focus:ring focus:ring-blue-300 transition duration-300"
+          >
+          <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+            <select 
+              v-model="statusFilter" 
+              class="p-3 border rounded-lg focus:ring focus:ring-blue-300 transition duration-300"
+            >
               <option value="all">All Games</option>
               <option value="completed">Completed</option>
               <option value="in_progress">In Progress</option>
             </select>
-            <select v-model="sortOption" class="p-2 border rounded">
+            <select 
+              v-model="sortOption" 
+              class="p-3 border rounded-lg focus:ring focus:ring-blue-300 transition duration-300"
+            >
               <option value="date">Sort by Date</option>
               <option value="name">Sort by Name</option>
             </select>
           </div>
         </div>
-        <div class="flex justify-end space-x-2">
-          <button @click="exportAllGames" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+        <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+          <button 
+            @click="exportAllGames" 
+            class="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition duration-300 w-full sm:w-auto"
+          >
             Export All Games
           </button>
-          <label class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition cursor-pointer">
+          <label class="bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition duration-300 cursor-pointer text-center w-full sm:w-auto">
             Import Games
             <input type="file" @change="importGames" accept=".json" class="hidden">
           </label>
@@ -31,36 +44,53 @@
   
       <!-- Game List -->
       <TransitionGroup name="list" tag="div" class="game-list space-y-4">
-        <div v-for="game in paginatedGames" :key="game.id" 
-             class="game-item bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xl font-semibold">{{ game.name }}</h3>
-            <span class="text-sm" :class="{'text-green-500': game.status === 'completed', 'text-yellow-500': game.status === 'in_progress'}">
+        <div 
+          v-for="game in paginatedGames" 
+          :key="game.id" 
+          class="game-item bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300"
+        >
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+            <h3 class="text-xl font-semibold text-gray-800">{{ game.name }}</h3>
+            <span 
+              class="text-sm font-medium px-2 py-1 rounded-full mt-2 sm:mt-0"
+              :class="{
+                'bg-green-100 text-green-800': game.status === 'completed',
+                'bg-yellow-100 text-yellow-800': game.status === 'in_progress'
+              }"
+            >
               {{ formatStatus(game.status) }}
             </span>
           </div>
-          <p class="text-gray-600">{{ formatDate(game.date) }}</p>
-          <p class="mt-2">
-            <span class="font-semibold">Our Team:</span> {{ getGameScore(game).team }} - 
-            <span class="font-semibold">{{ game.opponentTeam }}:</span> {{ getGameScore(game).opponent }}
+          <p class="text-gray-600 mb-2">{{ formatDate(game.date) }}</p>
+          <p class="text-lg font-medium mb-4">
+            <span class="text-blue-600">Our Team:</span> {{ getGameScore(game).team }} - 
+            <span class="text-red-600">{{ game.opponentTeam }}:</span> {{ getGameScore(game).opponent }}
           </p>
-          <div class="mt-4 flex flex-wrap justify-end space-x-2 space-y-2">
-            <button v-if="game.status === 'completed'" 
-                    @click="viewGameStats(game.id)"
-                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+          <div class="flex flex-wrap justify-end space-x-2 space-y-2 sm:space-y-0">
+            <button 
+              v-if="game.status === 'completed'" 
+              @click="viewGameStats(game.id)"
+              class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+            >
               View Stats
             </button>
-            <button v-else 
-                    @click="continueGame(game.id)"
-                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+            <button 
+              v-else 
+              @click="continueGame(game.id)"
+              class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300"
+            >
               Continue Game
             </button>
-            <button @click="exportGame(game)"
-                    class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition">
+            <button 
+              @click="exportGame(game)"
+              class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition duration-300"
+            >
               Export
             </button>
-            <button @click="deleteGame(game.id)"
-                    class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+            <button 
+              @click="deleteGame(game.id)"
+              class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300"
+            >
               Delete
             </button>
           </div>
@@ -68,23 +98,37 @@
       </TransitionGroup>
   
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="pagination mt-6 flex justify-center space-x-2">
-        <button @click="currentPage--" :disabled="currentPage === 1" class="px-3 py-1 rounded bg-gray-200 disabled:opacity-50">
+      <div v-if="totalPages > 1" class="pagination mt-8 flex justify-center space-x-2">
+        <button 
+          @click="currentPage--" 
+          :disabled="currentPage === 1" 
+          class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition duration-300 disabled:opacity-50"
+        >
           Previous
         </button>
-        <button v-for="page in displayedPages" :key="page" 
-                @click="currentPage = page"
-                :class="['px-3 py-1 rounded', currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-200']">
+        <button 
+          v-for="page in displayedPages" 
+          :key="page" 
+          @click="currentPage = page"
+          :class="[
+            'px-4 py-2 rounded-lg transition duration-300',
+            currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'
+          ]"
+        >
           {{ page }}
         </button>
-        <button @click="currentPage++" :disabled="currentPage === totalPages" class="px-3 py-1 rounded bg-gray-200 disabled:opacity-50">
+        <button 
+          @click="currentPage++" 
+          :disabled="currentPage === totalPages" 
+          class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition duration-300 disabled:opacity-50"
+        >
           Next
         </button>
       </div>
   
       <!-- Loading and Error States -->
-      <div v-if="isLoading" class="text-center mt-4">Loading games...</div>
-      <div v-if="error" class="text-center mt-4 text-red-500">{{ error }}</div>
+      <div v-if="isLoading" class="text-center mt-8 text-gray-600">Loading games...</div>
+      <div v-if="error" class="text-center mt-8 text-red-500">{{ error }}</div>
   
       <!-- Confirmation Modal -->
       <ConfirmationModal 
@@ -308,6 +352,17 @@
   .list-leave-to {
     opacity: 0;
     transform: translateX(30px);
+  }
+  </style>
+  <style scoped>
+  .list-enter-active,
+  .list-leave-active {
+    transition: all 0.5s ease;
+  }
+  .list-enter-from,
+  .list-leave-to {
+    opacity: 0;
+    transform: translateY(30px);
   }
   </style>
   
