@@ -2,20 +2,23 @@
     <div class="results-screen p-4 bg-gray-100 rounded-lg shadow-md">
       <h2 class="text-3xl font-bold mb-6 text-center">Recent Games</h2>
   
-      <!-- Filter, Sort, and Import/Export Options -->
-      <div class="mb-4 flex flex-wrap justify-between items-center">
-        <div class="flex space-x-2 mb-2 sm:mb-0">
-          <select v-model="statusFilter" class="p-2 border rounded">
-            <option value="all">All Games</option>
-            <option value="completed">Completed</option>
-            <option value="in_progress">In Progress</option>
-          </select>
-          <select v-model="sortOption" class="p-2 border rounded">
-            <option value="date">Sort by Date</option>
-            <option value="name">Sort by Name</option>
-          </select>
+      <!-- Search, Filter, Sort, and Import/Export Options -->
+      <div class="mb-4 space-y-4">
+        <div class="flex flex-wrap justify-between items-center">
+          <input v-model="searchQuery" placeholder="Search games..." class="p-2 border rounded w-full sm:w-auto mb-2 sm:mb-0">
+          <div class="flex space-x-2">
+            <select v-model="statusFilter" class="p-2 border rounded">
+              <option value="all">All Games</option>
+              <option value="completed">Completed</option>
+              <option value="in_progress">In Progress</option>
+            </select>
+            <select v-model="sortOption" class="p-2 border rounded">
+              <option value="date">Sort by Date</option>
+              <option value="name">Sort by Name</option>
+            </select>
+          </div>
         </div>
-        <div class="flex space-x-2">
+        <div class="flex justify-end space-x-2">
           <button @click="exportAllGames" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
             Export All Games
           </button>
@@ -27,8 +30,8 @@
       </div>
   
       <!-- Game List -->
-      <div class="game-list space-y-4">
-        <div v-for="game in filteredAndSortedGames" :key="game.id" 
+      <TransitionGroup name="list" tag="div" class="game-list space-y-4">
+        <div v-for="game in paginatedGames" :key="game.id" 
              class="game-item bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-200">
           <div class="flex justify-between items-center">
             <h3 class="text-xl font-semibold">{{ game.name }}</h3>
@@ -41,7 +44,7 @@
             <span class="font-semibold">Our Team:</span> {{ getGameScore(game).team }} - 
             <span class="font-semibold">{{ game.opponentTeam }}:</span> {{ getGameScore(game).opponent }}
           </p>
-          <div class="mt-4 flex justify-end space-x-2">
+          <div class="mt-4 flex flex-wrap justify-end space-x-2 space-y-2">
             <button v-if="game.status === 'completed'" 
                     @click="viewGameStats(game.id)"
                     class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
@@ -56,65 +59,125 @@
                     class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition">
               Export
             </button>
+            <button @click="deleteGame(game.id)"
+                    class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+              Delete
+            </button>
           </div>
         </div>
-      </div>
+      </TransitionGroup>
   
       <!-- Pagination -->
       <div v-if="totalPages > 1" class="pagination mt-6 flex justify-center space-x-2">
-        <button v-for="page in totalPages" :key="page" 
+        <button @click="currentPage--" :disabled="currentPage === 1" class="px-3 py-1 rounded bg-gray-200 disabled:opacity-50">
+          Previous
+        </button>
+        <button v-for="page in displayedPages" :key="page" 
                 @click="currentPage = page"
                 :class="['px-3 py-1 rounded', currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-200']">
           {{ page }}
         </button>
+        <button @click="currentPage++" :disabled="currentPage === totalPages" class="px-3 py-1 rounded bg-gray-200 disabled:opacity-50">
+          Next
+        </button>
       </div>
+  
+      <!-- Loading and Error States -->
+      <div v-if="isLoading" class="text-center mt-4">Loading games...</div>
+      <div v-if="error" class="text-center mt-4 text-red-500">{{ error }}</div>
+  
+      <!-- Confirmation Modal -->
+      <ConfirmationModal 
+        v-if="showDeleteConfirmation"
+        :message="'Are you sure you want to delete this game?'"
+        @confirm="confirmDelete"
+        @cancel="cancelDelete"
+      />
     </div>
   </template>
   
   <script>
-  import { ref, computed } from 'vue';
+  import { ref, computed, onMounted, watch } from 'vue';
   import { useRouter } from 'vue-router';
+  import ConfirmationModal from '../components/ConfirmationModal.vue';
   
   export default {
     name: 'ResultsScreen',
+    components: {
+      ConfirmationModal
+    },
     setup() {
       const router = useRouter();
       const games = ref([]);
       const statusFilter = ref('all');
       const sortOption = ref('date');
+      const searchQuery = ref('');
       const currentPage = ref(1);
       const gamesPerPage = 10;
+      const isLoading = ref(true);
+      const error = ref(null);
+      const showDeleteConfirmation = ref(false);
+      const gameToDelete = ref(null);
   
-      const fetchGames = () => {
-        const storedGames = localStorage.getItem('games');
-        if (storedGames) {
-          games.value = JSON.parse(storedGames);
+      const fetchGames = async () => {
+        isLoading.value = true;
+        error.value = null;
+        try {
+          const storedGames = localStorage.getItem('games');
+          if (storedGames) {
+            games.value = JSON.parse(storedGames);
+          }
+        } catch (err) {
+          console.error('Error fetching games:', err);
+          error.value = 'Failed to load games. Please try again.';
+        } finally {
+          isLoading.value = false;
         }
       };
   
-      fetchGames();
+      onMounted(fetchGames);
   
       const filteredAndSortedGames = computed(() => {
         let filtered = games.value;
         if (statusFilter.value !== 'all') {
           filtered = filtered.filter(game => game.status === statusFilter.value);
         }
+        if (searchQuery.value) {
+          const query = searchQuery.value.toLowerCase();
+          filtered = filtered.filter(game => 
+            game.name.toLowerCase().includes(query) ||
+            game.opponentTeam.toLowerCase().includes(query)
+          );
+        }
         
-        const sorted = filtered.sort((a, b) => {
+        return filtered.sort((a, b) => {
           if (sortOption.value === 'date') {
             return new Date(b.date) - new Date(a.date);
           } else {
             return a.name.localeCompare(b.name);
           }
         });
-  
-        const startIndex = (currentPage.value - 1) * gamesPerPage;
-        const endIndex = startIndex + gamesPerPage;
-        return sorted.slice(startIndex, endIndex);
       });
   
       const totalPages = computed(() => {
-        return Math.ceil(games.value.length / gamesPerPage);
+        return Math.ceil(filteredAndSortedGames.value.length / gamesPerPage);
+      });
+  
+      const paginatedGames = computed(() => {
+        const startIndex = (currentPage.value - 1) * gamesPerPage;
+        const endIndex = startIndex + gamesPerPage;
+        return filteredAndSortedGames.value.slice(startIndex, endIndex);
+      });
+  
+      const displayedPages = computed(() => {
+        const range = 2;
+        const start = Math.max(1, currentPage.value - range);
+        const end = Math.min(totalPages.value, currentPage.value + range);
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+      });
+  
+      watch([statusFilter, sortOption, searchQuery], () => {
+        currentPage.value = 1;
       });
   
       const formatDate = (dateString) => {
@@ -191,13 +254,35 @@
         }
       };
   
+      const deleteGame = (gameId) => {
+        gameToDelete.value = gameId;
+        showDeleteConfirmation.value = true;
+      };
+  
+      const confirmDelete = () => {
+        games.value = games.value.filter(game => game.id !== gameToDelete.value);
+        localStorage.setItem('games', JSON.stringify(games.value));
+        showDeleteConfirmation.value = false;
+        gameToDelete.value = null;
+      };
+  
+      const cancelDelete = () => {
+        showDeleteConfirmation.value = false;
+        gameToDelete.value = null;
+      };
+  
       return {
         games,
         statusFilter,
         sortOption,
+        searchQuery,
         currentPage,
-        filteredAndSortedGames,
+        paginatedGames,
         totalPages,
+        displayedPages,
+        isLoading,
+        error,
+        showDeleteConfirmation,
         formatDate,
         formatStatus,
         getGameScore,
@@ -205,9 +290,24 @@
         continueGame,
         exportGame,
         exportAllGames,
-        importGames
+        importGames,
+        deleteGame,
+        confirmDelete,
+        cancelDelete
       };
     }
   };
   </script>
+  
+  <style scoped>
+  .list-enter-active,
+  .list-leave-active {
+    transition: all 0.5s ease;
+  }
+  .list-enter-from,
+  .list-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  </style>
   
