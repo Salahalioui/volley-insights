@@ -19,7 +19,7 @@
       </div>
   
       <!-- Scoreboard -->
-      <div class="scoreboard mb-4 p-2 md:p-4 bg-blue-100 rounded-lg flex justify-between items-center">
+      <div v-if="currentSet" class="scoreboard mb-4 p-2 md:p-4 bg-blue-100 rounded-lg flex justify-between items-center">
         <div class="team-score text-center">
           <h2 class="text-lg md:text-xl font-bold">Our Team</h2>
           <p class="text-3xl md:text-4xl font-bold">{{ currentSet.teamScore }}</p>
@@ -36,6 +36,13 @@
           <button @click="adjustScore('opponent', 1)" class="bg-green-500 text-white p-1 rounded mr-1">+</button>
           <button @click="adjustScore('opponent', -1)" class="bg-red-500 text-white p-1 rounded">-</button>
         </div>
+      </div>
+  
+      <!-- Serving Indicator -->
+      <div class="serving-indicator mb-4 text-center">
+        <p class="text-lg font-bold">
+          Serving Team: {{ servingTeam === 'team' ? 'Our Team' : game.opponentTeam }}
+        </p>
       </div>
   
       <!-- Event Input Toggle -->
@@ -216,7 +223,7 @@
   </template>
   
   <script>
-  import { ref, computed, onMounted } from 'vue';
+  import { ref, computed, onMounted, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   
   export default {
@@ -231,6 +238,7 @@
       const undoStack = ref([]);
       const redoStack = ref([]);
       const isAdvancedInput = ref(false);
+      const servingTeam = ref('team');
   
       onMounted(() => {
         const games = JSON.parse(localStorage.getItem('games') || '[]');
@@ -257,18 +265,21 @@
       });
   
       const currentSet = computed(() => {
-        return game.value.sets[game.value.currentSet - 1] || { teamScore: 0, opponentScore: 0, events: [] };
-      });
-  
-      const currentRotation = computed(() => {
-        return game.value.currentRotation;
-      });
-  
-      const benchPlayers = computed(() => {
-        return game.value.players.filter(playerId => !currentRotation.value.includes(playerId));
-      });
-  
-      const setsWon = computed(() => {
+      return game.value && game.value.sets[game.value.currentSet - 1] 
+        ? game.value.sets[game.value.currentSet - 1] 
+        : { teamScore: 0, opponentScore: 0, events: [] };
+    });
+
+    const currentRotation = computed(() => {
+      return game.value ? game.value.currentRotation : [];
+    });
+
+    const benchPlayers = computed(() => {
+      return game.value ? game.value.players.filter(playerId => !currentRotation.value.includes(playerId)) : [];
+    });
+
+    const setsWon = computed(() => {
+      if (!game.value) return { team: 0, opponent: 0 };
       const team = game.value.sets.filter(set => set.teamScore > set.opponentScore).length;
       const opponent = game.value.sets.filter(set => set.opponentScore > set.teamScore).length;
       return { team, opponent };
@@ -314,6 +325,7 @@
     };
 
     const startNewSet = () => {
+      if (!game.value) return;
       game.value.sets.push({
         setNumber: game.value.sets.length + 1,
         teamScore: 0,
@@ -322,6 +334,15 @@
       });
       game.value.currentSet = game.value.sets.length;
       saveGame();
+    };
+
+    const rotateTeam = () => {
+      if (!game.value || !game.value.currentRotation) return;
+      game.value.currentRotation.unshift(game.value.currentRotation.pop());
+    };
+
+    const switchServingTeam = () => {
+      servingTeam.value = servingTeam.value === 'team' ? 'opponent' : 'team';
     };
 
     const recordEvent = () => {
@@ -335,16 +356,28 @@
         ...currentEvent.value
       };
 
-      undoStack.value.push({ type: 'event', data: { ...currentSet.value } });
+      undoStack.value.push({ type: 'event', data: { ...currentSet.value, servingTeam: servingTeam.value } });
       redoStack.value = [];
 
       currentSet.value.events.push(event);
 
       if (event.result === 'point') {
-        currentSet.value.teamScore++;
-        rotateTeam();
+        if (servingTeam.value === 'team') {
+          currentSet.value.teamScore++;
+        } else {
+          currentSet.value.opponentScore++;
+          rotateTeam();
+          switchServingTeam();
+        }
       } else if (event.result === 'error') {
-        currentSet.value.opponentScore++;
+        if (servingTeam.value === 'team') {
+          currentSet.value.opponentScore++;
+          switchServingTeam();
+        } else {
+          currentSet.value.teamScore++;
+          rotateTeam();
+          switchServingTeam();
+        }
       }
 
       checkSetEnd();
@@ -363,10 +396,6 @@
       }
 
       recordEvent(); // Use the same logic as basic event recording
-    };
-
-    const rotateTeam = () => {
-      game.value.currentRotation.unshift(game.value.currentRotation.pop());
     };
 
     const makeSubstitution = () => {
@@ -440,6 +469,7 @@
     };
 
     const saveGame = () => {
+      if (!game.value) return;
       const games = JSON.parse(localStorage.getItem('games') || '[]');
       const index = games.findIndex(g => g.id === game.value.id);
       if (index !== -1) {
@@ -452,10 +482,11 @@
       if (undoStack.value.length === 0) return;
 
       const lastAction = undoStack.value.pop();
-      redoStack.value.push({ type: lastAction.type, data: { ...currentSet.value } });
+      redoStack.value.push({ type: lastAction.type, data: { ...currentSet.value, servingTeam: servingTeam.value } });
 
       if (lastAction.type === 'event') {
         Object.assign(currentSet.value, lastAction.data);
+        servingTeam.value = lastAction.data.servingTeam;
       } else if (lastAction.type === 'substitution') {
         game.value.currentRotation = [...lastAction.data.rotation];
         currentSet.value.events = [...lastAction.data.events];
@@ -468,10 +499,11 @@
       if (redoStack.value.length === 0) return;
 
       const nextAction = redoStack.value.pop();
-      undoStack.value.push({ type: nextAction.type, data: { ...currentSet.value } });
+      undoStack.value.push({ type: nextAction.type, data: { ...currentSet.value, servingTeam: servingTeam.value } });
 
       if (nextAction.type === 'event') {
         Object.assign(currentSet.value, nextAction.data);
+        servingTeam.value = nextAction.data.servingTeam;
       } else if (nextAction.type === 'substitution') {
         game.value.currentRotation = [...nextAction.data.rotation];
         currentSet.value.events = [...nextAction.data.events];
@@ -481,7 +513,7 @@
     };
 
     const adjustScore = (team, amount) => {
-      undoStack.value.push({ type: 'score', data: { ...currentSet.value } });
+      undoStack.value.push({ type: 'score', data: { ...currentSet.value, servingTeam: servingTeam.value } });
       redoStack.value = [];
 
       if (team === 'team') {
@@ -495,6 +527,7 @@
     };
 
     const toggleGameStatus = () => {
+      if (!game.value) return;
       if (game.value.status === 'not_started') {
         game.value.status = 'in_progress';
       } else if (game.value.status === 'in_progress') {
@@ -530,6 +563,13 @@
       currentEvent.value.result = result;
     };
 
+    watch(() => game.value?.currentSet, (newSet, oldSet) => {
+      if (newSet !== oldSet) {
+        // Switch serving team at the start of a new set
+        switchServingTeam();
+      }
+    });
+
     return {
       game,
       currentEvent,
@@ -542,6 +582,7 @@
       canUndo,
       canRedo,
       isAdvancedInput,
+      servingTeam,
       getActionTypes,
       getEvaluations,
       getPlayerName,
