@@ -228,15 +228,26 @@
           </li>
         </ul>
       </div>
+      <!-- Add this button to toggle the stat screen -->
+  <button @click="toggleStatScreen" class="bg-blue-500 text-white p-2 rounded mt-4">
+    {{ showStatScreen ? 'Hide Stats' : 'Show Stats' }}
+  </button>
+
+  <!-- Add the StatScreen component -->
+  <StatScreen v-if="showStatScreen" :game="gameWithPlayerDetails" />
     </div>
   </template>
   
   <script>
   import { ref, computed, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
+  import StatScreen from '../components/StatScreen.vue';
   
   export default {
     name: 'GameView',
+    components: {
+    StatScreen
+  },
     setup() {
       const route = useRoute();
       const router = useRouter();
@@ -248,6 +259,7 @@
       const redoStack = ref([]);
       const isAdvancedInput = ref(false);
       const isOpponentServing = ref(false);
+      
   
       onMounted(() => {
         const games = JSON.parse(localStorage.getItem('games') || '[]');
@@ -620,6 +632,19 @@
     const selectResult = (result) => {
       currentEvent.value.result = result;
     };
+    const showStatScreen = ref(false);
+    
+
+    const toggleStatScreen = () => {
+      showStatScreen.value = !showStatScreen.value;
+    };
+    const gameWithPlayerDetails = computed(() => {
+      if (!game.value) return null;
+      return {
+        ...game.value,
+        playerDetails: players.value
+      };
+    });
 
     return {
       game,
@@ -652,7 +677,10 @@
       selectAction,
       selectResult,
       rotateManually,
-      toggleServingTeam
+      toggleServingTeam,
+      showStatScreen,
+      toggleStatScreen,
+      gameWithPlayerDetails
     };
   }
 };
