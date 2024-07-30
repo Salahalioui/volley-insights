@@ -25,8 +25,8 @@ const routes = [
   },
   {
     path: '/stats/:id',
-    name: 'Stats',
-    component: () => import('@/views/Stats.vue')
+    name: 'StatScreen',
+    component: () => import('@/components/StatScreen.vue'),
   },
   {
     path: '/results',
