@@ -283,7 +283,7 @@
       };
   
       const viewGameStats = (gameId) => {
-        router.push({ name: 'GameStats', params: { id: gameId } });
+        router.push({ name: 'StatScreen', params: { id: gameId } });
       };
   
       const continueGame = (gameId) => {

@@ -29,9 +29,9 @@
           </div>
         </div>
         <div class="set-info text-center">
-          <p class="text-xl md:text-2xl font-bold">Set {{ game.currentSet }}</p>
-          <p class="text-lg md:text-xl">{{ setsWon.team }} - {{ setsWon.opponent }}</p>
-        </div>
+      <p class="text-xl md:text-2xl font-bold">Set {{ game.currentSet }}</p>
+      <p class="text-lg md:text-xl">{{ setsWon.team }} - {{ setsWon.opponent }}</p>
+    </div>
         <div class="opponent-score text-center">
           <h2 class="text-lg md:text-xl font-bold">{{ game.opponentTeam }}</h2>
           <p class="text-3xl md:text-4xl font-bold">{{ currentSet.opponentScore }}</p>
@@ -244,54 +244,70 @@
   </template>
   
   <script>
-  import { ref, computed, onMounted } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
-  import StatScreen from '../components/StatScreen.vue';
-  
-  export default {
-    name: 'GameView',
-    components: {
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import StatScreen from '../components/StatScreen.vue';
+
+export default {
+  name: 'GameView',
+  components: {
     StatScreen
   },
-    setup() {
-      const route = useRoute();
-      const router = useRouter();
-      const game = ref(null);
-      const currentEvent = ref({ player: '', action: '', type: '', evaluation: '', result: '', target: '' });
-      const substitution = ref({ outPlayer: '', inPlayer: '' });
-      const players = ref([]);
-      const undoStack = ref([]);
-      const redoStack = ref([]);
-      const isAdvancedInput = ref(false);
-      const isOpponentServing = ref(false);
-      
+  setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const game = ref(null);
+    const currentEvent = ref({ player: '', action: '', type: '', evaluation: '', result: '', target: '' });
+    const substitution = ref({ outPlayer: '', inPlayer: '' });
+    const players = ref([]);
+    const undoStack = ref([]);
+    const redoStack = ref([]);
+    const isAdvancedInput = ref(false);
+    const isOpponentServing = ref(false);
+    const setsWon = ref({ team: 0, opponent: 0 }); // Declare setsWon as a ref
   
-      onMounted(() => {
+
+    onMounted(() => {
+      try {
         const games = JSON.parse(localStorage.getItem('games') || '[]');
         game.value = games.find(g => g.id === parseInt(route.params.id));
         if (!game.value) {
           router.push({ name: 'Home' });
           return;
         }
-        
+
         const storedPlayers = JSON.parse(localStorage.getItem('players') || '[]');
         players.value = storedPlayers;
-  
+
         if (game.value.sets.length === 0) {
           startNewSet();
-        }
+        } 
         if (!game.value.currentRotation) {
-        game.value.currentRotation = [...game.value.initialRotation];
-      }
+          game.value.currentRotation = [...game.value.initialRotation];
+        }
 
-      if (!game.value.status) {
-        game.value.status = 'not_started';
+        if (!game.value.status) {
+          game.value.status = 'not_started';
+        }
+
+        // Initialize setsWon if it doesn't exist in loaded game data
+        if (!game.value.setsWon) { 
+          game.value.setsWon = { team: 0, opponent: 0 };
+        } else {
+          // Update the ref with the loaded values
+          setsWon.value = { ...game.value.setsWon }; 
+        }
+
+      } catch (error) {
+        console.error("Error loading game data:", error);
+        alert("An error occurred while loading the game. Please try again.");
+        router.push({ name: 'Home' });
       }
     });
 
     const currentSet = computed(() => {
-      return game.value && game.value.sets[game.value.currentSet - 1] 
-        ? game.value.sets[game.value.currentSet - 1] 
+      return game.value && game.value.sets[game.value.currentSet - 1]
+        ? game.value.sets[game.value.currentSet - 1]
         : { teamScore: 0, opponentScore: 0, events: [] };
     });
 
@@ -303,12 +319,7 @@
       return game.value ? game.value.players.filter(playerId => !currentRotation.value.includes(playerId)) : [];
     });
 
-    const setsWon = computed(() => {
-      if (!game.value) return { team: 0, opponent: 0 };
-      const team = game.value.sets.filter(set => set.teamScore > set.opponentScore).length;
-      const opponent = game.value.sets.filter(set => set.opponentScore > set.teamScore).length;
-      return { team, opponent };
-    });
+
 
     const recentEvents = computed(() => {
       return currentSet.value.events.slice(-5).reverse();
@@ -491,18 +502,20 @@
     };
 
     const endSet = (winner) => {
-      if (winner === 'team') {
-        setsWon.value.team++;
-      } else {
-        setsWon.value.opponent++;
-      }
+  if (winner === 'team') {
+    setsWon.value.team++; // Increment setsWon.value
+    game.value.setsWon.team++; // Update game.value.setsWon.team
+  } else {
+    setsWon.value.opponent++; // Increment setsWon.value
+    game.value.setsWon.opponent++; // Update game.value.setsWon.opponent
+  }
 
-      if (setsWon.value.team === 3 || setsWon.value.opponent === 3) {
-        endGame();
-      } else {
-        startNewSet();
-      }
-    };
+  if (setsWon.value.team === 3 || setsWon.value.opponent === 3) {
+    endGame();
+  } else {
+    startNewSet();
+  }
+};
 
     const endGame = () => {
       game.value.status = 'completed';
