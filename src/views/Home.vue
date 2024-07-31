@@ -106,34 +106,38 @@
       });
   
       const fetchData = () => {
-        // Fetch games data
-        const storedGames = JSON.parse(localStorage.getItem('games') || '[]');
-        recentGames.value = storedGames.slice(-5).reverse(); // Get last 5 games
-        totalGames.value = storedGames.length;
-  
-        // Fetch players data
-        const storedPlayers = JSON.parse(localStorage.getItem('players') || '[]');
-        totalPlayers.value = storedPlayers.length;
-  
-        // Calculate top scorer
-        if (storedGames.length > 0 && storedPlayers.length > 0) {
-          const playerScores = {};
-          storedGames.forEach(game => {
-            game.sets.forEach(set => {
-              set.events.forEach(event => {
-                if (event.action === 'spike' && event.result === 'point') {
-                  playerScores[event.player] = (playerScores[event.player] || 0) + 1;
-                }
-              });
-            });
-          });
-          const topScorerId = Object.keys(playerScores).reduce((a, b) => playerScores[a] > playerScores[b] ? a : b);
-          const topScorerPlayer = storedPlayers.find(player => player.id === parseInt(topScorerId));
-          if (topScorerPlayer) {
-            topScorer.value = { name: topScorerPlayer.name, points: playerScores[topScorerId] };
+  // Fetch games data
+  const storedGames = JSON.parse(localStorage.getItem('games') || '[]');
+  recentGames.value = storedGames.slice(-5).reverse(); 
+  totalGames.value = storedGames.length;
+
+  // Fetch players data
+  const storedPlayers = JSON.parse(localStorage.getItem('players') || '[]');
+  totalPlayers.value = storedPlayers.length;
+
+  // Calculate top scorer
+  if (storedGames.length > 0 && storedPlayers.length > 0) {
+    const playerScores = {};
+    storedGames.forEach(game => {
+      game.sets.forEach(set => {
+        set.events.forEach(event => {
+          if (event.action === 'spike' && event.result === 'point') {
+            playerScores[event.player] = (playerScores[event.player] || 0) + 1;
           }
-        }
-      };
+        });
+      });
+    });
+    // Use optional chaining and a default value for reduce
+    const topScorerId = Object.keys(playerScores)?.reduce((a, b) => playerScores[a] > playerScores[b] ? a : b, null) || null; 
+    const topScorerPlayer = storedPlayers.find(player => player.id === parseInt(topScorerId));
+    if (topScorerPlayer) {
+      topScorer.value = { name: topScorerPlayer.name, points: playerScores[topScorerId] };
+    } else {
+      // If no top scorer found, reset to default
+      topScorer.value = { name: 'N/A', points: 0 }; 
+    }
+  }
+};
   
       const winPercentage = computed(() => {
         const completedGames = recentGames.value.filter(game => game.status === 'completed');
