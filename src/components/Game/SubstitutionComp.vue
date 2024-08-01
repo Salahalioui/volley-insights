@@ -67,7 +67,7 @@ export default {
 
 <style scoped>
 .substitution {
-  background-color: #fef3c7;
+  background-color: #ffffff;
   border-radius: 1rem;
   padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -77,7 +77,7 @@ export default {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
-  color: #92400e;
+  color: #000000;
 }
 
 .player-selection {
@@ -93,14 +93,14 @@ export default {
 
 .swap-icon {
   font-size: 1.5rem;
-  color: #92400e;
+  color: #0e5792;
 }
 
 label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
-  color: #92400e;
+  color: #000000;
 }
 
 .form-select {
