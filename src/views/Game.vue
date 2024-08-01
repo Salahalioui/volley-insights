@@ -1,257 +1,124 @@
 <template>
-    <div v-if="game" class="game-page p-2 md:p-4 max-w-4xl mx-auto">
-      <h1 class="text-2xl md:text-3xl font-bold mb-4 text-center">{{ game.name }}</h1>
-      
-      <!-- Game Info and Controls -->
-      <div class="game-info-controls mb-4 flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-100 rounded-lg p-4">
-        <div class="game-info mb-2 md:mb-0">
-          <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
-          <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
-          <p><strong>Status:</strong> {{ game.status }}</p>
-        </div>
-        <div class="game-controls flex flex-wrap justify-center md:justify-end mt-2 md:mt-0">
-          <button @click="undoLastEvent" class="btn btn-yellow mr-2 mb-2" :disabled="!canUndo">Undo</button>
-          <button @click="redoLastEvent" class="btn btn-green mr-2 mb-2" :disabled="!canRedo">Redo</button>
-          <button @click="toggleGameStatus" class="btn btn-blue mb-2">
-            {{ game.status === 'in_progress' ? 'Pause Game' : 'Resume Game' }}
-          </button>
-        </div>
+  <div v-if="game" class="game-page p-2 md:p-4 max-w-4xl mx-auto">
+    <h1 class="text-2xl md:text-3xl font-bold mb-4 text-center">{{ game.name }}</h1>
+    
+    <!-- Game Info and Controls -->
+    <div class="game-info-controls mb-4 flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-100 rounded-lg p-4">
+      <div class="game-info mb-2 md:mb-0">
+        <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
+        <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
+        <p><strong>Status:</strong> {{ game.status }}</p>
       </div>
-  
-      <!-- Scoreboard -->
-      <div v-if="currentSet" class="scoreboard mb-4 p-4 bg-blue-100 rounded-lg flex justify-between items-center">
-        <div class="team-score text-center">
-          <h2 class="text-lg md:text-xl font-bold">Our Team</h2>
-          <p class="text-3xl md:text-4xl font-bold">{{ currentSet.teamScore }}</p>
-          <div class="flex justify-center mt-2">
-            <button @click="adjustScore('team', 1)" class="btn btn-green mr-1">+</button>
-            <button @click="adjustScore('team', -1)" class="btn btn-red">-</button>
-          </div>
-        </div>
-        <div class="set-info text-center">
-      <p class="text-xl md:text-2xl font-bold">Set {{ game.currentSet }}</p>
-      <p class="text-lg md:text-xl">{{ setsWon.team }} - {{ setsWon.opponent }}</p>
+      <GameControls
+        :canUndo="canUndo"
+        :canRedo="canRedo"
+        :game="game"
+        @undoLastEvent="undoLastEvent"
+        @redoLastEvent="redoLastEvent"
+        @toggleGameStatus="toggleGameStatus"
+      />
     </div>
-        <div class="opponent-score text-center">
-          <h2 class="text-lg md:text-xl font-bold">{{ game.opponentTeam }}</h2>
-          <p class="text-3xl md:text-4xl font-bold">{{ currentSet.opponentScore }}</p>
-          <div class="flex justify-center mt-2">
-            <button @click="adjustScore('opponent', 1)" class="btn btn-green mr-1">+</button>
-            <button @click="adjustScore('opponent', -1)" class="btn btn-red">-</button>
-          </div>
-        </div>
-      </div>
-  
-      <!-- Serving Team Switch -->
-      <div class="serving-indicator mb-4 text-center p-2 bg-purple-100 rounded-lg">
-        <p class="text-lg font-bold mb-2">
-          Serving Team: {{ isOpponentServing ? game.opponentTeam : 'Our Team' }}
-        </p>
-        <button @click="toggleServingTeam" class="btn btn-purple">
-          Switch Serving Team
-        </button>
-      </div>
-  
-      <!-- Event Input Toggle -->
-      <div class="mb-4 flex justify-center">
-        <button @click="toggleInputMethod" class="btn btn-purple">
-          Switch to {{ isAdvancedInput ? 'Basic' : 'Advanced' }} Input
-        </button>
-      </div>
-  
-      <!-- Basic Event Input -->
-      <div v-if="!isAdvancedInput" class="event-input mb-4 bg-gray-100 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">Record Event</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
-          <button v-for="playerId in currentRotation" :key="playerId"
-                  @click="selectPlayer(playerId)"
-                  :class="['btn', currentEvent.player === playerId ? 'btn-blue-active' : 'btn-blue']">
-            {{ getPlayerName(playerId) }}
-          </button>
-        </div>
-        <div class="grid grid-cols-3 gap-2 mb-2">
-          <button v-for="action in ['serve', 'receive', 'set', 'spike', 'block', 'dig']" :key="action"
-                  @click="selectAction(action)"
-                  :class="['btn', currentEvent.action === action ? 'btn-green-active' : 'btn-green']">
-            {{ action }}
-          </button>
-        </div>
-        <div class="grid grid-cols-3 gap-2 mb-2">
-          <button v-for="result in ['point', 'error', 'continue']" :key="result"
-                  @click="selectResult(result)"
-                  :class="['btn', currentEvent.result === result ? 'btn-red-active' : 'btn-red']">
-            {{ result }}
-          </button>
-        </div>
-        <button @click="recordEvent" class="btn btn-purple w-full">
-          Record Event
-        </button>
-      </div>
-  
-      <!-- Advanced Event Input -->
-      <div v-else class="event-input mb-4 bg-gray-100 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">Advanced Event Input</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <select v-model="currentEvent.player" class="form-select">
-            <option value="">Select Player</option>
-            <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
-              {{ getPlayerName(playerId) }}
-            </option>
-          </select>
-          <select v-model="currentEvent.action" class="form-select">
-            <option value="">Select Action</option>
-            <option value="serve">Serve</option>
-            <option value="receive">Receive</option>
-            <option value="set">Set</option>
-            <option value="spike">Spike</option>
-            <option value="block">Block</option>
-            <option value="dig">Dig</option>
-          </select>
-          <select v-if="currentEvent.action" v-model="currentEvent.type" class="form-select">
-            <option value="">Type of Action</option>
-            <option v-for="type in getActionTypes" :key="type" :value="type">{{ type }}</option>
-          </select>
-          <select v-if="currentEvent.action" v-model="currentEvent.evaluation" class="form-select">
-            <option value="">Evaluation</option>
-            <option v-for="evaluation in getEvaluations" :key="evaluation" :value="evaluation">{{ evaluation }}</option>
-          </select>
-          <select v-model="currentEvent.result" class="form-select">
-            <option value="">Result</option>
-            <option value="point">Point</option>
-            <option value="error">Error</option>
-            <option value="continue">Continue</option>
-          </select>
-          <select v-if="['serve', 'spike', 'set'].includes(currentEvent.action)" v-model="currentEvent.target" class="form-select">
-            <option value="">Target</option>
-            <option v-for="target in getTargets" :key="target" :value="target">{{ target }}</option>
-          </select>
-        </div>
-        <button @click="recordAdvancedEvent" class="btn btn-purple w-full mt-2">
-          Record Advanced Event
-        </button>
-      </div>
-  
-      <!-- Substitution Section -->
-      <div class="substitution mb-4 bg-yellow-100 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">Substitutions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <select v-model="substitution.outPlayer" class="form-select">
-            <option value="">Player Out</option>
-            <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
-              {{ getPlayerName(playerId) }}
-            </option>
-          </select>
-          <select v-model="substitution.inPlayer" class="form-select">
-            <option value="">Player In</option>
-            <option v-for="playerId in benchPlayers" :key="playerId" :value="playerId">
-              {{ getPlayerName(playerId) }}
-            </option>
-          </select>
-        </div>
-        <button @click="makeSubstitution" class="btn btn-yellow w-full mt-2">
-          Substitute
-        </button>
-      </div>
-  
-      <!-- Rotation Tracker -->
-      <div class="rotation-tracker mb-4 bg-blue-100 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">Current Rotation</h2>
-        <div class="relative w-full aspect-[3/2] border-2 border-blue-500 rounded-lg" style="max-height: 200px;">
-          <!-- Back Row -->
-          <div v-for="(position, index) in [1, 6, 5]" :key="position" 
-               class="absolute w-[25%] text-center p-1"
-               :style="{
-                 top: '10%',
-                 left: index === 0 ? '10%' : index === 1 ? '37.5%' : '65%',
-                 fontSize: '0.8rem'
-               }">
-            <p class="font-bold">P{{ position }}</p>
-            <p>{{ getPlayerName(currentRotation[position - 1]) }}</p>
-          </div>
-          <!-- Front Row -->
-          <div v-for="(position, index) in [2, 3, 4]" :key="position"
-               class="absolute w-[25%] text-center p-1"
-               :style="{
-                 bottom: '10%',
-                 left: index === 0 ? '10%' : index === 1 ? '37.5%' : '65%',
-                 fontSize: '0.8rem'
-               }">
-            <p class="font-bold">P{{ position }}</p>
-            <p>{{ getPlayerName(currentRotation[position - 1]) }}</p>
-          </div>
-        </div>
-        <button @click="rotateManually" class="btn btn-blue w-full mt-2">
-          Rotate Manually
-        </button>
-      </div>
-  
-      <!-- Player Statistics -->
-      <div class="player-statistics mb-4 bg-gray-100 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">Player Statistics</h2>
-        <div class="overflow-x-auto">
-          <table class="min-w-full bg-white">
-            <thead class="bg-gray-200">
-              <tr>
-                <th class="py-2 px-4 text-left">Player</th>
-                <th class="py-2 px-4 text-left">Points</th>
-                <th class="py-2 px-4 text-left">Errors</th>
-                <th class="py-2 px-4 text-left">Serves</th>
-                <th class="py-2 px-4 text-left">Attacks</th>
-                <th class="py-2 px-4 text-left">Blocks</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="playerId in game.players" :key="playerId" class="border-b">
-                <td class="py-2 px-4">{{ getPlayerName(playerId) }}</td>
-                <td class="py-2 px-4">{{ getPlayerStat(playerId, 'points') }}</td>
-                <td class="py-2 px-4">{{ getPlayerStat(playerId, 'errors') }}</td>
-                <td class="py-2 px-4">{{ getPlayerStat(playerId, 'serves') }}</td>
-                <td class="py-2 px-4">{{ getPlayerStat(playerId, 'attacks') }}</td>
-                <td class="py-2 px-4">{{ getPlayerStat(playerId, 'blocks') }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-  
-      <!-- Recent Events -->
-      <div class="recent-events bg-gray-100 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">Recent Events</h2>
-        <ul class="space-y-2">
-          <li v-for="event in recentEvents" :key="event.id" class="p-2 bg-white rounded text-sm shadow">
-            <template v-if="event.type === 'substitution'">
-              Substitution: {{ getPlayerName(event.outPlayer) }} out, {{ getPlayerName(event.inPlayer) }} in
-            </template>
-            <template v-else>
-              {{ getPlayerName(event.player) }} - {{ event.action }} 
-              <template v-if="event.type">- {{ event.type }}</template>
-              <template v-if="event.evaluation">- {{ event.evaluation }}</template>
-              - {{ event.result }}
-              <template v-if="event.target">- Target: {{ event.target }}</template>
-            </template>
-          </li>
-        </ul>
-      </div>
-  
-      <!-- Stat Screen Toggle -->
-      <button @click="toggleStatScreen" class="btn btn-blue mt-4 w-full">
-        {{ showStatScreen ? 'Hide Stats' : 'Show Stats' }}
+
+    <!-- Scoreboard -->
+    <GameScoreboard
+      :currentSet="currentSet"
+      :game="game"
+      :setsWon="setsWon"
+      @adjustScore="adjustScore"
+    />
+
+    <!-- Serving Team Switch -->
+    <ServingIndicator
+      :isOpponentServing="isOpponentServing"
+      :game="game"
+      @toggleServingTeam="toggleServingTeam"
+    />
+
+    <!-- Event Input Toggle -->
+    <div class="mb-4 flex justify-center">
+      <button @click="toggleInputMethod" class="btn btn-purple">
+        Switch to {{ isAdvancedInput ? 'Basic' : 'Advanced' }} Input
       </button>
-  
-      <!-- Stat Screen Component -->
-      <StatScreen v-if="showStatScreen" :game="gameWithPlayerDetails" />
     </div>
-  </template>
-  
-  <script>
+
+    <!-- Event Input -->
+    <EventInput
+      :currentRotation="currentRotation"
+      :isAdvancedInput="isAdvancedInput"
+      :getPlayerName="getPlayerName"
+      :getActionTypes="getActionTypes"
+      :getEvaluations="getEvaluations"
+      :getTargets="getTargets"
+      @selectPlayer="selectPlayer"
+      @selectAction="selectAction"
+      @selectResult="selectResult"
+      @recordEvent="recordEvent"
+      @recordAdvancedEvent="recordAdvancedEvent"
+    />
+
+    <!-- Substitution Section -->
+    <PlayerSubstitution
+      :currentRotation="currentRotation"
+      :benchPlayers="benchPlayers"
+      :getPlayerName="getPlayerName"
+      @makeSubstitution="makeSubstitution"
+    />
+
+    <!-- Rotation Tracker -->
+    <RotationTracker
+      :currentRotation="currentRotation"
+      :getPlayerName="getPlayerName"
+      @rotateManually="rotateManually"
+    />
+
+    <!-- Player Statistics -->
+    <PlayerStatistics
+      :game="game"
+      :getPlayerName="getPlayerName"
+      :getPlayerStat="getPlayerStat"
+    />
+
+    <!-- Recent Events -->
+    <RecentEvents
+      :recentEvents="recentEvents"
+      :getPlayerName="getPlayerName"
+    />
+
+    <!-- Stat Screen Toggle -->
+    <button @click="toggleStatScreen" class="btn btn-blue mt-4 w-full">
+      {{ showStatScreen ? 'Hide Stats' : 'Show Stats' }}
+    </button>
+
+    <!-- Stat Screen Component -->
+    <StatScreen v-if="showStatScreen" :game="gameWithPlayerDetails" />
+  </div>
+</template>
+
+<script>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import StatScreen from '../components/StatScreen.vue';
+import EventInput from '../components/Game/EventInput.vue';
+import GameScoreboard from '../components/Game/ScoreboardComp.vue';
+import RotationTracker from '../components/Game/RotationTracker.vue';
+import PlayerSubstitution from '../components/Game/SubstitutionComp.vue';
+import PlayerStatistics from '../components/Game/PlayerStatistics.vue';
+import RecentEvents from '../components/Game/RecentEvents.vue';
+import GameControls from '../components/Game/GameControls.vue';
+import ServingIndicator from '../components/Game/ServingIndicator.vue';
 
 export default {
   name: 'GameView',
   components: {
-    StatScreen
+    StatScreen,
+    EventInput,
+    GameScoreboard,
+    RotationTracker,
+    PlayerSubstitution,
+    PlayerStatistics,
+    RecentEvents,
+    GameControls,
+    ServingIndicator
   },
   setup() {
     const route = useRoute();
@@ -264,8 +131,7 @@ export default {
     const redoStack = ref([]);
     const isAdvancedInput = ref(false);
     const isOpponentServing = ref(false);
-    const setsWon = ref({ team: 0, opponent: 0 }); // Declare setsWon as a ref
-  
+    const setsWon = ref({ team: 0, opponent: 0 });
 
     onMounted(() => {
       try {
@@ -290,11 +156,9 @@ export default {
           game.value.status = 'not_started';
         }
 
-        // Initialize setsWon if it doesn't exist in loaded game data
         if (!game.value.setsWon) { 
           game.value.setsWon = { team: 0, opponent: 0 };
         } else {
-          // Update the ref with the loaded values
           setsWon.value = { ...game.value.setsWon }; 
         }
 
@@ -318,8 +182,6 @@ export default {
     const benchPlayers = computed(() => {
       return game.value ? game.value.players.filter(playerId => !currentRotation.value.includes(playerId)) : [];
     });
-
-
 
     const recentEvents = computed(() => {
       return currentSet.value.events.slice(-5).reverse();
@@ -398,15 +260,15 @@ export default {
       isOpponentServing.value = !isOpponentServing.value;
     };
 
-    const recordEvent = () => {
-      if (!currentEvent.value.player || !currentEvent.value.action || !currentEvent.value.result) {
+    const recordEvent = (event) => {
+      if (!event.player || !event.action || !event.result) {
         alert('Please fill in all required event details');
         return;
       }
 
-      const event = {
+      const newEvent = {
         id: Date.now(),
-        ...currentEvent.value
+        ...event
       };
 
       undoStack.value.push({ 
@@ -419,15 +281,15 @@ export default {
       });
       redoStack.value = [];
 
-      currentSet.value.events.push(event);
+      currentSet.value.events.push(newEvent);
 
-      if (event.result === 'point') {
+      if (newEvent.result === 'point') {
         currentSet.value.teamScore++;
         if (isOpponentServing.value) {
           rotateTeam();
           isOpponentServing.value = false;
         }
-      } else if (event.result === 'error') {
+      } else if (newEvent.result === 'error') {
         currentSet.value.opponentScore++;
         if (!isOpponentServing.value) {
           isOpponentServing.value = true;
@@ -436,29 +298,26 @@ export default {
 
       checkSetEnd();
 
-      // Reset current event
-      currentEvent.value = { player: '', action: '', type: '', evaluation: '', result: '', target: '' };
-
       saveGame();
     };
 
-    const recordAdvancedEvent = () => {
-      if (!currentEvent.value.player || !currentEvent.value.action || !currentEvent.value.type || 
-          !currentEvent.value.evaluation || !currentEvent.value.result) {
+    const recordAdvancedEvent = (event) => {
+      if (!event.player || !event.action || !event.type || 
+          !event.evaluation || !event.result) {
         alert('Please fill in all required event details');
         return;
       }
 
-      recordEvent(); // Use the same logic as basic event recording
+      recordEvent(event); // Use the same logic as basic event recording
     };
 
-    const makeSubstitution = () => {
-      if (!substitution.value.outPlayer || !substitution.value.inPlayer) {
+    const makeSubstitution = (substitution) => {
+      if (!substitution.outPlayer || !substitution.inPlayer) {
         alert('Please select both players for substitution');
         return;
       }
 
-      const outIndex = currentRotation.value.indexOf(substitution.value.outPlayer);
+      const outIndex = currentRotation.value.indexOf(substitution.outPlayer);
       if (outIndex === -1) {
         alert('Selected player is not in the current rotation');
         return;
@@ -473,19 +332,14 @@ export default {
       });
       redoStack.value = [];
 
-      // Update rotation
-      game.value.currentRotation[outIndex] = substitution.value.inPlayer;
+      game.value.currentRotation[outIndex] = substitution.inPlayer;
 
-      // Record substitution event
       currentSet.value.events.push({
         id: Date.now(),
         type: 'substitution',
-        outPlayer: substitution.value.outPlayer,
-        inPlayer: substitution.value.inPlayer
+        outPlayer: substitution.outPlayer,
+        inPlayer: substitution.inPlayer
       });
-
-      // Reset substitution form
-      substitution.value = { outPlayer: '', inPlayer: '' };
 
       saveGame();
     };
@@ -502,25 +356,24 @@ export default {
     };
 
     const endSet = (winner) => {
-  if (winner === 'team') {
-    setsWon.value.team++; // Increment setsWon.value
-    game.value.setsWon.team++; // Update game.value.setsWon.team
-  } else {
-    setsWon.value.opponent++; // Increment setsWon.value
-    game.value.setsWon.opponent++; // Update game.value.setsWon.opponent
-  }
+      if (winner === 'team') {
+        setsWon.value.team++;
+        game.value.setsWon.team++;
+      } else {
+        setsWon.value.opponent++;
+        game.value.setsWon.opponent++;
+      }
 
-  if (setsWon.value.team === 3 || setsWon.value.opponent === 3) {
-    endGame();
-  } else {
-    startNewSet();
-  }
-};
+      if (setsWon.value.team === 3 || setsWon.value.opponent === 3) {
+        endGame();
+      } else {
+        startNewSet();
+      }
+    };
 
     const endGame = () => {
       game.value.status = 'completed';
       saveGame();
-      // Redirect to results page or show game summary
       router.push({ name: 'GameSummary', params: { id: game.value.id } });
     };
 
@@ -650,12 +503,13 @@ export default {
     const selectResult = (result) => {
       currentEvent.value.result = result;
     };
+
     const showStatScreen = ref(false);
-    
 
     const toggleStatScreen = () => {
       showStatScreen.value = !showStatScreen.value;
     };
+
     const gameWithPlayerDetails = computed(() => {
       if (!game.value) return null;
       return {
@@ -703,6 +557,7 @@ export default {
   }
 };
 </script>
+
 <style scoped>
 .btn {
   font-weight: bold;
