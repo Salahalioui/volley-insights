@@ -92,10 +92,12 @@
         this.$emit('selectPlayer', playerId);
       },
       handleSelectAction(action) {
+        console.log('Action selected:', action);
         this.selectedAction = action;
         this.$emit('selectAction', action);
       },
       handleSelectResult(result) {
+        console.log('Result selected:', result);
         this.selectedResult = result;
         this.$emit('selectResult', result);
       },
@@ -108,6 +110,7 @@
         this.resetSelection();
       },
       recordAdvancedEvent() {
+        console.log('Advanced Event selected:', this.selectedPlayer, this.selectedAction, this.selectedType, this.selectedEvaluation, this.selectedResult, this.selectedTarget);
         this.$emit('recordAdvancedEvent', {
           player: this.selectedPlayer,
           action: this.selectedAction,

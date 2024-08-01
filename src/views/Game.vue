@@ -191,6 +191,7 @@ export default {
     const canRedo = computed(() => redoStack.value.length > 0);
 
     const getActionTypes = computed(() => {
+      console.log('getActionTypes called');
       switch (currentEvent.value.action) {
         case 'serve':
           return ['Float', 'Jump', 'Topspin'];
@@ -214,6 +215,7 @@ export default {
     });
 
     const getTargets = computed(() => {
+      console.log('getTargets called');
       if (['serve', 'spike'].includes(currentEvent.value.action)) {
         return ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5', 'Zone 6'];
       } else if (currentEvent.value.action === 'set') {
