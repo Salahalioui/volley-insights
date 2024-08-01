@@ -1,6 +1,6 @@
 <template>
   <div class="stat-screen p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6 text-gray-800">Game Statistics</h2>
+    <h2 class="text-3xl font-bold mb-6 text-gray-800">Advanced Game Statistics</h2>
     
     <!-- Set Tabs -->
     <div class="mb-6">
@@ -26,14 +26,10 @@
       </ul>
     </div>
 
-    <!-- Statistics Display -->
+    <!-- Advanced Statistics Display -->
     <div v-if="selectedSet === 'fullGame'">
-      <h3 class="text-xl font-bold mb-4">Full Game Statistics</h3>
+      <h3 class="text-xl font-bold mb-4">Full Game Advanced Statistics</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div v-for="stat in basicStats" :key="stat.title" class="p-4 bg-white rounded-lg shadow">
-          <h4 class="font-semibold text-lg mb-2">{{ stat.title }}</h4>
-          <p>{{ stat.value }}</p>
-        </div>
         <div v-for="stat in advancedStats" :key="stat.title" class="p-4 bg-white rounded-lg shadow">
           <h4 class="font-semibold text-lg mb-2">{{ stat.title }}</h4>
           <p>{{ stat.value }}</p>
@@ -41,12 +37,8 @@
       </div>
     </div>
     <div v-else>
-      <h3 class="text-xl font-bold mb-4">Set {{ selectedSet }} Statistics</h3>
+      <h3 class="text-xl font-bold mb-4">Set {{ selectedSet }} Advanced Statistics</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div v-for="stat in basicStats" :key="stat.title" class="p-4 bg-white rounded-lg shadow">
-          <h4 class="font-semibold text-lg mb-2">{{ stat.title }}</h4>
-          <p>{{ stat.value }}</p>
-        </div>
         <div v-for="stat in advancedStats" :key="stat.title" class="p-4 bg-white rounded-lg shadow">
           <h4 class="font-semibold text-lg mb-2">{{ stat.title }}</h4>
           <p>{{ stat.value }}</p>
@@ -54,29 +46,31 @@
       </div>
     </div>
 
-    <!-- Individual Player Performance -->
+    <!-- Individual Player Advanced Performance -->
     <div class="player-performance mt-6">
-      <h3 class="text-xl font-bold mb-4">Individual Player Performance</h3>
+      <h3 class="text-xl font-bold mb-4">Individual Player Advanced Performance</h3>
       <div class="overflow-x-auto">
         <table class="min-w-full bg-white">
           <thead class="bg-gray-200">
             <tr>
               <th class="py-2 px-4 text-left">Player</th>
-              <th class="py-2 px-4 text-left">Points</th>
-              <th class="py-2 px-4 text-left">Errors</th>
-              <th class="py-2 px-4 text-left">Serves</th>
-              <th class="py-2 px-4 text-left">Spikes</th>
-              <th class="py-2 px-4 text-left">Blocks</th>
+              <th class="py-2 px-4 text-left">Efficiency</th>
+              <th class="py-2 px-4 text-left">Serve Success Rate</th>
+              <th class="py-2 px-4 text-left">Spike Success Rate</th>
+              <th class="py-2 px-4 text-left">Hitting Percentage</th>
+              <th class="py-2 px-4 text-left">Service Efficiency</th>
+              <th class="py-2 px-4 text-left">Blocking Efficiency</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="player in game.players" :key="player" class="border-b">
               <td class="py-2 px-4">{{ getPlayerName(player) }}</td>
-              <td class="py-2 px-4">{{ getPlayerStat(player, 'points') }}</td>
-              <td class="py-2 px-4">{{ getPlayerStat(player, 'errors') }}</td>
-              <td class="py-2 px-4">{{ getPlayerStat(player, 'serves') }}</td>
-              <td class="py-2 px-4">{{ getPlayerStat(player, 'spikes') }}</td>
-              <td class="py-2 px-4">{{ getPlayerStat(player, 'blocks') }}</td>
+              <td class="py-2 px-4">{{ calculatePlayerEfficiency(player) }}</td>
+              <td class="py-2 px-4">{{ calculatePlayerSuccessRate(player, 'serve') }}</td>
+              <td class="py-2 px-4">{{ calculatePlayerSuccessRate(player, 'spike') }}</td>
+              <td class="py-2 px-4">{{ calculatePlayerHittingPercentage(player) }}</td>
+              <td class="py-2 px-4">{{ calculatePlayerServiceEfficiency(player) }}</td>
+              <td class="py-2 px-4">{{ calculatePlayerBlockingEfficiency(player) }}</td>
             </tr>
           </tbody>
         </table>
@@ -99,10 +93,6 @@ export default {
     };
   },
   computed: {
-    basicStats() {
-      const stats = this.selectedSet === 'fullGame' ? this.computeFullGameStats('basic') : this.computeSetStats(this.selectedSet, 'basic');
-      return stats;
-    },
     advancedStats() {
       const stats = this.selectedSet === 'fullGame' ? this.computeFullGameStats('advanced') : this.computeSetStats(this.selectedSet, 'advanced');
       return stats;
@@ -114,40 +104,28 @@ export default {
     },
     computeFullGameStats(type) {
       const stats = [];
-      if (type === 'basic') {
-        stats.push({ title: 'Total Points', value: this.game.sets.reduce((acc, set) => acc + set.teamScore, 0) });
-        stats.push({ title: 'Total Errors', value: this.game.sets.reduce((acc, set) => acc + set.opponentScore, 0) });
-        stats.push({ title: 'Total Serves', value: this.countEvents('serve') });
-        stats.push({ title: 'Total Spikes', value: this.countEvents('spike') });
-      }
       if (type === 'advanced') {
         stats.push({ title: 'Efficiency', value: this.calculateEfficiency() });
         stats.push({ title: 'Serve Success Rate', value: this.calculateSuccessRate('serve') });
         stats.push({ title: 'Spike Success Rate', value: this.calculateSuccessRate('spike') });
+        stats.push({ title: 'Hitting Percentage', value: this.calculateHittingPercentage() });
+        stats.push({ title: 'Service Efficiency', value: this.calculateServiceEfficiency() });
+        stats.push({ title: 'Blocking Efficiency', value: this.calculateBlockingEfficiency() });
       }
       return stats;
     },
     computeSetStats(setNumber, type) {
       const set = this.game.sets.find(s => s.setNumber === setNumber);
       const stats = [];
-      if (set) {
-        if (type === 'basic') {
-          stats.push({ title: 'Points', value: set.teamScore });
-          stats.push({ title: 'Errors', value: set.opponentScore });
-          stats.push({ title: 'Serves', value: this.countEvents('serve', set) });
-          stats.push({ title: 'Spikes', value: this.countEvents('spike', set) });
-        }
-        if (type === 'advanced') {
-          stats.push({ title: 'Efficiency', value: this.calculateEfficiency(set) });
-          stats.push({ title: 'Serve Success Rate', value: this.calculateSuccessRate('serve', set) });
-          stats.push({ title: 'Spike Success Rate', value: this.calculateSuccessRate('spike', set) });
-        }
+      if (set && type === 'advanced') {
+        stats.push({ title: 'Efficiency', value: this.calculateEfficiency(set) });
+        stats.push({ title: 'Serve Success Rate', value: this.calculateSuccessRate('serve', set) });
+        stats.push({ title: 'Spike Success Rate', value: this.calculateSuccessRate('spike', set) });
+        stats.push({ title: 'Hitting Percentage', value: this.calculateHittingPercentage(set) });
+        stats.push({ title: 'Service Efficiency', value: this.calculateServiceEfficiency(set) });
+        stats.push({ title: 'Blocking Efficiency', value: this.calculateBlockingEfficiency(set) });
       }
       return stats;
-    },
-    countEvents(action, set = null) {
-      const events = set ? set.events : this.game.sets.flatMap(s => s.events);
-      return events.filter(event => event.action === action).length;
     },
     calculateEfficiency(set = null) {
       const events = set ? set.events : this.game.sets.flatMap(s => s.events);
@@ -161,20 +139,59 @@ export default {
       const successfulActions = events.filter(event => event.action === action && event.result === 'point').length;
       return totalActions > 0 ? ((successfulActions / totalActions) * 100).toFixed(2) + '%' : '0%';
     },
+    calculateHittingPercentage(set = null) {
+      const events = set ? set.events : this.game.sets.flatMap(s => s.events);
+      const kills = events.filter(event => event.action === 'spike' && event.result === 'point').length;
+      const errors = events.filter(event => event.action === 'spike' && event.result === 'error').length;
+      const attempts = events.filter(event => event.action === 'spike').length;
+      return attempts > 0 ? (((kills - errors) / attempts) * 100).toFixed(2) + '%' : '0%';
+    },
+    calculateServiceEfficiency(set = null) {
+      const events = set ? set.events : this.game.sets.flatMap(s => s.events);
+      const points = events.filter(event => event.action === 'serve' && event.result === 'point').length;
+      const errors = events.filter(event => event.action === 'serve' && event.result === 'error').length;
+      return (points - errors).toString();
+    },
+    calculateBlockingEfficiency(set = null) {
+      const events = set ? set.events : this.game.sets.flatMap(s => s.events);
+      const points = events.filter(event => event.action === 'block' && event.result === 'point').length;
+      const errors = events.filter(event => event.action === 'block' && event.result === 'error').length;
+      return (points - errors).toString();
+    },
     getPlayerName(playerId) {
       const player = this.game.playerDetails.find(p => p.id === playerId);
       return player ? player.name : 'Unknown Player';
     },
-    getPlayerStat(playerId, statType) {
+    calculatePlayerEfficiency(playerId) {
       const events = this.selectedSet === 'fullGame' ? this.game.sets.flatMap(s => s.events) : this.game.sets.find(s => s.setNumber === this.selectedSet).events;
-      return events.filter(event => 
-        event.player === playerId && 
-        (statType === 'points' ? event.result === 'point' :
-         statType === 'errors' ? event.result === 'error' :
-         statType === 'serves' ? event.action === 'serve' :
-         statType === 'spikes' ? event.action === 'spike' :
-         statType === 'blocks' ? event.action === 'block' : false)
-      ).length;
+      const totalActions = events.filter(event => event.player === playerId).length;
+      const successfulActions = events.filter(event => event.player === playerId && event.result === 'point').length;
+      return totalActions > 0 ? ((successfulActions / totalActions) * 100).toFixed(2) + '%' : '0%';
+    },
+    calculatePlayerSuccessRate(playerId, action) {
+      const events = this.selectedSet === 'fullGame' ? this.game.sets.flatMap(s => s.events) : this.game.sets.find(s => s.setNumber === this.selectedSet).events;
+      const totalActions = events.filter(event => event.player === playerId && event.action === action).length;
+      const successfulActions = events.filter(event => event.player === playerId && event.action === action && event.result === 'point').length;
+      return totalActions > 0 ? ((successfulActions / totalActions) * 100).toFixed(2) + '%' : '0%';
+    },
+    calculatePlayerHittingPercentage(playerId) {
+      const events = this.selectedSet === 'fullGame' ? this.game.sets.flatMap(s => s.events) : this.game.sets.find(s => s.setNumber === this.selectedSet).events;
+      const kills = events.filter(event => event.player === playerId && event.action === 'spike' && event.result === 'point').length;
+      const errors = events.filter(event => event.player === playerId && event.action === 'spike' && event.result === 'error').length;
+      const attempts = events.filter(event => event.player === playerId && event.action === 'spike').length;
+      return attempts > 0 ? (((kills - errors) / attempts) * 100).toFixed(2) + '%' : '0%';
+    },
+    calculatePlayerServiceEfficiency(playerId) {
+      const events = this.selectedSet === 'fullGame' ? this.game.sets.flatMap(s => s.events) : this.game.sets.find(s => s.setNumber === this.selectedSet).events;
+      const points = events.filter(event => event.player === playerId && event.action === 'serve' && event.result === 'point').length;
+      const errors = events.filter(event => event.player === playerId && event.action === 'serve' && event.result === 'error').length;
+      return (points - errors).toString();
+    },
+    calculatePlayerBlockingEfficiency(playerId) {
+      const events = this.selectedSet === 'fullGame' ? this.game.sets.flatMap(s => s.events) : this.game.sets.find(s => s.setNumber === this.selectedSet).events;
+      const points = events.filter(event => event.player === playerId && event.action === 'block' && event.result === 'point').length;
+      const errors = events.filter(event => event.player === playerId && event.action === 'block' && event.result === 'error').length;
+      return (points - errors).toString();
     }
   }
 };
