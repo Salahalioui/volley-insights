@@ -41,7 +41,7 @@
           </select>
           <select v-if="selectedAction" v-model="selectedType" class="form-select">
             <option value="">Type of Action</option>
-            <option v-for="type in getActionTypes" :key="type" :value="type">{{ type }}</option>
+            <option v-for="type in getActionTypes(selectedAction)" :key="type" :value="type">{{ type }}</option>
           </select>
           <select v-if="selectedAction" v-model="selectedEvaluation" class="form-select">
             <option value="">Evaluation</option>
@@ -53,7 +53,7 @@
           </select>
           <select v-if="['serve', 'spike', 'set'].includes(selectedAction)" v-model="selectedTarget" class="form-select">
             <option value="">Target</option>
-            <option v-for="target in getTargets" :key="target" :value="target">{{ target }}</option>
+            <option v-for="target in getTargets(selectedAction)" :key="target" :value="target">{{ target }}</option>
           </select>
         </div>
         <button @click="recordAdvancedEvent" class="btn btn-record">
@@ -69,9 +69,9 @@
       currentRotation: Array,
       isAdvancedInput: Boolean,
       getPlayerName: Function,
-      getActionTypes: Array,
+      getActionTypes: Function,
       getEvaluations: Array,
-      getTargets: Array
+      getTargets: Function
     },
     emits: ['selectPlayer', 'selectAction', 'selectResult', 'recordEvent', 'recordAdvancedEvent'],
     data() {
@@ -132,7 +132,7 @@
     }
   };
   </script>
-  
+
   <style scoped>
   .event-input {
     background-color: #f3f4f6;

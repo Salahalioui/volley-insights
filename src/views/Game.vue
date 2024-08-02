@@ -190,9 +190,9 @@ export default {
     const canUndo = computed(() => undoStack.value.length > 0);
     const canRedo = computed(() => redoStack.value.length > 0);
 
-    const getActionTypes = computed(() => {
+    const getActionTypes =  (action) => {
       console.log('getActionTypes called');
-      switch (currentEvent.value.action) {
+      switch (action) {
         case 'serve':
           return ['Float', 'Jump', 'Topspin'];
         case 'receive':
@@ -208,21 +208,21 @@ export default {
         default:
           return [];
       }
-    });
+    };
 
     const getEvaluations = computed(() => {
       return ['Perfect', 'Good', 'OK', 'Poor'];
     });
 
-    const getTargets = computed(() => {
+    const getTargets = (action) => {
       console.log('getTargets called');
-      if (['serve', 'spike'].includes(currentEvent.value.action)) {
+      if (['serve', 'spike'].includes(action)) {
         return ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5', 'Zone 6'];
-      } else if (currentEvent.value.action === 'set') {
+      } else if (action === 'set') {
         return ['2', '3', '4', 'Back Row'];
       }
       return [];
-    });
+    };
 
     const getPlayerName = (playerId) => {
       const player = players.value.find(p => p.id === playerId);
