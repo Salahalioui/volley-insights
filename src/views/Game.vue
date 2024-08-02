@@ -34,13 +34,6 @@
       @toggleServingTeam="toggleServingTeam"
     />
 
-    <!-- Event Input Toggle -->
-    <div class="mb-4 flex justify-center">
-      <button @click="toggleInputMethod" class="btn btn-purple">
-        Switch to {{ isAdvancedInput ? 'Basic' : 'Advanced' }} Input
-      </button>
-    </div>
-
     <!-- Event Input -->
     <EventInput
       :currentRotation="currentRotation"
@@ -490,10 +483,6 @@ export default {
       ).length;
     };
 
-    const toggleInputMethod = () => {
-      isAdvancedInput.value = !isAdvancedInput.value;
-    };
-
     const selectPlayer = (playerId) => {
       currentEvent.value.player = playerId;
     };
@@ -546,7 +535,6 @@ export default {
       adjustScore,
       toggleGameStatus,
       getPlayerStat,
-      toggleInputMethod,
       selectPlayer,
       selectAction,
       selectResult,

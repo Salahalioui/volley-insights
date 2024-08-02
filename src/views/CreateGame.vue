@@ -79,6 +79,24 @@
         </p>
       </div>
 
+      <!-- Input Method Selection -->
+      <div class="form-group">
+        <label class="form-label mb-2">Select Input Method</label>
+        <div class="flex gap-4">
+          <button 
+            type="button"
+            :class="['btn', inputMethod === 'basic' ? 'btn-blue' : 'btn-gray']" 
+            @click="selectInputMethod('basic')">Basic</button>
+          <button 
+            type="button"
+            :class="['btn', inputMethod === 'advanced' ? 'btn-blue' : 'btn-gray']" 
+            @click="selectInputMethod('advanced')">Advanced</button>
+        </div>
+        <p v-if="!inputMethodSelected" class="mt-2 text-sm text-red-600">
+          Please select an input method.
+        </p>
+      </div>
+
       <button type="submit" 
               :disabled="!isFormValid"
               :class="['w-full p-3 rounded transition duration-300', 
@@ -97,6 +115,7 @@
           <p><strong>Opponent:</strong> {{ opponentTeam }}</p>
           <p><strong>Location:</strong> {{ location }}</p>
           <p><strong>Players:</strong> {{ selectedPlayers.length }}</p>
+          <p><strong>Input Method:</strong> {{ inputMethod }}</p>
         </div>
         <p class="mb-4">Are you sure you want to create this game?</p>
         <div class="flex justify-end space-x-3">
@@ -124,6 +143,8 @@ export default {
     const players = ref([]);
     const selectedPlayers = ref([]);
     const initialRotation = ref(Array(6).fill(''));
+    const inputMethod = ref(''); // Add input method
+    const inputMethodSelected = ref(true); // Validation flag
     const showModal = ref(false);
 
     onMounted(() => {
@@ -157,8 +178,14 @@ export default {
              opponentTeam.value.trim() !== '' &&
              location.value.trim() !== '' &&
              selectedPlayers.value.length >= 6 &&
-             isRotationValid(initialRotation.value); // Pass rotation to function
+             isRotationValid(initialRotation.value) &&
+             inputMethod.value !== ''; // Add input method validation
     });
+
+    const selectInputMethod = (method) => {
+      inputMethod.value = method;
+      inputMethodSelected.value = true;
+    };
 
     const showConfirmationModal = () => {
       if (isFormValid.value) {
@@ -176,6 +203,7 @@ export default {
         location: location.value,
         players: selectedPlayers.value,
         initialRotation: initialRotation.value,
+        inputMethod: inputMethod.value, // Add input method to game data
         sets: [],
         currentSet: 1,
         status: 'not_started'
@@ -193,8 +221,9 @@ export default {
       location.value = '';
       selectedPlayers.value = [];
       initialRotation.value = Array(6).fill('');
+      inputMethod.value = '';
 
-      showModal.value = false; 
+      showModal.value = false;
 
       alert('Game created successfully!');
       router.push({ name: 'GameView', params: { id: gameData.id } });
@@ -209,11 +238,14 @@ export default {
       players,
       selectedPlayers,
       initialRotation,
+      inputMethod,
+      inputMethodSelected,
       showModal,
       getPlayerName,
       getPlayerShirtNumber,
       isRotationValid, // Pure function
       isFormValid,
+      selectInputMethod,
       showConfirmationModal,
       createGame
     };
@@ -221,8 +253,7 @@ export default {
 };
 </script>
 
-  
-  <style scoped>
+<style scoped>
 .form-group {
   margin-bottom: 1rem;
 }
@@ -268,4 +299,17 @@ export default {
   border-color: #93c5fd;
   box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
 }
+
+.btn {
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  border-radius: 0.25rem;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.btn-gray { background-color: #d1d5db; color: white; }
+.btn-gray:hover { background-color: #9ca3af; }
+
+.btn-blue { background-color: #4299e1; color: white; }
+.btn-blue:hover { background-color: #3182ce; }
 </style>
