@@ -37,7 +37,7 @@
     <!-- Event Input -->
     <EventInput
       :currentRotation="currentRotation"
-      :isAdvancedInput="isAdvancedInput"
+      :isAdvancedInput="game.inputMethod === 'advanced'"
       :getPlayerName="getPlayerName"
       :getActionTypes="getActionTypes"
       :getEvaluations="getEvaluations"
@@ -263,7 +263,8 @@ export default {
 
       const newEvent = {
         id: Date.now(),
-        ...event
+        ...event,
+        rotation: [...game.value.currentRotation]
       };
 
       undoStack.value.push({ 
