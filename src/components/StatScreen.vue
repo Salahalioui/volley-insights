@@ -1,6 +1,8 @@
 <template>
   <div class="stat-screen p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">Game Statistics</h2>
+    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">
+      Game Statistics
+    </h2>
 
     <!-- Filter Section (Tabs) -->
     <div class="filter-section flex space-x-4 mb-4">
@@ -24,14 +26,20 @@
     <div v-if="activeTab === 'game'" class="game-summary mb-6">
       <button @click="toggleSection('gameSummary')" class="section-header">
         <h3 class="text-lg font-semibold">Game Summary</h3>
-        <i :class="['fas', gameSummaryOpen ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+        <i
+          :class="['fas', gameSummaryOpen ? 'fa-chevron-up' : 'fa-chevron-down']"
+        ></i>
       </button>
-      <div v-if="gameSummaryOpen" class="section-content bg-white p-4 rounded-md shadow-sm">
+      <div
+        v-if="gameSummaryOpen"
+        class="section-content bg-white p-4 rounded-md shadow-sm"
+      >
         <p><strong>Game Name:</strong> {{ game.name }}</p>
         <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
         <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
         <p>
-          <strong>Sets Won:</strong> {{ game.setsWon.team }} - {{ game.setsWon.opponent }}
+          <strong>Sets Won:</strong> {{ game.setsWon.team }} -
+          {{ game.setsWon.opponent }}
         </p>
       </div>
     </div>
@@ -43,10 +51,17 @@
     >
       <button @click="toggleSection('teamStats')" class="section-header">
         <h3 class="text-lg font-semibold">Team Stats</h3>
-        <i :class="['fas', teamStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+        <i
+          :class="['fas', teamStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"
+        ></i>
       </button>
-      <div v-if="teamStatsOpen" class="section-content bg-white p-4 rounded-md shadow-sm">
-        <table class="w-full table-auto border-collapse border border-gray-300">
+      <div
+        v-if="teamStatsOpen"
+        class="section-content bg-white p-4 rounded-md shadow-sm"
+      >
+        <table
+          class="w-full table-auto border-collapse border border-gray-300"
+        >
           <thead>
             <tr>
               <th class="px-4 py-2 text-left border border-gray-300">
@@ -59,19 +74,21 @@
             <tr class="bg-gray-100">
               <td class="px-4 py-2 border border-gray-300">Total Points</td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamTotalPoints() }}
+                {{ getTeamTotalPoints(currentSetNumber) }}
               </td>
             </tr>
             <tr>
               <td class="px-4 py-2 border border-gray-300">Total Errors</td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamTotalErrors() }}
+                {{ getTeamTotalErrors(currentSetNumber) }}
               </td>
             </tr>
             <tr class="bg-gray-100">
-              <td class="px-4 py-2 border border-gray-300">Serve Efficiency</td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamServeEfficiency().toFixed(2) }}
+                Serve Efficiency
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamServeEfficiency(currentSetNumber).toFixed(2) }}
               </td>
             </tr>
             <tr>
@@ -79,13 +96,15 @@
                 Attack Efficiency
               </td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamAttackEfficiency().toFixed(2) }}
+                {{ getTeamAttackEfficiency(currentSetNumber).toFixed(2) }}
               </td>
             </tr>
             <tr class="bg-gray-100">
-              <td class="px-4 py-2 border border-gray-300">Block Efficiency</td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamBlockEfficiency().toFixed(2) }}
+                Block Efficiency
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamBlockEfficiency(currentSetNumber).toFixed(2) }}
               </td>
             </tr>
             <tr>
@@ -93,7 +112,7 @@
                 Side Out Percentage
               </td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamSideOutPercentage().toFixed(2) }}
+                {{ getTeamSideOutPercentage(currentSetNumber).toFixed(2) }}
               </td>
             </tr>
             <tr class="bg-gray-100">
@@ -101,50 +120,70 @@
                 Break Point Percentage
               </td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamBreakPointPercentage().toFixed(2) }}
+                {{ getTeamBreakPointPercentage(currentSetNumber).toFixed(2) }}
               </td>
             </tr>
+          </tbody>
+        </table>
+
+        <!-- Rotation Effectiveness Table -->
+        <table class="w-full table-auto mt-4">
+          <thead>
             <tr>
+              <th class="px-4 py-2 text-left border border-gray-300">
+                Rotation (Player Names)
+              </th>
+              <th class="px-4 py-2 text-left border border-gray-300">
+                Receive Effectiveness
+              </th>
+              <th class="px-4 py-2 text-left border border-gray-300">
+                Block Effectiveness
+              </th>
+              <th class="px-4 py-2 text-left border border-gray-300">
+                Attack Effectiveness
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(data, rotationKey) in getTeamRotationEffectiveness(
+                currentSetNumber
+              )"
+              :key="rotationKey"
+            >
               <td class="px-4 py-2 border border-gray-300">
-                Rotation Effectiveness (Receive-Block-Attack)
+                {{
+                  rotationKey
+                    .split("-")
+                    .map(
+                      (playerId, index) =>
+                        `P${index + 1}: ${getPlayerName(parseInt(playerId))}`
+                    )
+                    .join(", ")
+                }}
               </td>
               <td class="px-4 py-2 border border-gray-300">
-                {{ getTeamRotationEffectiveness().receive }} -
-                {{ getTeamRotationEffectiveness().block }} -
-                {{ getTeamRotationEffectiveness().attack }}
+                {{ data.receiveEffectiveness }}
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ data.blockEffectiveness }}
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ data.attackEffectiveness }}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <div v-if="teamStatsOpen" class="section-content">
-      <table class="w-full table-auto">
-  <thead>
-    <tr>
-      <th class="px-4 py-2">Rotation (Player Names)</th>
-      <th class="px-4 py-2">Receive Effectiveness</th>
-      <th class="px-4 py-2">Block Effectiveness</th>
-      <th class="px-4 py-2">Attack Effectiveness</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr v-for="(data, rotationKey) in getTeamRotationEffectiveness()" :key="rotationKey">
-      <td class="px-4 py-2">
-  {{ rotationKey.split('-').map((playerId, index) => `P${index + 1}: ${getPlayerName(parseInt(playerId))}`).join(', ') }} 
-</td>
-      <td class="px-4 py-2">{{ data.receiveEffectiveness }}</td>
-      <td class="px-4 py-2">{{ data.blockEffectiveness }}</td>
-      <td class="px-4 py-2">{{ data.attackEffectiveness }}</td>
-    </tr>
-  </tbody>
-</table>
-    </div>
 
     <!-- Individual Player Stats Section -->
     <div class="player-stats mb-6">
       <h3 class="text-lg font-semibold mb-2">Individual Player Stats</h3>
-      <select v-model="selectedPlayer" class="w-full p-2 border rounded-md mb-4">
+      <select
+        v-model="selectedPlayer"
+        class="w-full p-2 border rounded-md mb-4"
+      >
         <option
           v-for="player in game.playerDetails"
           :key="player.id"
@@ -166,7 +205,9 @@
           v-if="basicStatsOpen"
           class="section-content bg-white p-4 rounded-md shadow-sm"
         >
-          <table class="w-full table-auto border-collapse border border-gray-300">
+          <table
+            class="w-full table-auto border-collapse border border-gray-300"
+          >
             <thead>
               <tr>
                 <th class="px-4 py-2 text-left border border-gray-300">
@@ -191,16 +232,19 @@
               <tr class="bg-gray-100">
                 <td class="px-4 py-2 border border-gray-300">Serve</td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getServeStats(selectedPlayer).totalAttempts }}
+                  {{ getServeStats(selectedPlayer, currentSetNumber).totalAttempts }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getServeStats(selectedPlayer).points }}
+                  {{ getServeStats(selectedPlayer, currentSetNumber).points }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getServeStats(selectedPlayer).errors }}
+                  {{ getServeStats(selectedPlayer, currentSetNumber).errors }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getServeStats(selectedPlayer).efficiency.toFixed(2) }}
+                  {{
+                    getServeStats(selectedPlayer, currentSetNumber)
+                      .efficiency.toFixed(2)
+                  }}
                 </td>
               </tr>
 
@@ -208,16 +252,26 @@
               <tr>
                 <td class="px-4 py-2 border border-gray-300">Reception</td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getReceptionStats(selectedPlayer).totalAttempts }}
+                  {{
+                    getReceptionStats(selectedPlayer, currentSetNumber)
+                      .totalAttempts
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getReceptionStats(selectedPlayer).points }}
+                  {{
+                    getReceptionStats(selectedPlayer, currentSetNumber).points
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getReceptionStats(selectedPlayer).errors }}
+                  {{
+                    getReceptionStats(selectedPlayer, currentSetNumber).errors
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getReceptionStats(selectedPlayer).efficiency.toFixed(2) }}
+                  {{
+                    getReceptionStats(selectedPlayer, currentSetNumber)
+                      .efficiency.toFixed(2)
+                  }}
                 </td>
               </tr>
 
@@ -225,16 +279,26 @@
               <tr class="bg-gray-100">
                 <td class="px-4 py-2 border border-gray-300">Setting</td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getSettingStats(selectedPlayer).totalAttempts }}
+                  {{
+                    getSettingStats(selectedPlayer, currentSetNumber)
+                      .totalAttempts
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getSettingStats(selectedPlayer).points }}
+                  {{
+                    getSettingStats(selectedPlayer, currentSetNumber).points
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getSettingStats(selectedPlayer).errors }}
+                  {{
+                    getSettingStats(selectedPlayer, currentSetNumber).errors
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getSettingStats(selectedPlayer).efficiency.toFixed(2) }}
+                  {{
+                    getSettingStats(selectedPlayer, currentSetNumber)
+                      .efficiency.toFixed(2)
+                  }}
                 </td>
               </tr>
 
@@ -242,16 +306,26 @@
               <tr>
                 <td class="px-4 py-2 border border-gray-300">Attack</td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getAttackStats(selectedPlayer).totalAttempts }}
+                  {{
+                    getAttackStats(selectedPlayer, currentSetNumber)
+                      .totalAttempts
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getAttackStats(selectedPlayer).points }}
+                  {{
+                    getAttackStats(selectedPlayer, currentSetNumber).points
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getAttackStats(selectedPlayer).errors }}
+                  {{
+                    getAttackStats(selectedPlayer, currentSetNumber).errors
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getAttackStats(selectedPlayer).efficiency.toFixed(2) }}
+                  {{
+                    getAttackStats(selectedPlayer, currentSetNumber)
+                      .efficiency.toFixed(2)
+                  }}
                 </td>
               </tr>
 
@@ -259,16 +333,22 @@
               <tr class="bg-gray-100">
                 <td class="px-4 py-2 border border-gray-300">Block</td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getBlockStats(selectedPlayer).totalAttempts }}
+                  {{
+                    getBlockStats(selectedPlayer, currentSetNumber)
+                      .totalAttempts
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getBlockStats(selectedPlayer).points }}
+                  {{ getBlockStats(selectedPlayer, currentSetNumber).points }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getBlockStats(selectedPlayer).errors }}
+                  {{ getBlockStats(selectedPlayer, currentSetNumber).errors }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getBlockStats(selectedPlayer).efficiency.toFixed(2) }}
+                  {{
+                    getBlockStats(selectedPlayer, currentSetNumber)
+                      .efficiency.toFixed(2)
+                  }}
                 </td>
               </tr>
 
@@ -276,13 +356,17 @@
               <tr>
                 <td class="px-4 py-2 border border-gray-300">Dig</td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getDigStats(selectedPlayer).totalAttempts }}
+                  {{
+                    getDigStats(selectedPlayer, currentSetNumber).totalAttempts
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getDigStats(selectedPlayer).validAttempts }}
+                  {{
+                    getDigStats(selectedPlayer, currentSetNumber).validAttempts
+                  }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ getDigStats(selectedPlayer).errors }}
+                  {{ getDigStats(selectedPlayer, currentSetNumber).errors }}
                 </td>
                 <td class="px-4 py-2 border border-gray-300">-</td>
               </tr>
@@ -292,7 +376,10 @@
 
         <!-- Advanced Stats (Only if Advanced Input is Used) -->
         <div v-if="game.inputMethod === 'advanced'" class="advanced-stats">
-          <button @click="toggleSection('advancedStats')" class="section-header">
+          <button
+            @click="toggleSection('advancedStats')"
+            class="section-header"
+          >
             <h3 class="text-lg font-semibold">Advanced Stats</h3>
             <i
               :class="['fas', advancedStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"
@@ -308,15 +395,14 @@
               <p>
                 <strong>Ace Serve Percentage:</strong>
                 {{
-                  getAdvancedServeStats(selectedPlayer).aceServePercentage.toFixed(
-                    2
-                  )
+                  getAdvancedServeStats(selectedPlayer, currentSetNumber)
+                    .aceServePercentage.toFixed(2)
                 }}
               </p>
               <p>
                 <strong>Valid Serve Percentage:</strong>
                 {{
-                  getAdvancedServeStats(selectedPlayer)
+                  getAdvancedServeStats(selectedPlayer, currentSetNumber)
                     .validServePercentage.toFixed(2)
                 }}
               </p>
@@ -325,16 +411,19 @@
               <div
                 v-if="
                   Object.keys(
-                    getAdvancedServeStats(selectedPlayer).typePerPoint
+                    getAdvancedServeStats(selectedPlayer, currentSetNumber)
+                      .typePerPoint
                   ).length > 0
                 "
                 class="mt-2"
               >
                 <strong class="block mb-1">Points per Serve Type:</strong>
                 <div
-                  v-for="(points, type) in getAdvancedServeStats(
-                    selectedPlayer
-                  ).typePerPoint"
+                  v-for="(
+                    points,
+                    type
+                  ) in getAdvancedServeStats(selectedPlayer, currentSetNumber)
+                    .typePerPoint"
                   :key="type"
                   class="flex items-center"
                 >
@@ -347,7 +436,8 @@
               <div
                 v-if="
                   Object.keys(
-                    getAdvancedServeStats(selectedPlayer).targetPerPoint
+                    getAdvancedServeStats(selectedPlayer, currentSetNumber)
+                      .targetPerPoint
                   ).length > 0
                 "
                 class="mt-2"
@@ -355,18 +445,19 @@
                 <strong class="block mb-1">Points per Serve Target:</strong>
                 <div
                   v-for="(
-                    data, target
-                  ) in getAdvancedServeStats(selectedPlayer).targetPerPoint"
+                    data,
+                    target
+                  ) in getAdvancedServeStats(selectedPlayer, currentSetNumber)
+                    .targetPerPoint"
                   :key="target"
                   class="flex items-center"
                 >
                   <span class="w-24">{{ target }}:</span>
                   <span
-                    >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} / {{
-                      data.attempts
-                    }} attempt{{ data.attempts > 1 ? 's' : '' }} ({{
-                      (data.percentage * 100).toFixed(2)
-                    }}%)</span
+                    >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} /
+                    {{ data.attempts }} attempt{{
+                      data.attempts > 1 ? "s" : ""
+                    }} ({{ (data.percentage * 100).toFixed(2) }}%)</span
                   >
                 </div>
               </div>
@@ -378,7 +469,7 @@
               <p>
                 <strong>Valid Reception Percentage:</strong>
                 {{
-                  getAdvancedReceptionStats(selectedPlayer)
+                  getAdvancedReceptionStats(selectedPlayer, currentSetNumber)
                     .validReceptionPercentage.toFixed(2)
                 }}
               </p>
@@ -390,7 +481,7 @@
               <p>
                 <strong>Successful Set Percentage:</strong>
                 {{
-                  getAdvancedSettingStats(selectedPlayer)
+                  getAdvancedSettingStats(selectedPlayer, currentSetNumber)
                     .successfulSetPercentage.toFixed(2)
                 }}
               </p>
@@ -399,7 +490,8 @@
               <div
                 v-if="
                   Object.keys(
-                    getAdvancedSettingStats(selectedPlayer).setTargetDistribution
+                    getAdvancedSettingStats(selectedPlayer, currentSetNumber)
+                      .setTargetDistribution
                   ).length > 0
                 "
                 class="mt-2"
@@ -407,14 +499,15 @@
                 <strong class="block mb-1">Set Target Distribution:</strong>
                 <div
                   v-for="(
-                    count, target
-                  ) in getAdvancedSettingStats(selectedPlayer)
+                    count,
+                    target
+                  ) in getAdvancedSettingStats(selectedPlayer, currentSetNumber)
                     .setTargetDistribution"
                   :key="target"
                   class="flex items-center"
                 >
                   <span class="w-24">{{ target }}:</span>
-                  <span>{{ count }} set{{ count > 1 ? 's' : '' }}</span>
+                  <span>{{ count }} set{{ count > 1 ? "s" : "" }}</span>
                 </div>
               </div>
             </div>
@@ -425,15 +518,14 @@
               <p>
                 <strong>Kill Percentage:</strong>
                 {{
-                  getAdvancedAttackStats(selectedPlayer).killPercentage.toFixed(
-                    2
-                  )
+                  getAdvancedAttackStats(selectedPlayer, currentSetNumber)
+                    .killPercentage.toFixed(2)
                 }}
               </p>
               <p>
                 <strong>Valid Attack Percentage:</strong>
                 {{
-                  getAdvancedAttackStats(selectedPlayer)
+                  getAdvancedAttackStats(selectedPlayer, currentSetNumber)
                     .validAttackPercentage.toFixed(2)
                 }}
               </p>
@@ -442,7 +534,8 @@
               <div
                 v-if="
                   Object.keys(
-                    getAdvancedAttackStats(selectedPlayer).typePerPoint
+                    getAdvancedAttackStats(selectedPlayer, currentSetNumber)
+                      .typePerPoint
                   ).length > 0
                 "
                 class="mt-2"
@@ -450,13 +543,15 @@
                 <strong class="block mb-1">Points per Attack Type:</strong>
                 <div
                   v-for="(
-                    points, type
-                  ) in getAdvancedAttackStats(selectedPlayer).typePerPoint"
+                    points,
+                    type
+                  ) in getAdvancedAttackStats(selectedPlayer, currentSetNumber)
+                    .typePerPoint"
                   :key="type"
                   class="flex items-center"
                 >
                   <span class="w-24">{{ type }}:</span>
-                  <span>{{ points }} point{{ points > 1 ? 's' : '' }}</span>
+                  <span>{{ points }} point{{ points > 1 ? "s" : "" }}</span>
                 </div>
               </div>
 
@@ -464,7 +559,8 @@
               <div
                 v-if="
                   Object.keys(
-                    getAdvancedAttackStats(selectedPlayer).targetPerPoint
+                    getAdvancedAttackStats(selectedPlayer, currentSetNumber)
+                      .targetPerPoint
                   ).length > 0
                 "
                 class="mt-2"
@@ -472,18 +568,19 @@
                 <strong class="block mb-1">Points per Attack Target:</strong>
                 <div
                   v-for="(
-                    data, target
-                  ) in getAdvancedAttackStats(selectedPlayer).targetPerPoint"
+                    data,
+                    target
+                  ) in getAdvancedAttackStats(selectedPlayer, currentSetNumber)
+                    .targetPerPoint"
                   :key="target"
                   class="flex items-center"
                 >
                   <span class="w-24">{{ target }}:</span>
                   <span
-                    >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} / {{
-                      data.attempts
-                    }} attempt{{ data.attempts > 1 ? 's' : '' }} ({{
-                      (data.percentage * 100).toFixed(2)
-                    }}%)</span
+                    >{{ data.points }} point{{ data.points > 1 ? "s" : "" }} /
+                    {{ data.attempts }} attempt{{
+                      data.attempts > 1 ? "s" : ""
+                    }} ({{ (data.percentage * 100).toFixed(2) }}%)</span
                   >
                 </div>
               </div>
@@ -494,7 +591,10 @@
               <h4 class="text-md font-medium mb-2">Block</h4>
               <p>
                 <strong>Block Efficiency:</strong>
-                {{ getBlockStats(selectedPlayer).efficiency.toFixed(2) }}
+                {{
+                  getBlockStats(selectedPlayer, currentSetNumber)
+                    .efficiency.toFixed(2)
+                }}
               </p>
             </div>
 
@@ -510,7 +610,6 @@
   </div>
 </template>
 
-
 <script>
 export default {
   props: {
@@ -518,7 +617,7 @@ export default {
       type: Object,
       required: true,
     },
-    getPlayerName: { // Add getPlayerName as a prop
+    getPlayerName: {
       type: Function,
       required: true,
     },
@@ -528,11 +627,16 @@ export default {
       activeTab: "set",
       selectedPlayer: null,
       rotationEffectiveness: {},
-      gameSummaryOpen: true, 
-      teamStatsOpen: true, 
+      gameSummaryOpen: true,
+      teamStatsOpen: true,
       basicStatsOpen: true,
       advancedStatsOpen: true,
     };
+  },
+  computed: {
+    currentSetNumber() {
+      return this.activeTab === "set" ? this.game.currentSet : null; 
+    },
   },
   mounted() {
     // Set selectedPlayer to the first player on mount
@@ -547,14 +651,61 @@ export default {
     formatDate(dateString) {
       return new Date(dateString).toLocaleDateString();
     },
-    
+
     toggleSection(sectionName) {
-      this[sectionName + 'Open'] = !this[sectionName + 'Open'];
+      this[sectionName + "Open"] = !this[sectionName + "Open"];
     },
+
+    // Generic stat calculation function
+    calculateStatsForAction(playerId, action, setNumber = null) {
+      let totalAttempts = 0;
+      let points = 0;
+      let errors = 0;
+      let validAttempts = 0; // For actions like reception and dig
+
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]] // Get a specific set
+          : this.game.sets; // Get all sets
+
+      setsToProcess.forEach((set) => {
+        set.events.forEach((event) => {
+          if (event.player === playerId && event.action === action) {
+            totalAttempts++;
+
+            if (event.result === "point") {
+              points++;
+            } else if (event.result === "error") {
+              errors++;
+            }
+
+            if (
+              ["receive", "dig"].includes(action) &&
+              event.result === "continue"
+            ) {
+              validAttempts++;
+            }
+          }
+        });
+      });
+
+      const efficiency =
+        totalAttempts > 0
+          ? (points - errors) / totalAttempts // General efficiency calculation
+          : 0;
+
+      return { totalAttempts, points, errors, efficiency, validAttempts };
+    },
+
     // Team Stats Calculations
-    getTeamTotalPoints() {
+    getTeamTotalPoints(setNumber = null) {
       let totalPoints = 0;
-      this.game.sets.forEach((set) => {
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
+
+      setsToProcess.forEach((set) => {
         set.events.forEach((event) => {
           if (event.result === "point") {
             totalPoints++;
@@ -564,9 +715,14 @@ export default {
       return totalPoints;
     },
 
-    getTeamTotalErrors() {
+    getTeamTotalErrors(setNumber = null) {
       let totalErrors = 0;
-      this.game.sets.forEach((set) => {
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
+
+      setsToProcess.forEach((set) => {
         set.events.forEach((event) => {
           if (event.result === "error") {
             totalErrors++;
@@ -576,13 +732,18 @@ export default {
       return totalErrors;
     },
 
-    getTeamServeEfficiency() {
+    getTeamServeEfficiency(setNumber = null) {
       let totalServeAttempts = 0;
       let servePoints = 0;
       let serveContinues = 0;
       let serveErrors = 0;
 
-      this.game.sets.forEach((set) => {
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
+
+      setsToProcess.forEach((set) => {
         set.events.forEach((event) => {
           if (event.action === "serve") {
             totalServeAttempts++;
@@ -602,12 +763,17 @@ export default {
         : 0;
     },
 
-    getTeamAttackEfficiency() {
+    getTeamAttackEfficiency(setNumber = null) {
       let totalAttackAttempts = 0;
       let attackPoints = 0;
       let attackErrors = 0;
 
-      this.game.sets.forEach((set) => {
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
+
+      setsToProcess.forEach((set) => {
         set.events.forEach((event) => {
           if (event.action === "spike") {
             totalAttackAttempts++;
@@ -625,13 +791,18 @@ export default {
         : 0;
     },
 
-    getTeamBlockEfficiency() {
+    getTeamBlockEfficiency(setNumber = null) {
       let totalBlockAttempts = 0;
       let blockPoints = 0;
       let blockContinues = 0;
       let blockErrors = 0;
 
-      this.game.sets.forEach((set) => {
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
+
+      setsToProcess.forEach((set) => {
         set.events.forEach((event) => {
           if (event.action === "block") {
             totalBlockAttempts++;
@@ -651,11 +822,16 @@ export default {
         : 0;
     },
 
-    getTeamSideOutPercentage() {
+    getTeamSideOutPercentage(setNumber = null) {
       let pointsWhenReceiving = 0;
       let totalTimesReceiving = 0;
 
-      this.game.sets.forEach((set) => {
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
+
+      setsToProcess.forEach((set) => {
         set.events.forEach((event, index) => {
           // Check if opponent served the previous event
           const opponentServedPrevious =
@@ -676,11 +852,16 @@ export default {
         : 0;
     },
 
-    getTeamBreakPointPercentage() {
+    getTeamBreakPointPercentage(setNumber = null) {
       let pointsWhenServing = 0;
       let totalTimesServing = 0;
 
-      this.game.sets.forEach((set) => {
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
+
+      setsToProcess.forEach((set) => {
         set.events.forEach((event, index) => {
           // Check if the team served the previous event
           const teamServedPrevious =
@@ -696,417 +877,337 @@ export default {
         });
       });
 
-      return totalTimesServing > 0 ? pointsWhenServing / totalTimesServing : 0;
+      return totalTimesServing > 0
+        ? pointsWhenServing / totalTimesServing
+        : 0;
     },
 
-    getTeamRotationEffectiveness() {
-  // Create a new object to avoid mutating the original data
-  const rotationEffectiveness = {};
+    getTeamRotationEffectiveness(setNumber = null) {
+      const rotationEffectiveness = {};
 
-  this.game.sets.forEach((set) => {
-    set.events.forEach((event) => {
-      // Check if event.rotation exists before proceeding
-      if (event.rotation) { 
-      const rotationKey = event.rotation.join("-");
+      const setsToProcess =
+        setNumber !== null
+          ? [this.game.sets[setNumber - 1]]
+          : this.game.sets;
 
-      // Use a temporary object to accumulate data for each rotation
-      if (!rotationEffectiveness[rotationKey]) {
-        rotationEffectiveness[rotationKey] = {
-          receiveSuccess: 0,
-          blockSuccess: 0,
-          attackSuccess: 0,
-          receiveTotal: 0,
-          blockTotal: 0,
-          attackTotal: 0,
-        };
+      setsToProcess.forEach((set) => {
+        set.events.forEach((event) => {
+          if (event.rotation) {
+            const rotationKey = event.rotation.join("-");
+
+            if (!rotationEffectiveness[rotationKey]) {
+              rotationEffectiveness[rotationKey] = {
+                receiveSuccess: 0,
+                blockSuccess: 0,
+                attackSuccess: 0,
+                receiveTotal: 0,
+                blockTotal: 0,
+                attackTotal: 0,
+              };
+            }
+
+            // Track Reception Success
+            if (
+              event.action === "receive" &&
+              (event.result === "continue" || event.result === "point")
+            ) {
+              rotationEffectiveness[rotationKey].receiveSuccess++;
+            }
+            if (event.action === "receive") {
+              rotationEffectiveness[rotationKey].receiveTotal++;
+            }
+
+            // Track Block Success
+            if (
+              event.action === "block" &&
+              (event.result === "point" || event.result === "continue")
+            ) {
+              rotationEffectiveness[rotationKey].blockSuccess++;
+            }
+            if (event.action === "block") {
+              rotationEffectiveness[rotationKey].blockTotal++;
+            }
+
+            // Track Attack Success
+            if (event.action === "spike" && event.result === "point") {
+              rotationEffectiveness[rotationKey].attackSuccess++;
+            }
+            if (event.action === "spike") {
+              rotationEffectiveness[rotationKey].attackTotal++;
+            }
+          }
+        });
+      });
+
+      for (const rotation in rotationEffectiveness) {
+        const data = rotationEffectiveness[rotation];
+        data.receiveEffectiveness =
+          data.receiveTotal > 0
+            ? (data.receiveSuccess / data.receiveTotal).toFixed(2)
+            : "-";
+        data.blockEffectiveness =
+          data.blockTotal > 0
+            ? (data.blockSuccess / data.blockTotal).toFixed(2)
+            : "-";
+        data.attackEffectiveness =
+          data.attackTotal > 0
+            ? (data.attackSuccess / data.attackTotal).toFixed(2)
+            : "-";
       }
 
-      // Track Reception Success
-      if (
-        event.action === "receive" &&
-        (event.result === "continue" || event.result === "point")
-      ) {
-        rotationEffectiveness[rotationKey].receiveSuccess++;
-      }
-      if (event.action === "receive") {
-        rotationEffectiveness[rotationKey].receiveTotal++;
-      }
-
-      // Track Block Success
-      if (
-        event.action === "block" &&
-        (event.result === "point" || event.result === "continue")
-      ) {
-        rotationEffectiveness[rotationKey].blockSuccess++;
-      }
-      if (event.action === "block") {
-        rotationEffectiveness[rotationKey].blockTotal++;
-      }
-
-      // Track Attack Success
-      if (event.action === "spike" && event.result === "point") {
-        rotationEffectiveness[rotationKey].attackSuccess++;
-      }
-      if (event.action === "spike") {
-        rotationEffectiveness[rotationKey].attackTotal++;
-      }
-    }});
-  });
-
- // Calculate effectiveness percentages for each rotation
- for (const rotation in rotationEffectiveness) {
-    const data = rotationEffectiveness[rotation];
-    data.receiveEffectiveness =
-      data.receiveTotal > 0
-        ? (data.receiveSuccess / data.receiveTotal).toFixed(2)
-        : "-"; // Display "-" if no attempts
-    data.blockEffectiveness =
-      data.blockTotal > 0
-        ? (data.blockSuccess / data.blockTotal).toFixed(2)
-        : "-";
-    data.attackEffectiveness =
-      data.attackTotal > 0
-        ? (data.attackSuccess / data.attackTotal).toFixed(2)
-        : "-";
-  }
-
-  // Instead of calculating averages, return the entire rotationEffectiveness object
-  return rotationEffectiveness;
-},
+      return rotationEffectiveness;
+    },
 
     // Individual Player Stats Calculations
-    getServeStats(playerId) {
-      let totalAttempts = 0;
-      let points = 0;
-      let errors = 0;
-
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "serve") {
-            totalAttempts++;
-            if (event.result === "point") {
-              points++;
-            } else if (event.result === "error") {
-              errors++;
-            }
-          }
-        });
-      });
-
-      const efficiency =
-        totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
-      return { totalAttempts, points, errors, efficiency };
+    getServeStats(playerId, setNumber = null) {
+      return this.calculateStatsForAction(playerId, "serve", setNumber);
     },
-    getReceptionStats(playerId) {
-      let totalAttempts = 0;
-      let validAttempts = 0;
-      let errors = 0;
-      let points = 0;
 
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "receive") {
-            totalAttempts++;
-            if (event.result === "continue" || event.result === "point") {
-              validAttempts++;
-              if (event.result === "point") {
-                points++;
-              }
-            } else if (event.result === "error") {
-              errors++;
-            }
-          }
-        });
-      });
-
-      const efficiency =
-        totalAttempts > 0 ? validAttempts / totalAttempts : 0;
-      return { totalAttempts, validAttempts, errors, efficiency, points };
+    getReceptionStats(playerId, setNumber = null) {
+      const stats = this.calculateStatsForAction(
+        playerId,
+        "receive",
+        setNumber
+      );
+      stats.efficiency =
+        stats.totalAttempts > 0
+          ? stats.validAttempts / stats.totalAttempts
+          : 0;
+      return stats;
     },
-    getSettingStats(playerId) {
-      let totalAttempts = 0;
-      let validAttempts = 0;
-      let errors = 0;
-      let points = 0;
 
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "set") {
-            totalAttempts++;
-            if (event.result === "continue" || event.result === "point") {
-              validAttempts++;
-              if (event.result === "point") {
-                points++;
-              }
-            } else if (event.result === "error") {
-              errors++;
-            }
-          }
-        });
-      });
-
-      const efficiency =
-        totalAttempts > 0 ? (validAttempts - errors) / totalAttempts : 0;
-      return { totalAttempts, validAttempts, errors, efficiency, points };
+    getSettingStats(playerId, setNumber = null) {
+      return this.calculateStatsForAction(playerId, "set", setNumber);
     },
-    getAttackStats(playerId) {
-      let totalAttempts = 0;
-      let points = 0;
-      let errors = 0;
 
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "spike") {
-            totalAttempts++;
-            if (event.result === "point") {
-              points++;
-            } else if (event.result === "error") {
-              errors++;
-            }
-          }
-        });
-      });
-
-      const efficiency =
-        totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
-      return { totalAttempts, points, errors, efficiency };
+    getAttackStats(playerId, setNumber = null) {
+      return this.calculateStatsForAction(playerId, "spike", setNumber);
     },
-    getBlockStats(playerId) {
-      let totalAttempts = 0;
-      let points = 0;
-      let errors = 0;
 
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "block") {
-            totalAttempts++;
-            if (event.result === "point") {
-              points++;
-            } else if (event.result === "error") {
-              errors++;
-            }
-          }
-        });
-      });
-
-      const efficiency =
-        totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
-      return { totalAttempts, points, errors, efficiency };
+    getBlockStats(playerId, setNumber = null) {
+      return this.calculateStatsForAction(playerId, "block", setNumber);
     },
-    getDigStats(playerId) {
-      let totalAttempts = 0;
-      let validAttempts = 0;
-      let errors = 0;
 
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "dig") {
-            totalAttempts++;
-            if (event.result === "continue") {
-              validAttempts++;
-            } else if (event.result === "error") {
-              errors++;
-            }
-          }
-        });
-      });
-
-      const efficiency =
-        totalAttempts > 0 ? (validAttempts - errors) / totalAttempts : 0;
-      return { totalAttempts, validAttempts, errors, efficiency };
+    getDigStats(playerId, setNumber = null) {
+      const stats = this.calculateStatsForAction(playerId, "dig", setNumber);
+      stats.efficiency =
+        stats.totalAttempts > 0
+          ? stats.validAttempts / stats.totalAttempts
+          : 0;
+      return stats;
     },
 
     // Advanced Player Stats Calculations
-    getAdvancedServeStats(playerId) {
+    getAdvancedServeStats(playerId, setNumber = null) {
       let totalAttempts = 0;
       let points = 0;
       let errors = 0;
-      let perfectServes = 0;
-      let goodServes = 0;
-      let typePerPoint = {};
-      let targetPerPoint = {};
+let perfectServes = 0;
+let goodServes = 0;
+let typePerPoint = {};
+let targetPerPoint = {};
 
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "serve") {
-            totalAttempts++;
-            if (event.result === "point") points++;
-            if (event.result === "error") errors++;
+const setsToProcess =
+  setNumber !== null
+    ? [this.game.sets[setNumber - 1]]
+    : this.game.sets;
 
-            if (event.evaluation === "Perfect") perfectServes++;
-            if (event.evaluation === "Good") goodServes++;
+setsToProcess.forEach((set) => {
+  set.events.forEach((event) => {
+    if (event.player === playerId && event.action === "serve") {
+      totalAttempts++;
+      if (event.result === "point") points++;
+      if (event.result === "error") errors++;
 
-            if (event.result === "point" && event.type) {
-              typePerPoint[event.type] = (typePerPoint[event.type] || 0) + 1;
-            }
+      if (event.evaluation === "Perfect") perfectServes++;
+      if (event.evaluation === "Good") goodServes++;
 
-            if (event.result === "point" && event.target) {
-              if (!targetPerPoint[event.target]) {
-                targetPerPoint[event.target] = { points: 0, attempts: 0 };
-              }
-              targetPerPoint[event.target].points++;
-            }
-
-            if (event.target) {
-              if (!targetPerPoint[event.target]) {
-                targetPerPoint[event.target] = { points: 0, attempts: 0 };
-              }
-              targetPerPoint[event.target].attempts++;
-            }
-          }
-        });
-      });
-
-      const aceServePercentage =
-        totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
-      const validServePercentage =
-        totalAttempts > 0
-          ? (points + perfectServes + goodServes - errors) / totalAttempts
-          : 0;
-
-      for (const target in targetPerPoint) {
-        targetPerPoint[target].percentage =
-          targetPerPoint[target].attempts > 0
-            ? targetPerPoint[target].points / targetPerPoint[target].attempts
-            : 0;
+      if (event.result === "point" && event.type) {
+        typePerPoint[event.type] = (typePerPoint[event.type] || 0) + 1;
       }
 
-      return {
-        totalAttempts,
-        points,
-        errors,
-        aceServePercentage,
-        validServePercentage,
-        typePerPoint,
-        targetPerPoint,
-      };
-    },
-
-    getAdvancedReceptionStats(playerId) {
-      let totalAttempts = 0;
-      let perfectReceptions = 0;
-      let goodReceptions = 0;
-      let errors = 0;
-
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "receive") {
-            totalAttempts++;
-            if (event.evaluation === "Perfect") perfectReceptions++;
-            if (event.evaluation === "Good") goodReceptions++;
-            if (event.result === "error") errors++;
-          }
-        });
-      });
-
-      const validReceptionPercentage =
-        totalAttempts > 0
-          ? (perfectReceptions + goodReceptions - errors) / totalAttempts
-          : 0;
-
-      return {
-        totalAttempts,
-        validReceptionPercentage,
-      };
-    },
-
-    getAdvancedSettingStats(playerId) {
-      let totalAttempts = 0;
-      let perfectSets = 0;
-      let goodSets = 0;
-      let setTargetDistribution = {};
-
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "set") {
-            totalAttempts++;
-            if (event.evaluation === "Perfect") perfectSets++;
-            if (event.evaluation === "Good") goodSets++;
-
-            // Set Target Distribution
-            if (event.target) {
-              setTargetDistribution[event.target] =
-                (setTargetDistribution[event.target] || 0) + 1;
-            }
-          }
-        });
-      });
-
-      const successfulSetPercentage =
-        totalAttempts > 0 ? (perfectSets + goodSets) / totalAttempts : 0;
-
-      return {
-        totalAttempts,
-        successfulSetPercentage,
-        setTargetDistribution,
-      };
-    },
-
-    getAdvancedAttackStats(playerId) {
-      let totalAttempts = 0;
-      let points = 0;
-      let errors = 0;
-      let perfectAttacks = 0;
-      let goodAttacks = 0;
-      let typePerPoint = {};
-      let targetPerPoint = {};
-
-      this.game.sets.forEach((set) => {
-        set.events.forEach((event) => {
-          if (event.player === playerId && event.action === "spike") {
-            totalAttempts++;
-            if (event.result === "point") points++;
-            if (event.result === "error") errors++;
-
-            if (event.evaluation === "Perfect") perfectAttacks++;
-            if (event.evaluation === "Good") goodAttacks++;
-
-            if (event.result === "point" && event.type) {
-              typePerPoint[event.type] = (typePerPoint[event.type] || 0) + 1;
-            }
-
-            if (event.result === "point" && event.target) {
-              if (!targetPerPoint[event.target]) {
-                targetPerPoint[event.target] = { points: 0, attempts: 0 };
-              }
-              targetPerPoint[event.target].points++;
-            }
-
-            if (event.target) {
-              if (!targetPerPoint[event.target]) {
-                targetPerPoint[event.target] = { points: 0, attempts: 0 };
-              }
-              targetPerPoint[event.target].attempts++;
-            }
-          }
-        });
-      });
-
-      const killPercentage =
-        totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
-      const validAttackPercentage =
-        totalAttempts > 0
-          ? (points + perfectAttacks + goodAttacks - errors) / totalAttempts
-          : 0;
-
-      for (const target in targetPerPoint) {
-        targetPerPoint[target].percentage =
-          targetPerPoint[target].attempts > 0
-            ? targetPerPoint[target].points / targetPerPoint[target].attempts
-            : 0;
+      if (event.result === "point" && event.target) {
+        if (!targetPerPoint[event.target]) {
+          targetPerPoint[event.target] = { points: 0, attempts: 0 };
+        }
+        targetPerPoint[event.target].points++;
       }
 
-      return {
-        totalAttempts,
-        points,
-        errors,
-        killPercentage,
-        validAttackPercentage,
-        typePerPoint,
-        targetPerPoint,
-      };
-    },
-  },
+      if (event.target) {
+        if (!targetPerPoint[event.target]) {
+          targetPerPoint[event.target] = { points: 0, attempts: 0 };
+        }
+        targetPerPoint[event.target].attempts++;
+      }
+    }
+  });
+});
+
+const aceServePercentage =
+  totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
+const validServePercentage =
+  totalAttempts > 0
+    ? (points + perfectServes + goodServes - errors) / totalAttempts
+    : 0;
+
+for (const target in targetPerPoint) {
+  targetPerPoint[target].percentage =
+    targetPerPoint[target].attempts > 0
+      ? targetPerPoint[target].points / targetPerPoint[target].attempts
+      : 0;
+}
+
+return {
+  totalAttempts,
+  points,
+  errors,
+  aceServePercentage,
+  validServePercentage,
+  typePerPoint,
+  targetPerPoint,
+};
+},
+
+getAdvancedReceptionStats(playerId, setNumber = null) {
+let totalAttempts = 0;
+let perfectReceptions = 0;
+let goodReceptions = 0;
+let errors = 0;
+
+const setsToProcess =
+  setNumber !== null
+    ? [this.game.sets[setNumber - 1]]
+    : this.game.sets;
+
+setsToProcess.forEach((set) => {
+  set.events.forEach((event) => {
+    if (event.player === playerId && event.action === "receive") {
+      totalAttempts++;
+      if (event.evaluation === "Perfect") perfectReceptions++;
+      if (event.evaluation === "Good") goodReceptions++;
+      if (event.result === "error") errors++;
+    }
+  });
+});
+
+const validReceptionPercentage =
+  totalAttempts > 0
+    ? (perfectReceptions + goodReceptions - errors) / totalAttempts
+    : 0;
+
+return {
+  totalAttempts,
+  validReceptionPercentage,
+};
+},
+
+getAdvancedSettingStats(playerId, setNumber = null) {
+let totalAttempts = 0;
+let perfectSets = 0;
+let goodSets = 0;
+let setTargetDistribution = {};
+
+const setsToProcess =
+  setNumber !== null
+    ? [this.game.sets[setNumber - 1]]
+    : this.game.sets;
+
+setsToProcess.forEach((set) => {
+  set.events.forEach((event) => {
+    if (event.player === playerId && event.action === "set") {
+      totalAttempts++;
+      if (event.evaluation === "Perfect") perfectSets++;
+      if (event.evaluation === "Good") goodSets++;
+
+      // Set Target Distribution
+      if (event.target) {
+        setTargetDistribution[event.target] =
+          (setTargetDistribution[event.target] || 0) + 1;
+      }
+    }
+  });
+});
+
+const successfulSetPercentage =
+  totalAttempts > 0 ? (perfectSets + goodSets) / totalAttempts : 0;
+
+return {
+  totalAttempts,
+  successfulSetPercentage,
+  setTargetDistribution,
+};
+},
+
+getAdvancedAttackStats(playerId, setNumber = null) {
+let totalAttempts = 0;
+let points = 0;
+let errors = 0;
+let perfectAttacks = 0;
+let goodAttacks = 0;
+let typePerPoint = {};
+let targetPerPoint = {};
+
+const setsToProcess =
+  setNumber !== null
+    ? [this.game.sets[setNumber - 1]]
+    : this.game.sets;
+
+setsToProcess.forEach((set) => {
+  set.events.forEach((event) => {
+    if (event.player === playerId && event.action === "spike") {
+      totalAttempts++;
+      if (event.result === "point") points++;
+      if (event.result === "error") errors++;
+
+      if (event.evaluation === "Perfect") perfectAttacks++;
+      if (event.evaluation === "Good") goodAttacks++;
+
+      if (event.result === "point" && event.type) {
+        typePerPoint[event.type] = (typePerPoint[event.type] || 0) + 1;
+      }
+
+      if (event.result === "point" && event.target) {
+        if (!targetPerPoint[event.target]) {
+          targetPerPoint[event.target] = { points: 0, attempts: 0 };
+        }
+        targetPerPoint[event.target].points++;
+      }
+
+      if (event.target) {
+        if (!targetPerPoint[event.target]) {
+          targetPerPoint[event.target] = { points: 0, attempts: 0 };
+        }
+        targetPerPoint[event.target].attempts++;
+      }
+    }
+  });
+});
+
+const killPercentage =
+  totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
+const validAttackPercentage =
+  totalAttempts > 0
+    ? (points + perfectAttacks + goodAttacks - errors) / totalAttempts
+    : 0;
+
+for (const target in targetPerPoint) {
+  targetPerPoint[target].percentage =
+    targetPerPoint[target].attempts > 0
+      ? targetPerPoint[target].points / targetPerPoint[target].attempts
+      : 0;
+}
+
+return {
+  totalAttempts,
+  points,
+  errors,
+  killPercentage,
+  validAttackPercentage,
+  typePerPoint,
+  targetPerPoint,
+};
+},
+},
 };
 </script>
 <style scoped>
