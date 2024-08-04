@@ -83,7 +83,7 @@
     </button>
 
     <!-- Stat Screen Component -->
-    <StatScreen v-if="showStatScreen" :game="gameWithPlayerDetails" />
+    <StatScreen v-if="showStatScreen" :game="gameWithPlayerDetails" :getPlayerName="getPlayerName" />
   </div>
 </template>
 

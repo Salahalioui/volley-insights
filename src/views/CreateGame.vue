@@ -312,4 +312,5 @@ export default {
 
 .btn-blue { background-color: #4299e1; color: white; }
 .btn-blue:hover { background-color: #3182ce; }
+
 </style>

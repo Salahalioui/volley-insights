@@ -1,6 +1,6 @@
 <template>
   <div class="stat-screen p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold mb-4 text-gray-800 text-center">Game Statistics</h2>
+    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">Game Statistics</h2>
 
     <!-- Filter Section (Tabs) -->
     <div class="filter-section flex space-x-4 mb-4">
@@ -21,302 +21,495 @@
     </div>
 
     <!-- Game Summary Section -->
-    <div v-if="activeTab === 'game'" class="game-summary bg-white p-4 rounded-md shadow-sm mb-4">
-      <h3 class="text-lg font-semibold mb-2">Game Summary</h3>
-      <p><strong>Game Name:</strong> {{ game.name }}</p>
-      <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
-      <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
-      <p><strong>Sets Won:</strong> {{ game.setsWon.team }} - {{ game.setsWon.opponent }}</p>
+    <div v-if="activeTab === 'game'" class="game-summary mb-6">
+      <button @click="toggleSection('gameSummary')" class="section-header">
+        <h3 class="text-lg font-semibold">Game Summary</h3>
+        <i :class="['fas', gameSummaryOpen ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+      </button>
+      <div v-if="gameSummaryOpen" class="section-content bg-white p-4 rounded-md shadow-sm">
+        <p><strong>Game Name:</strong> {{ game.name }}</p>
+        <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
+        <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
+        <p>
+          <strong>Sets Won:</strong> {{ game.setsWon.team }} - {{ game.setsWon.opponent }}
+        </p>
+      </div>
     </div>
 
     <!-- Team Stats Section -->
-    <div v-if="activeTab === 'set' || activeTab === 'game'" class="team-stats bg-white p-4 rounded-md shadow-sm mb-4">
-      <h3 class="text-lg font-semibold mb-2">Team Stats</h3>
+    <div
+      v-if="activeTab === 'set' || activeTab === 'game'"
+      class="team-stats mb-6"
+    >
+      <button @click="toggleSection('teamStats')" class="section-header">
+        <h3 class="text-lg font-semibold">Team Stats</h3>
+        <i :class="['fas', teamStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+      </button>
+      <div v-if="teamStatsOpen" class="section-content bg-white p-4 rounded-md shadow-sm">
+        <table class="w-full table-auto border-collapse border border-gray-300">
+          <thead>
+            <tr>
+              <th class="px-4 py-2 text-left border border-gray-300">
+                Stat Category
+              </th>
+              <th class="px-4 py-2 text-left border border-gray-300">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-gray-100">
+              <td class="px-4 py-2 border border-gray-300">Total Points</td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamTotalPoints() }}
+              </td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2 border border-gray-300">Total Errors</td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamTotalErrors() }}
+              </td>
+            </tr>
+            <tr class="bg-gray-100">
+              <td class="px-4 py-2 border border-gray-300">Serve Efficiency</td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamServeEfficiency().toFixed(2) }}
+              </td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2 border border-gray-300">
+                Attack Efficiency
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamAttackEfficiency().toFixed(2) }}
+              </td>
+            </tr>
+            <tr class="bg-gray-100">
+              <td class="px-4 py-2 border border-gray-300">Block Efficiency</td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamBlockEfficiency().toFixed(2) }}
+              </td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2 border border-gray-300">
+                Side Out Percentage
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamSideOutPercentage().toFixed(2) }}
+              </td>
+            </tr>
+            <tr class="bg-gray-100">
+              <td class="px-4 py-2 border border-gray-300">
+                Break Point Percentage
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamBreakPointPercentage().toFixed(2) }}
+              </td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2 border border-gray-300">
+                Rotation Effectiveness (Receive-Block-Attack)
+              </td>
+              <td class="px-4 py-2 border border-gray-300">
+                {{ getTeamRotationEffectiveness().receive }} -
+                {{ getTeamRotationEffectiveness().block }} -
+                {{ getTeamRotationEffectiveness().attack }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div v-if="teamStatsOpen" class="section-content">
       <table class="w-full table-auto">
-        <thead>
-          <tr>
-            <th class="px-4 py-2">Stat Category</th>
-            <th class="px-4 py-2">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="px-4 py-2">Total Points</td>
-            <td class="px-4 py-2">{{ getTeamTotalPoints() }}</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Total Errors</td>
-            <td class="px-4 py-2">{{ getTeamTotalErrors() }}</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Serve Efficiency</td>
-            <td class="px-4 py-2">{{ getTeamServeEfficiency().toFixed(2) }}</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Attack Efficiency</td>
-            <td class="px-4 py-2">{{ getTeamAttackEfficiency().toFixed(2) }}</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Block Efficiency</td>
-            <td class="px-4 py-2">{{ getTeamBlockEfficiency().toFixed(2) }}</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Side Out Percentage</td>
-            <td class="px-4 py-2">{{ getTeamSideOutPercentage().toFixed(2) }}</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Break Point Percentage</td>
-            <td class="px-4 py-2">{{ getTeamBreakPointPercentage().toFixed(2) }}</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2">Rotation Effectiveness (Receive-Block-Attack)</td>
-            <td class="px-4 py-2">
-              {{ getTeamRotationEffectiveness().receive }} -
-              {{ getTeamRotationEffectiveness().block }} -
-              {{ getTeamRotationEffectiveness().attack }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <thead>
+    <tr>
+      <th class="px-4 py-2">Rotation (Player Names)</th>
+      <th class="px-4 py-2">Receive Effectiveness</th>
+      <th class="px-4 py-2">Block Effectiveness</th>
+      <th class="px-4 py-2">Attack Effectiveness</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="(data, rotationKey) in getTeamRotationEffectiveness()" :key="rotationKey">
+      <td class="px-4 py-2">
+  {{ rotationKey.split('-').map((playerId, index) => `P${index + 1}: ${getPlayerName(parseInt(playerId))}`).join(', ') }} 
+</td>
+      <td class="px-4 py-2">{{ data.receiveEffectiveness }}</td>
+      <td class="px-4 py-2">{{ data.blockEffectiveness }}</td>
+      <td class="px-4 py-2">{{ data.attackEffectiveness }}</td>
+    </tr>
+  </tbody>
+</table>
     </div>
 
-    <!-- Individual Player Performance Section -->
-    <div class="player-stats bg-white p-4 rounded-md shadow-sm">
+    <!-- Individual Player Stats Section -->
+    <div class="player-stats mb-6">
       <h3 class="text-lg font-semibold mb-2">Individual Player Stats</h3>
       <select v-model="selectedPlayer" class="w-full p-2 border rounded-md mb-4">
-        <option v-for="player in game.playerDetails" :key="player.id" :value="player.id">
+        <option
+          v-for="player in game.playerDetails"
+          :key="player.id"
+          :value="player.id"
+        >
           {{ player.name }}
         </option>
       </select>
 
       <div v-if="selectedPlayer">
         <!-- Basic Stats -->
-        <table class="w-full table-auto mb-4">
-          <thead>
-            <tr>
-              <th class="px-4 py-2">Stat Category</th>
-              <th class="px-4 py-2">Total Attempts</th>
-              <th class="px-4 py-2">Points</th>
-              <th class="px-4 py-2">Errors</th>
-              <th class="px-4 py-2">Efficiency</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Serve Stats -->
-            <tr>
-              <td class="px-4 py-2">Serve</td>
-              <td class="px-4 py-2">{{ getServeStats(selectedPlayer).totalAttempts }}</td>
-              <td class="px-4 py-2">{{ getServeStats(selectedPlayer).points }}</td>
-              <td class="px-4 py-2">{{ getServeStats(selectedPlayer).errors }}</td>
-              <td class="px-4 py-2">{{ getServeStats(selectedPlayer).efficiency.toFixed(2) }}</td>
-            </tr>
+        <button @click="toggleSection('basicStats')" class="section-header">
+          <h3 class="text-lg font-semibold">Basic Stats</h3>
+          <i
+            :class="['fas', basicStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"
+          ></i>
+        </button>
+        <div
+          v-if="basicStatsOpen"
+          class="section-content bg-white p-4 rounded-md shadow-sm"
+        >
+          <table class="w-full table-auto border-collapse border border-gray-300">
+            <thead>
+              <tr>
+                <th class="px-4 py-2 text-left border border-gray-300">
+                  Stat Category
+                </th>
+                <th class="px-4 py-2 text-left border border-gray-300">
+                  Total Attempts
+                </th>
+                <th class="px-4 py-2 text-left border border-gray-300">
+                  Points
+                </th>
+                <th class="px-4 py-2 text-left border border-gray-300">
+                  Errors
+                </th>
+                <th class="px-4 py-2 text-left border border-gray-300">
+                  Efficiency
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Serve Stats -->
+              <tr class="bg-gray-100">
+                <td class="px-4 py-2 border border-gray-300">Serve</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getServeStats(selectedPlayer).totalAttempts }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getServeStats(selectedPlayer).points }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getServeStats(selectedPlayer).errors }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getServeStats(selectedPlayer).efficiency.toFixed(2) }}
+                </td>
+              </tr>
 
-            <!-- Reception Stats -->
-            <tr>
-              <td class="px-4 py-2">Reception</td>
-              <td class="px-4 py-2">{{ getReceptionStats(selectedPlayer).totalAttempts }}</td>
-              <td class="px-4 py-2">{{ getReceptionStats(selectedPlayer).points }}</td>
-              <td class="px-4 py-2">{{ getReceptionStats(selectedPlayer).errors }}</td>
-              <td class="px-4 py-2">{{ getReceptionStats(selectedPlayer).efficiency.toFixed(2) }}</td>
-            </tr>
+              <!-- Reception Stats -->
+              <tr>
+                <td class="px-4 py-2 border border-gray-300">Reception</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getReceptionStats(selectedPlayer).totalAttempts }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getReceptionStats(selectedPlayer).points }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getReceptionStats(selectedPlayer).errors }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getReceptionStats(selectedPlayer).efficiency.toFixed(2) }}
+                </td>
+              </tr>
 
-            <!-- Setting Stats -->
-            <tr>
-              <td class="px-4 py-2">Setting</td>
-              <td class="px-4 py-2">{{ getSettingStats(selectedPlayer).totalAttempts }}</td>
-              <td class="px-4 py-2">{{ getSettingStats(selectedPlayer).points }}</td>
-              <td class="px-4 py-2">{{ getSettingStats(selectedPlayer).errors }}</td>
-              <td class="px-4 py-2">{{ getSettingStats(selectedPlayer).efficiency.toFixed(2) }}</td>
-            </tr>
+              <!-- Setting Stats -->
+              <tr class="bg-gray-100">
+                <td class="px-4 py-2 border border-gray-300">Setting</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getSettingStats(selectedPlayer).totalAttempts }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getSettingStats(selectedPlayer).points }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getSettingStats(selectedPlayer).errors }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getSettingStats(selectedPlayer).efficiency.toFixed(2) }}
+                </td>
+              </tr>
 
-            <!-- Attack Stats -->
-            <tr>
-              <td class="px-4 py-2">Attack</td>
-              <td class="px-4 py-2">{{ getAttackStats(selectedPlayer).totalAttempts }}</td>
-              <td class="px-4 py-2">{{ getAttackStats(selectedPlayer).points }}</td>
-              <td class="px-4 py-2">{{ getAttackStats(selectedPlayer).errors }}</td>
-              <td class="px-4 py-2">{{ getAttackStats(selectedPlayer).efficiency.toFixed(2) }}</td>
-            </tr>
+              <!-- Attack Stats -->
+              <tr>
+                <td class="px-4 py-2 border border-gray-300">Attack</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getAttackStats(selectedPlayer).totalAttempts }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getAttackStats(selectedPlayer).points }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getAttackStats(selectedPlayer).errors }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getAttackStats(selectedPlayer).efficiency.toFixed(2) }}
+                </td>
+              </tr>
 
-            <!-- Block Stats -->
-            <tr>
-              <td class="px-4 py-2">Block</td>
-              <td class="px-4 py-2">{{ getBlockStats(selectedPlayer).totalAttempts }}</td>
-              <td class="px-4 py-2">{{ getBlockStats(selectedPlayer).points }}</td>
-              <td class="px-4 py-2">{{ getBlockStats(selectedPlayer).errors }}</td>
-              <td class="px-4 py-2">{{ getBlockStats(selectedPlayer).efficiency.toFixed(2) }}</td>
-            </tr>
+              <!-- Block Stats -->
+              <tr class="bg-gray-100">
+                <td class="px-4 py-2 border border-gray-300">Block</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getBlockStats(selectedPlayer).totalAttempts }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getBlockStats(selectedPlayer).points }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getBlockStats(selectedPlayer).errors }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getBlockStats(selectedPlayer).efficiency.toFixed(2) }}
+                </td>
+              </tr>
 
-            <!-- Dig Stats -->
-            <tr>
-              <td class="px-4 py-2">Dig</td>
-              <td class="px-4 py-2">{{ getDigStats(selectedPlayer).totalAttempts }}</td>
-              <td class="px-4 py-2">{{ getDigStats(selectedPlayer).validAttempts }}</td>
-              <td class="px-4 py-2">{{ getDigStats(selectedPlayer).errors }}</td>
-              <td class="px-4 py-2">-</td>
-            </tr>
-          </tbody>
-        </table>
+              <!-- Dig Stats -->
+              <tr>
+                <td class="px-4 py-2 border border-gray-300">Dig</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getDigStats(selectedPlayer).totalAttempts }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getDigStats(selectedPlayer).validAttempts }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ getDigStats(selectedPlayer).errors }}
+                </td>
+                <td class="px-4 py-2 border border-gray-300">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Advanced Stats (Only if Advanced Input is Used) -->
         <div v-if="game.inputMethod === 'advanced'" class="advanced-stats">
-          <h3 class="text-lg font-semibold mb-2">Advanced Stats</h3>
+          <button @click="toggleSection('advancedStats')" class="section-header">
+            <h3 class="text-lg font-semibold">Advanced Stats</h3>
+            <i
+              :class="['fas', advancedStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"
+            ></i>
+          </button>
+          <div
+            v-if="advancedStatsOpen"
+            class="section-content bg-white p-4 rounded-md shadow-sm"
+          >
+            <!-- Serve Advanced Stats -->
+            <div class="mb-4">
+              <h4 class="text-md font-medium mb-2">Serve</h4>
+              <p>
+                <strong>Ace Serve Percentage:</strong>
+                {{
+                  getAdvancedServeStats(selectedPlayer).aceServePercentage.toFixed(
+                    2
+                  )
+                }}
+              </p>
+              <p>
+                <strong>Valid Serve Percentage:</strong>
+                {{
+                  getAdvancedServeStats(selectedPlayer)
+                    .validServePercentage.toFixed(2)
+                }}
+              </p>
 
-          <!-- Serve Advanced Stats -->
-          <div class="mb-4">
-            <h4 class="text-md font-medium mb-2">Serve</h4>
-            <p>
-              <strong>Ace Serve Percentage:</strong>
-              {{ getAdvancedServeStats(selectedPlayer).aceServePercentage.toFixed(2) }}
-            </p>
-            <p>
-              <strong>Valid Serve Percentage:</strong>
-              {{ getAdvancedServeStats(selectedPlayer).validServePercentage.toFixed(2) }}
-            </p>
-
-            <!-- Type per Point -->
-            <div
-              v-if="Object.keys(getAdvancedServeStats(selectedPlayer).typePerPoint).length > 0"
-              class="mt-2"
-            >
-              <strong class="block mb-1">Points per Serve Type:</strong>
+              <!-- Type per Point -->
               <div
-                v-for="(points, type) in getAdvancedServeStats(selectedPlayer).typePerPoint"
-                :key="type"
-                class="flex items-center"
+                v-if="
+                  Object.keys(
+                    getAdvancedServeStats(selectedPlayer).typePerPoint
+                  ).length > 0
+                "
+                class="mt-2"
               >
-                <span class="w-24">{{ type }}:</span>
-                <span>{{ points }} point{{ points > 1 ? 's' : '' }}</span>
-              </div>
-            </div>
-
-            <!-- Target per Point -->
-            <div
-              v-if="Object.keys(getAdvancedServeStats(selectedPlayer).targetPerPoint).length > 0"
-              class="mt-2"
-            >
-              <strong class="block mb-1">Points per Serve Target:</strong>
-              <div
-                v-for="(data, target) in getAdvancedServeStats(selectedPlayer).targetPerPoint"
-                :key="target"
-                class="flex items-center"
-              >
-                <span class="w-24">{{ target }}:</span>
-                <span
-                  >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} / {{
-                    data.attempts
-                  }} attempt{{ data.attempts > 1 ? 's' : '' }} ({{
-                    (data.percentage * 100).toFixed(2)
-                  }}%)</span
+                <strong class="block mb-1">Points per Serve Type:</strong>
+                <div
+                  v-for="(points, type) in getAdvancedServeStats(
+                    selectedPlayer
+                  ).typePerPoint"
+                  :key="type"
+                  class="flex items-center"
                 >
+                  <span class="w-24">{{ type }}:</span>
+                  <span>{{ points }} point{{ points > 1 ? 's' : '' }}</span>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Reception Advanced Stats -->
-          <div class="mb-4">
-            <h4 class="text-md font-medium mb-2">Reception</h4>
-            <p>
-              <strong>Valid Reception Percentage:</strong>
-              {{ getAdvancedReceptionStats(selectedPlayer).validReceptionPercentage.toFixed(2) }}
-            </p>
-          </div>
-
-          <!-- Setting Advanced Stats -->
-          <div class="mb-4">
-            <h4 class="text-md font-medium mb-2">Setting</h4>
-            <p>
-              <strong>Successful Set Percentage:</strong>
-              {{ getAdvancedSettingStats(selectedPlayer).successfulSetPercentage.toFixed(2) }}
-            </p>
-
-            <!-- Set Target Distribution -->
-            <div
-              v-if="Object.keys(getAdvancedSettingStats(selectedPlayer).setTargetDistribution).length > 0"
-              class="mt-2"
-            >
-              <strong class="block mb-1">Set Target Distribution:</strong>
+              <!-- Target per Point -->
               <div
-                v-for="(count, target) in getAdvancedSettingStats(selectedPlayer).setTargetDistribution"
-                :key="target"
-                class="flex items-center"
+                v-if="
+                  Object.keys(
+                    getAdvancedServeStats(selectedPlayer).targetPerPoint
+                  ).length > 0
+                "
+                class="mt-2"
               >
-                <span class="w-24">{{ target }}:</span>
-                <span>{{ count }} set{{ count > 1 ? 's' : '' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Attack Advanced Stats -->
-          <div class="mb-4">
-            <h4 class="text-md font-medium mb-2">Attack</h4>
-            <p>
-              <strong>Kill Percentage:</strong>
-              {{ getAdvancedAttackStats(selectedPlayer).killPercentage.toFixed(2) }}
-            </p>
-            <p>
-              <strong>Valid Attack Percentage:</strong>
-              {{ getAdvancedAttackStats(selectedPlayer).validAttackPercentage.toFixed(2) }}
-            </p>
-
-            <!-- Type per Point -->
-            <div
-              v-if="Object.keys(getAdvancedAttackStats(selectedPlayer).typePerPoint).length > 0"
-              class="mt-2"
-            >
-              <strong class="block mb-1">Points per Attack Type:</strong>
-              <div
-                v-for="(points, type) in getAdvancedAttackStats(selectedPlayer).typePerPoint"
-                :key="type"
-                class="flex items-center"
-              >
-                <span class="w-24">{{ type }}:</span>
-                <span>{{ points }} point{{ points > 1 ? 's' : '' }}</span>
-              </div>
-            </div>
-
-            <!-- Target per Point -->
-            <div
-              v-if="Object.keys(getAdvancedAttackStats(selectedPlayer).targetPerPoint).length > 0"
-              class="mt-2"
-            >
-              <strong class="block mb-1">Points per Attack Target:</strong>
-              <div
-                v-for="(data, target) in getAdvancedAttackStats(selectedPlayer).targetPerPoint"
-                :key="target"
-                class="flex items-center"
-              >
-                <span class="w-24">{{ target }}:</span>
-                <span
-                  >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} / {{
-                    data.attempts
-                  }} attempt{{ data.attempts > 1 ? 's' : '' }} ({{
-                    (data.percentage * 100).toFixed(2)
-                  }}%)</span
+                <strong class="block mb-1">Points per Serve Target:</strong>
+                <div
+                  v-for="(
+                    data, target
+                  ) in getAdvancedServeStats(selectedPlayer).targetPerPoint"
+                  :key="target"
+                  class="flex items-center"
                 >
+                  <span class="w-24">{{ target }}:</span>
+                  <span
+                    >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} / {{
+                      data.attempts
+                    }} attempt{{ data.attempts > 1 ? 's' : '' }} ({{
+                      (data.percentage * 100).toFixed(2)
+                    }}%)</span
+                  >
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Block Advanced Stats -->
-          <div class="mb-4">
-            <h4 class="text-md font-medium mb-2">Block</h4>
-            <p>
-              <strong>Block Efficiency:</strong>
-              {{ getBlockStats(selectedPlayer).efficiency.toFixed(2) }}
-            </p>
-          </div>
+            <!-- Reception Advanced Stats -->
+            <div class="mb-4">
+              <h4 class="text-md font-medium mb-2">Reception</h4>
+              <p>
+                <strong>Valid Reception Percentage:</strong>
+                {{
+                  getAdvancedReceptionStats(selectedPlayer)
+                    .validReceptionPercentage.toFixed(2)
+                }}
+              </p>
+            </div>
 
-          <!-- Dig Advanced Stats -->
-          <div>
-            <h4 class="text-md font-medium mb-2">Dig</h4>
-            <!-- (No additional advanced stats for dig are included) -->
+            <!-- Setting Advanced Stats -->
+            <div class="mb-4">
+              <h4 class="text-md font-medium mb-2">Setting</h4>
+              <p>
+                <strong>Successful Set Percentage:</strong>
+                {{
+                  getAdvancedSettingStats(selectedPlayer)
+                    .successfulSetPercentage.toFixed(2)
+                }}
+              </p>
+
+              <!-- Set Target Distribution -->
+              <div
+                v-if="
+                  Object.keys(
+                    getAdvancedSettingStats(selectedPlayer).setTargetDistribution
+                  ).length > 0
+                "
+                class="mt-2"
+              >
+                <strong class="block mb-1">Set Target Distribution:</strong>
+                <div
+                  v-for="(
+                    count, target
+                  ) in getAdvancedSettingStats(selectedPlayer)
+                    .setTargetDistribution"
+                  :key="target"
+                  class="flex items-center"
+                >
+                  <span class="w-24">{{ target }}:</span>
+                  <span>{{ count }} set{{ count > 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attack Advanced Stats -->
+            <div class="mb-4">
+              <h4 class="text-md font-medium mb-2">Attack</h4>
+              <p>
+                <strong>Kill Percentage:</strong>
+                {{
+                  getAdvancedAttackStats(selectedPlayer).killPercentage.toFixed(
+                    2
+                  )
+                }}
+              </p>
+              <p>
+                <strong>Valid Attack Percentage:</strong>
+                {{
+                  getAdvancedAttackStats(selectedPlayer)
+                    .validAttackPercentage.toFixed(2)
+                }}
+              </p>
+
+              <!-- Type per Point -->
+              <div
+                v-if="
+                  Object.keys(
+                    getAdvancedAttackStats(selectedPlayer).typePerPoint
+                  ).length > 0
+                "
+                class="mt-2"
+              >
+                <strong class="block mb-1">Points per Attack Type:</strong>
+                <div
+                  v-for="(
+                    points, type
+                  ) in getAdvancedAttackStats(selectedPlayer).typePerPoint"
+                  :key="type"
+                  class="flex items-center"
+                >
+                  <span class="w-24">{{ type }}:</span>
+                  <span>{{ points }} point{{ points > 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+
+              <!-- Target per Point -->
+              <div
+                v-if="
+                  Object.keys(
+                    getAdvancedAttackStats(selectedPlayer).targetPerPoint
+                  ).length > 0
+                "
+                class="mt-2"
+              >
+                <strong class="block mb-1">Points per Attack Target:</strong>
+                <div
+                  v-for="(
+                    data, target
+                  ) in getAdvancedAttackStats(selectedPlayer).targetPerPoint"
+                  :key="target"
+                  class="flex items-center"
+                >
+                  <span class="w-24">{{ target }}:</span>
+                  <span
+                    >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} / {{
+                      data.attempts
+                    }} attempt{{ data.attempts > 1 ? 's' : '' }} ({{
+                      (data.percentage * 100).toFixed(2)
+                    }}%)</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Block Advanced Stats -->
+            <div class="mb-4">
+              <h4 class="text-md font-medium mb-2">Block</h4>
+              <p>
+                <strong>Block Efficiency:</strong>
+                {{ getBlockStats(selectedPlayer).efficiency.toFixed(2) }}
+              </p>
+            </div>
+
+            <!-- Dig Advanced Stats -->
+            <div>
+              <h4 class="text-md font-medium mb-2">Dig</h4>
+              <!-- (No additional advanced stats for dig are included) -->
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 
 <script>
 export default {
@@ -325,12 +518,20 @@ export default {
       type: Object,
       required: true,
     },
+    getPlayerName: { // Add getPlayerName as a prop
+      type: Function,
+      required: true,
+    },
   },
   data() {
     return {
       activeTab: "set",
       selectedPlayer: null,
       rotationEffectiveness: {},
+      gameSummaryOpen: true, 
+      teamStatsOpen: true, 
+      basicStatsOpen: true,
+      advancedStatsOpen: true,
     };
   },
   mounted() {
@@ -346,7 +547,10 @@ export default {
     formatDate(dateString) {
       return new Date(dateString).toLocaleDateString();
     },
-
+    
+    toggleSection(sectionName) {
+      this[sectionName + 'Open'] = !this[sectionName + 'Open'];
+    },
     // Team Stats Calculations
     getTeamTotalPoints() {
       let totalPoints = 0;
@@ -501,6 +705,8 @@ export default {
 
   this.game.sets.forEach((set) => {
     set.events.forEach((event) => {
+      // Check if event.rotation exists before proceeding
+      if (event.rotation) { 
       const rotationKey = event.rotation.join("-");
 
       // Use a temporary object to accumulate data for each rotation
@@ -544,37 +750,28 @@ export default {
       if (event.action === "spike") {
         rotationEffectiveness[rotationKey].attackTotal++;
       }
-    });
+    }});
   });
 
-  // Calculate average effectiveness across rotations
-  let avgReceiveEffectiveness = 0;
-  let avgBlockEffectiveness = 0;
-  let avgAttackEffectiveness = 0;
-  let rotationCount = 0;
-
-  for (const rotation in rotationEffectiveness) {
+ // Calculate effectiveness percentages for each rotation
+ for (const rotation in rotationEffectiveness) {
     const data = rotationEffectiveness[rotation];
-    avgReceiveEffectiveness +=
-      data.receiveTotal > 0 ? data.receiveSuccess / data.receiveTotal : 0;
-    avgBlockEffectiveness +=
-      data.blockTotal > 0 ? data.blockSuccess / data.blockTotal : 0;
-    avgAttackEffectiveness +=
-      data.attackTotal > 0 ? data.attackSuccess / data.attackTotal : 0;
-    rotationCount++;
+    data.receiveEffectiveness =
+      data.receiveTotal > 0
+        ? (data.receiveSuccess / data.receiveTotal).toFixed(2)
+        : "-"; // Display "-" if no attempts
+    data.blockEffectiveness =
+      data.blockTotal > 0
+        ? (data.blockSuccess / data.blockTotal).toFixed(2)
+        : "-";
+    data.attackEffectiveness =
+      data.attackTotal > 0
+        ? (data.attackSuccess / data.attackTotal).toFixed(2)
+        : "-";
   }
 
-  if (rotationCount > 0) {
-    avgReceiveEffectiveness /= rotationCount;
-    avgBlockEffectiveness /= rotationCount;
-    avgAttackEffectiveness /= rotationCount;
-  }
-
-  return {
-    receive: avgReceiveEffectiveness.toFixed(2),
-    block: avgBlockEffectiveness.toFixed(2),
-    attack: avgAttackEffectiveness.toFixed(2),
-  };
+  // Instead of calculating averages, return the entire rotationEffectiveness object
+  return rotationEffectiveness;
 },
 
     // Individual Player Stats Calculations
@@ -912,3 +1109,51 @@ export default {
   },
 };
 </script>
+<style scoped>
+.filter-section button {
+  background-color: #e2e8f0; /* Light gray */
+  color: #4a5568; /* Dark gray */
+  border: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.filter-section button:hover {
+  background-color: #a0aec0; /* Medium gray */
+  color: #fff; /* White */
+}
+
+.filter-section button.active {
+  background-color: #4299e1; /* Blue */
+  color: #fff; /* White */
+}
+
+.section-header {
+  cursor: pointer; 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem; /* Adjust as needed */
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.section-content {
+  margin-top: 1rem; /* Adjust as needed */
+}
+
+table {
+  width: 100%;
+  table-layout: auto; 
+  border-collapse: collapse;
+  border: 1px solid #cbd5e0;
+}
+
+th, td {
+  padding: 0.5rem 1rem; /* Adjust as needed */
+  text-align: left;
+  border: 1px solid #cbd5e0;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f7fafc; /* Light gray */
+}
+</style>
