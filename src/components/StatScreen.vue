@@ -376,235 +376,143 @@
 
         <!-- Advanced Stats (Only if Advanced Input is Used) -->
         <div v-if="game.inputMethod === 'advanced'" class="advanced-stats">
-          <button
-            @click="toggleSection('advancedStats')"
-            class="section-header"
-          >
-            <h3 class="text-lg font-semibold">Advanced Stats</h3>
-            <i
-              :class="['fas', advancedStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"
-            ></i>
-          </button>
-          <div
-            v-if="advancedStatsOpen"
-            class="section-content bg-white p-4 rounded-md shadow-sm"
-          >
-            <!-- Serve Advanced Stats -->
-            <div class="mb-4">
-              <h4 class="text-md font-medium mb-2">Serve</h4>
-              <p>
-                <strong>Ace Serve Percentage:</strong>
-                {{
-                  getAdvancedServeStats(selectedPlayer, currentSetNumber)
-                    .aceServePercentage.toFixed(2)
-                }}
-              </p>
-              <p>
-                <strong>Valid Serve Percentage:</strong>
-                {{
-                  getAdvancedServeStats(selectedPlayer, currentSetNumber)
-                    .validServePercentage.toFixed(2)
-                }}
-              </p>
-
-              <!-- Type per Point -->
-              <div
-                v-if="
-                  Object.keys(
-                    getAdvancedServeStats(selectedPlayer, currentSetNumber)
-                      .typePerPoint
-                  ).length > 0
-                "
-                class="mt-2"
-              >
-                <strong class="block mb-1">Points per Serve Type:</strong>
-                <div
-                  v-for="(
-                    points,
-                    type
-                  ) in getAdvancedServeStats(selectedPlayer, currentSetNumber)
-                    .typePerPoint"
-                  :key="type"
-                  class="flex items-center"
-                >
-                  <span class="w-24">{{ type }}:</span>
-                  <span>{{ points }} point{{ points > 1 ? 's' : '' }}</span>
-                </div>
-              </div>
-
-              <!-- Target per Point -->
-              <div
-                v-if="
-                  Object.keys(
-                    getAdvancedServeStats(selectedPlayer, currentSetNumber)
-                      .targetPerPoint
-                  ).length > 0
-                "
-                class="mt-2"
-              >
-                <strong class="block mb-1">Points per Serve Target:</strong>
-                <div
-                  v-for="(
-                    data,
-                    target
-                  ) in getAdvancedServeStats(selectedPlayer, currentSetNumber)
-                    .targetPerPoint"
-                  :key="target"
-                  class="flex items-center"
-                >
-                  <span class="w-24">{{ target }}:</span>
-                  <span
-                    >{{ data.points }} point{{ data.points > 1 ? 's' : '' }} /
-                    {{ data.attempts }} attempt{{
-                      data.attempts > 1 ? "s" : ""
-                    }} ({{ (data.percentage * 100).toFixed(2) }}%)</span
-                  >
-                </div>
-              </div>
-            </div>
-
-            <!-- Reception Advanced Stats -->
-            <div class="mb-4">
-              <h4 class="text-md font-medium mb-2">Reception</h4>
-              <p>
-                <strong>Valid Reception Percentage:</strong>
-                {{
-                  getAdvancedReceptionStats(selectedPlayer, currentSetNumber)
-                    .validReceptionPercentage.toFixed(2)
-                }}
-              </p>
-            </div>
-
-            <!-- Setting Advanced Stats -->
-            <div class="mb-4">
-              <h4 class="text-md font-medium mb-2">Setting</h4>
-              <p>
-                <strong>Successful Set Percentage:</strong>
-                {{
-                  getAdvancedSettingStats(selectedPlayer, currentSetNumber)
-                    .successfulSetPercentage.toFixed(2)
-                }}
-              </p>
-
-              <!-- Set Target Distribution -->
-              <div
-                v-if="
-                  Object.keys(
-                    getAdvancedSettingStats(selectedPlayer, currentSetNumber)
-                      .setTargetDistribution
-                  ).length > 0
-                "
-                class="mt-2"
-              >
-                <strong class="block mb-1">Set Target Distribution:</strong>
-                <div
-                  v-for="(
-                    count,
-                    target
-                  ) in getAdvancedSettingStats(selectedPlayer, currentSetNumber)
-                    .setTargetDistribution"
-                  :key="target"
-                  class="flex items-center"
-                >
-                  <span class="w-24">{{ target }}:</span>
-                  <span>{{ count }} set{{ count > 1 ? "s" : "" }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Attack Advanced Stats -->
-            <div class="mb-4">
-              <h4 class="text-md font-medium mb-2">Attack</h4>
-              <p>
-                <strong>Kill Percentage:</strong>
-                {{
-                  getAdvancedAttackStats(selectedPlayer, currentSetNumber)
-                    .killPercentage.toFixed(2)
-                }}
-              </p>
-              <p>
-                <strong>Valid Attack Percentage:</strong>
-                {{
-                  getAdvancedAttackStats(selectedPlayer, currentSetNumber)
-                    .validAttackPercentage.toFixed(2)
-                }}
-              </p>
-
-              <!-- Type per Point -->
-              <div
-                v-if="
-                  Object.keys(
-                    getAdvancedAttackStats(selectedPlayer, currentSetNumber)
-                      .typePerPoint
-                  ).length > 0
-                "
-                class="mt-2"
-              >
-                <strong class="block mb-1">Points per Attack Type:</strong>
-                <div
-                  v-for="(
-                    points,
-                    type
-                  ) in getAdvancedAttackStats(selectedPlayer, currentSetNumber)
-                    .typePerPoint"
-                  :key="type"
-                  class="flex items-center"
-                >
-                  <span class="w-24">{{ type }}:</span>
-                  <span>{{ points }} point{{ points > 1 ? "s" : "" }}</span>
-                </div>
-              </div>
-
-              <!-- Target per Point -->
-              <div
-                v-if="
-                  Object.keys(
-                    getAdvancedAttackStats(selectedPlayer, currentSetNumber)
-                      .targetPerPoint
-                  ).length > 0
-                "
-                class="mt-2"
-              >
-                <strong class="block mb-1">Points per Attack Target:</strong>
-                <div
-                  v-for="(
-                    data,
-                    target
-                  ) in getAdvancedAttackStats(selectedPlayer, currentSetNumber)
-                    .targetPerPoint"
-                  :key="target"
-                  class="flex items-center"
-                >
-                  <span class="w-24">{{ target }}:</span>
-                  <span
-                    >{{ data.points }} point{{ data.points > 1 ? "s" : "" }} /
-                    {{ data.attempts }} attempt{{
-                      data.attempts > 1 ? "s" : ""
-                    }} ({{ (data.percentage * 100).toFixed(2) }}%)</span
-                  >
-                </div>
-              </div>
-            </div>
-
-            <!-- Block Advanced Stats -->
-            <div class="mb-4">
-              <h4 class="text-md font-medium mb-2">Block</h4>
-              <p>
-                <strong>Block Efficiency:</strong>
-                {{
-                  getBlockStats(selectedPlayer, currentSetNumber)
-                    .efficiency.toFixed(2)
-                }}
-              </p>
-            </div>
-
-            <!-- Dig Advanced Stats -->
-            <div>
-              <h4 class="text-md font-medium mb-2">Dig</h4>
-              <!-- (No additional advanced stats for dig are included) -->
-            </div>
-          </div>
+  <button @click="toggleSection('advancedStats')" class="section-header">
+    <h3 class="text-lg font-semibold">Advanced Stats</h3>
+    <i :class="['fas', advancedStatsOpen ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+  </button>
+  <div v-if="advancedStatsOpen" class="section-content bg-white p-4 rounded-md shadow-sm">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Serve Advanced Stats -->
+      <div class="stat-group">
+        <h4 class="text-md font-medium mb-2">
+          <i class="fas fa-volleyball-ball mr-2"></i>Serve
+        </h4>
+        <div class="stat-card">
+          <h5>Ace Serve Percentage</h5>
+          <div class="progress-bar" :style="{ width: getAdvancedServeStats(selectedPlayer, currentSetNumber).aceServePercentage + '%' }"></div>
+          <p class="stat-value">{{ getAdvancedServeStats(selectedPlayer, currentSetNumber).aceServePercentage.toFixed(2) }}%</p>
         </div>
+        <div class="stat-card">
+          <h5>Valid Serve Percentage</h5>
+          <div class="progress-bar" :style="{ width: getAdvancedServeStats(selectedPlayer, currentSetNumber).validServePercentage + '%' }"></div>
+          <p class="stat-value">{{ getAdvancedServeStats(selectedPlayer, currentSetNumber).validServePercentage.toFixed(2) }}%</p>
+        </div>
+        
+        <!-- Points per Serve Type -->
+        <div v-if="Object.keys(getAdvancedServeStats(selectedPlayer, currentSetNumber).typePerPoint).length > 0" class="stat-card">
+          <h5>Points per Serve Type</h5>
+          <ul>
+            <li v-for="(points, type) in getAdvancedServeStats(selectedPlayer, currentSetNumber).typePerPoint" :key="type">
+              {{ type }}: {{ points }} point{{ points > 1 ? 's' : '' }}
+            </li>
+          </ul>
+        </div>
+        
+        <!-- Points per Serve Target -->
+        <div v-if="Object.keys(getAdvancedServeStats(selectedPlayer, currentSetNumber).targetPerPoint).length > 0" class="stat-card">
+          <h5>Points per Serve Target</h5>
+          <ul>
+            <li v-for="(data, target) in getAdvancedServeStats(selectedPlayer, currentSetNumber).targetPerPoint" :key="target">
+              {{ target }}: {{ data.points }} / {{ data.attempts }} ({{ (data.percentage * 100).toFixed(2) }}%)
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Reception Advanced Stats -->
+      <div class="stat-group">
+        <h4 class="text-md font-medium mb-2">
+          <i class="fas fa-hands mr-2"></i>Reception
+        </h4>
+        <div class="stat-card">
+          <h5>Valid Reception Percentage</h5>
+          <div class="progress-bar" :style="{ width: getAdvancedReceptionStats(selectedPlayer, currentSetNumber).validReceptionPercentage + '%' }"></div>
+          <p class="stat-value">{{ getAdvancedReceptionStats(selectedPlayer, currentSetNumber).validReceptionPercentage.toFixed(2) }}%</p>
+        </div>
+      </div>
+
+      <!-- Setting Advanced Stats -->
+      <div class="stat-group">
+        <h4 class="text-md font-medium mb-2">
+          <i class="fas fa-hand-point-up mr-2"></i>Setting
+        </h4>
+        <div class="stat-card">
+          <h5>Successful Set Percentage</h5>
+          <div class="progress-bar" :style="{ width: getAdvancedSettingStats(selectedPlayer, currentSetNumber).successfulSetPercentage + '%' }"></div>
+          <p class="stat-value">{{ getAdvancedSettingStats(selectedPlayer, currentSetNumber).successfulSetPercentage.toFixed(2) }}%</p>
+        </div>
+        
+        <!-- Set Target Distribution -->
+        <div v-if="Object.keys(getAdvancedSettingStats(selectedPlayer, currentSetNumber).setTargetDistribution).length > 0" class="stat-card">
+          <h5>Set Target Distribution</h5>
+          <ul>
+            <li v-for="(count, target) in getAdvancedSettingStats(selectedPlayer, currentSetNumber).setTargetDistribution" :key="target">
+              {{ target }}: {{ count }} set{{ count > 1 ? 's' : '' }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Attack Advanced Stats -->
+      <div class="stat-group">
+        <h4 class="text-md font-medium mb-2">
+          <i class="fas fa-fist-raised mr-2"></i>Attack
+        </h4>
+        <div class="stat-card">
+          <h5>Kill Percentage</h5>
+          <div class="progress-bar" :style="{ width: getAdvancedAttackStats(selectedPlayer, currentSetNumber).killPercentage + '%' }"></div>
+          <p class="stat-value">{{ getAdvancedAttackStats(selectedPlayer, currentSetNumber).killPercentage.toFixed(2) }}%</p>
+        </div>
+        <div class="stat-card">
+          <h5>Valid Attack Percentage</h5>
+          <div class="progress-bar" :style="{ width: getAdvancedAttackStats(selectedPlayer, currentSetNumber).validAttackPercentage + '%' }"></div>
+          <p class="stat-value">{{ getAdvancedAttackStats(selectedPlayer, currentSetNumber).validAttackPercentage.toFixed(2) }}%</p>
+        </div>
+        
+        <!-- Points per Attack Type -->
+        <div v-if="Object.keys(getAdvancedAttackStats(selectedPlayer, currentSetNumber).typePerPoint).length > 0" class="stat-card">
+          <h5>Points per Attack Type</h5>
+          <ul>
+            <li v-for="(points, type) in getAdvancedAttackStats(selectedPlayer, currentSetNumber).typePerPoint" :key="type">
+              {{ type }}: {{ points }} point{{ points > 1 ? 's' : '' }}
+            </li>
+          </ul>
+        </div>
+        
+        <!-- Points per Attack Target -->
+        <div v-if="Object.keys(getAdvancedAttackStats(selectedPlayer, currentSetNumber).targetPerPoint).length > 0" class="stat-card">
+          <h5>Points per Attack Target</h5>
+          <ul>
+            <li v-for="(data, target) in getAdvancedAttackStats(selectedPlayer, currentSetNumber).targetPerPoint" :key="target">
+              {{ target }}: {{ data.points }} / {{ data.attempts }} ({{ (data.percentage * 100).toFixed(2) }}%)
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Block Advanced Stats -->
+      <div class="stat-group">
+        <h4 class="text-md font-medium mb-2">
+          <i class="fas fa-shield-alt mr-2"></i>Block
+        </h4>
+        <div class="stat-card">
+          <h5>Block Efficiency</h5>
+          <div class="progress-bar" :style="{ width: getBlockStats(selectedPlayer, currentSetNumber).efficiency + '%' }"></div>
+          <p class="stat-value">{{ getBlockStats(selectedPlayer, currentSetNumber).efficiency.toFixed(2) }}</p>
+        </div>
+      </div>
+
+      <!-- Dig Advanced Stats -->
+      <div class="stat-group">
+        <h4 class="text-md font-medium mb-2">
+          <i class="fas fa-hand-paper mr-2"></i>Dig
+        </h4>
+        <!-- (No additional advanced stats for dig are included) -->
+      </div>
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   </div>
@@ -1044,11 +952,14 @@ setsToProcess.forEach((set) => {
 });
 
 const aceServePercentage =
-  totalAttempts > 0 ? (points - errors) / totalAttempts : 0;
+  totalAttempts > 0 ? ((points - errors) / totalAttempts) * 100 : 0;
+
 const validServePercentage =
   totalAttempts > 0
-    ? (points + perfectServes + goodServes - errors) / totalAttempts
+    ? ((perfectServes + goodServes - errors) / totalAttempts) * 100
     : 0;
+
+
 
 for (const target in targetPerPoint) {
   targetPerPoint[target].percentage =
@@ -1211,6 +1122,45 @@ return {
 };
 </script>
 <style scoped>
+.advanced-stats .grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.stat-group {
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 0.5rem;
+  background-color: #4CAF50;
+  border-radius: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #333;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+li {
+  margin-bottom: 0.25rem;
+}
 .filter-section button {
   background-color: #e2e8f0; /* Light gray */
   color: #4a5568; /* Dark gray */

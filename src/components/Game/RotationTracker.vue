@@ -1,3 +1,4 @@
+// src\components\Game\RotationTracker.vue
 <template>
     <div class="rotation-tracker">
       <h2 class="title">Current Rotation</h2>

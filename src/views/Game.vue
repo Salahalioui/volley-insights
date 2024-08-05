@@ -3,21 +3,34 @@
     <h1 class="text-2xl md:text-3xl font-bold mb-4 text-center">{{ game.name }}</h1>
     
     <!-- Game Info and Controls -->
-    <div class="game-info-controls mb-4 flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-100 rounded-lg p-4">
-      <div class="game-info mb-2 md:mb-0">
-        <p><strong>Date:</strong> {{ formatDate(game.date) }}</p>
-        <p><strong>Opponent:</strong> {{ game.opponentTeam }}</p>
-        <p><strong>Status:</strong> {{ game.status }}</p>
-      </div>
-      <GameControls
-        :canUndo="canUndo"
-        :canRedo="canRedo"
-        :game="game"
-        @undoLastEvent="undoLastEvent"
-        @redoLastEvent="redoLastEvent"
-        @toggleGameStatus="toggleGameStatus"
-      />
-    </div>
+    <div class="game-info-controls mb-4 flex flex-col items-center bg-gray-100 rounded-lg p-4">
+  <div class="game-info text-center mb-2"> <p><strong>{{ game.opponentTeam }}</strong> </p>
+    <p class="text-sm text-gray-600">
+      {{ formatDate(game.date) }} 
+    </p>
+    <p>
+      <span 
+        class="status-indicator"
+        :class="{ 
+          'in-progress': game.status === 'in_progress', 
+          'paused': game.status === 'paused',
+          'not-started': game.status === 'not_started' || game.status === 'completed' 
+        }"
+      > 
+        {{ game.status === 'in_progress' ? 'In Progress' : game.status === 'paused' ? 'Paused' : game.status }} 
+      </span>
+    </p>
+  </div>
+
+  <GameControls 
+    :canUndo="canUndo"
+    :canRedo="canRedo"
+    :game="game"
+    @undoLastEvent="undoLastEvent"
+    @redoLastEvent="redoLastEvent"
+    @toggleGameStatus="toggleGameStatus"
+  />
+</div>
 
     <!-- Scoreboard -->
     <GameScoreboard
@@ -550,6 +563,26 @@ export default {
 </script>
 
 <style scoped>
+.status-indicator { 
+  padding: 0.2rem 0.6rem; /* Adjust as needed */
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.status-indicator.in-progress {
+  background-color: #48bb78; /* Green */
+  color: white;
+}
+
+.status-indicator.paused {
+  background-color: #f56565; /* Red */
+  color: white; 
+}
+
+.status-indicator.not-started {
+  background-color: #a0aec0; /* Gray */
+  color: white;
+}
 .btn {
   font-weight: bold;
   padding: 0.5rem 1rem;

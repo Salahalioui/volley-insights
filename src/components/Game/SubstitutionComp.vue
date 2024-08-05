@@ -1,3 +1,4 @@
+// src\components\Game\SubstitutionComp.vue
 <template>
   <div class="substitution">
     <h2 class="title">Substitutions</h2>

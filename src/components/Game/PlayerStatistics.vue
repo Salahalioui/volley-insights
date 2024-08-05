@@ -1,3 +1,4 @@
+// src\components\Game\PlayerStatistics.vue
 <template>
     <div class="player-statistics">
       <h2 class="title">Player Statistics</h2>

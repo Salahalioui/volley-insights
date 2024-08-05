@@ -1,22 +1,24 @@
+// src\components\Game\GameControls.vue
 <template>
-    <div class="game-controls">
-      <div class="button-group">
-        <button @click="undoLastEvent" class="btn btn-yellow" :disabled="!canUndo" :class="{ 'btn-disabled': !canUndo }">
-          <span class="icon">↩</span>
-          <span class="text">Undo</span>
-        </button>
-        <button @click="redoLastEvent" class="btn btn-green" :disabled="!canRedo" :class="{ 'btn-disabled': !canRedo }">
-          <span class="icon">↪</span>
-          <span class="text">Redo</span>
-        </button>
-      </div>
-      <button @click="toggleGameStatus" class="btn btn-blue" :class="{ 'btn-paused': game.status !== 'in_progress' }">
-        <span class="icon">{{ game.status === 'in_progress' ? '⏸' : '▶' }}</span>
-        <span class="text">{{ game.status === 'in_progress' ? 'Pause' : 'Resume' }}</span>
+  <div class="game-controls">
+    <button @click="toggleGameStatus" class="btn btn-control" :class="{ 'btn-paused': game.status !== 'in_progress' }">
+      <span class="icon">
+        {{ game.status === 'in_progress' ? '⏸' : '▶' }}
+      </span>
+      <span class="text">
+        {{ game.status === 'in_progress' ? 'Pause' : 'Resume' }}
+      </span>
+    </button>
+    <div class="button-group">
+      <button @click="undoLastEvent" class="btn btn-undo" :disabled="!canUndo" :class="{ 'btn-disabled': !canUndo }">
+        <span class="icon">↩</span>
+      </button>
+      <button @click="redoLastEvent" class="btn btn-redo" :disabled="!canRedo" :class="{ 'btn-disabled': !canRedo }">
+        <span class="icon">↪</span>
       </button>
     </div>
-  </template>
-  
+  </div>
+</template>
   <script>
   export default {
     props: {
@@ -38,29 +40,29 @@
     }
   };
   </script>
-  
   <style scoped>
   .game-controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Start with column for mobile */
     align-items: center;
+    justify-content: center; /* Center horizontally */
     padding: 1rem;
     gap: 1rem;
   }
   
   .button-group {
     display: flex;
-    gap: 0.5rem;
+    gap: 1rem; /* More space between undo/redo */
   }
   
   .btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 1rem;
+    padding: 0.8rem 1.2rem; /* Increased padding */
     border: none;
-    border-radius: 0.25rem;
-    font-size: 1rem;
+    border-radius: 0.5rem; /* Larger border radius */
+    font-size: 1.1rem; /* Larger font size */
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -70,9 +72,21 @@
     opacity: 0.8;
   }
   
-  .btn-yellow { background-color: #fbbf24; color: #000; }
-  .btn-green { background-color: #34d399; color: #000; }
-  .btn-blue { background-color: #3b82f6; color: #fff; }
+  .btn-control { /* Style for the play/pause button */
+    background-color: #3b82f6; 
+    color: #fff; 
+    width: 100%; /* Full width for better mobile use */
+  }
+  
+  .btn-undo { 
+    background-color: #fbbf24; 
+    color: #000; 
+  }
+  
+  .btn-redo { 
+    background-color: #34d399; 
+    color: #000; 
+  }
   
   .btn-disabled {
     opacity: 0.5;
@@ -84,22 +98,23 @@
   }
   
   .icon {
-    font-size: 1.25rem;
-    margin-right: 0.5rem;
+    font-size: 1.5rem; /* Larger icons */
   }
   
+  /* Media query for larger screens (optional) */
   @media (min-width: 768px) {
     .game-controls {
-      flex-direction: row;
-      justify-content: flex-end;
+      flex-direction: row; /* Switch to row layout */
+      justify-content: flex-end; 
     }
   
     .button-group {
       order: 2;
     }
   
-    .btn-blue {
+    .btn-control {
       order: 1;
+      width: auto; /* Reset width on larger screens */
     }
   }
   </style>

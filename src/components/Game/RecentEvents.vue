@@ -1,3 +1,4 @@
+// src\components\Game\RecentEvents.vue
 <template>
     <div class="recent-events">
       <h2 class="title">Recent Events</h2>
