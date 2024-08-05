@@ -148,7 +148,25 @@ export default {
           router.push({ name: 'Home' });
           return;
         }
-
+        // Load isOpponentServing if it exists
+        const savedServingState = localStorage.getItem(`game-${game.value.id}-serving`);
+        if (savedServingState) {
+          isOpponentServing.value = JSON.parse(savedServingState);
+        }
+        // Load game status
+        const savedGameStatus = localStorage.getItem(`game-${game.value.id}-status`);
+        if (savedGameStatus) {
+          game.value.status = savedGameStatus; 
+        }
+        // Load currentRotation 
+        const savedRotation = localStorage.getItem(`game-${game.value.id}-rotation`);
+        if (savedRotation) {
+          game.value.currentRotation = JSON.parse(savedRotation);
+        } 
+        const savedSetsWon = localStorage.getItem(`game-${game.value.id}-setsWon`);
+        if (savedSetsWon) {
+          setsWon.value = JSON.parse(savedSetsWon);
+        }
         const storedPlayers = JSON.parse(localStorage.getItem('players') || '[]');
         players.value = storedPlayers;
 
@@ -262,11 +280,14 @@ export default {
 
     const rotateManually = () => {
       rotateTeam();
+      localStorage.setItem(`game-${game.value.id}-rotation`, JSON.stringify(game.value.currentRotation)); // Save rotation
       saveGame();
     };
 
-    const toggleServingTeam = () => {
+     // Save serving state to local storage whenever it changes
+     const toggleServingTeam = () => {
       isOpponentServing.value = !isOpponentServing.value;
+      localStorage.setItem(`game-${game.value.id}-serving`, JSON.stringify(isOpponentServing.value));
     };
 
     const recordEvent = (event) => {
@@ -397,6 +418,9 @@ export default {
         games[index] = game.value;
         localStorage.setItem('games', JSON.stringify(games));
       }
+      localStorage.setItem(`game-${game.value.id}-serving`, JSON.stringify(isOpponentServing.value));
+      localStorage.setItem(`game-${game.value.id}-rotation`, JSON.stringify(game.value.currentRotation)); 
+      localStorage.setItem(`game-${game.value.id}-setsWon`, JSON.stringify(setsWon.value)); // Save setsWon
     };
 
     const undoLastEvent = () => {
@@ -512,6 +536,10 @@ export default {
       } else if (game.value.status === 'paused') {
         game.value.status = 'in_progress';
       }
+
+      // Save the game status to localStorage immediately:
+      localStorage.setItem(`game-${game.value.id}-status`, game.value.status);
+
       saveGame();
     };
 
