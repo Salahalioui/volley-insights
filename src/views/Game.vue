@@ -103,6 +103,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { cloneDeep } from 'lodash'; // Import cloneDeep for deep copying
 import StatScreen from '../components/StatScreen.vue';
 import EventInput from '../components/Game/EventInput.vue';
 import GameScoreboard from '../components/Game/ScoreboardComp.vue';
@@ -283,9 +284,11 @@ export default {
       undoStack.value.push({ 
         type: 'event', 
         data: { 
-          set: { ...currentSet.value }, 
+          set: cloneDeep(currentSet.value), // Deep copy
           rotation: [...game.value.currentRotation],
-          isOpponentServing: isOpponentServing.value
+          isOpponentServing: isOpponentServing.value,
+          endedSet: false, // Flag for set end
+          endedGame: false // Flag for game end
         } 
       });
       redoStack.value = [];
@@ -400,22 +403,35 @@ export default {
       if (undoStack.value.length === 0) return;
 
       const lastAction = undoStack.value.pop();
-      redoStack.value.push({ 
-        type: lastAction.type, 
-        data: { 
-          set: { ...currentSet.value }, 
-          rotation: [...game.value.currentRotation],
-          isOpponentServing: isOpponentServing.value
-        } 
+      // Create a deep copy of the current state *before* undoing 
+      redoStack.value.push({
+        type: lastAction.type,
+        data: {
+          set: cloneDeep(currentSet.value), // Deep copy 
+          rotation: [...game.value.currentRotation], 
+          isOpponentServing: isOpponentServing.value,
+          setsWon: { ...setsWon.value }, // Capture setsWon 
+          gameStatus: game.value.status // Capture game status
+        }
       });
 
       if (lastAction.type === 'event' || lastAction.type === 'score') {
         Object.assign(currentSet.value, lastAction.data.set);
         game.value.currentRotation = [...lastAction.data.rotation];
         isOpponentServing.value = lastAction.data.isOpponentServing;
+        setsWon.value = { ...lastAction.data.setsWon }; // Restore setsWon
+        
+        // Check if we need to revert a set end or game end
+        if (lastAction.data.endedSet) {
+          game.value.sets.pop(); // Remove the last set
+          game.value.currentSet--; 
+        } 
+        if (lastAction.data.endedGame) {
+          game.value.status = 'in_progress'; // Revert to in progress
+        }
       } else if (lastAction.type === 'substitution') {
         game.value.currentRotation = [...lastAction.data.rotation];
-        currentSet.value.events = [...lastAction.data.events];
+        currentSet.value.events = [...lastAction.data.events]; 
       }
 
       saveGame();
@@ -425,19 +441,32 @@ export default {
       if (redoStack.value.length === 0) return;
 
       const nextAction = redoStack.value.pop();
-      undoStack.value.push({ 
-        type: nextAction.type, 
-        data: { 
-          set: { ...currentSet.value }, 
+
+      // Deep copy for undo stack
+      undoStack.value.push({
+        type: nextAction.type,
+        data: {
+          set: cloneDeep(currentSet.value),
           rotation: [...game.value.currentRotation],
-          isOpponentServing: isOpponentServing.value
-        } 
+          isOpponentServing: isOpponentServing.value,
+          setsWon: { ...setsWon.value },
+          gameStatus: game.value.status
+        }
       });
 
       if (nextAction.type === 'event' || nextAction.type === 'score') {
         Object.assign(currentSet.value, nextAction.data.set);
         game.value.currentRotation = [...nextAction.data.rotation];
         isOpponentServing.value = nextAction.data.isOpponentServing;
+        setsWon.value = { ...nextAction.data.setsWon };
+
+        // Redo set end or game end
+        if (nextAction.data.endedSet) {
+          startNewSet(); // Restart the set that was ended
+        }
+        if (nextAction.data.endedGame) {
+          game.value.status = 'completed'; 
+        }
       } else if (nextAction.type === 'substitution') {
         game.value.currentRotation = [...nextAction.data.rotation];
         currentSet.value.events = [...nextAction.data.events];
