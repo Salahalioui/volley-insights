@@ -42,7 +42,7 @@ export const getTeamBlockErrorPercentage = (game, setNumber = null) => {
   return totalBlockAttempts > 0 ? (blockErrors / totalBlockAttempts) * 100 : 0;
 };
 
-// Side Out Percentage:
+// Side Out Percentage (Corrected):
 export const getTeamSideOutPercentage = (game, setNumber = null) => {
   let sideOutPoints = 0;
   let opponentServeCount = 0;
@@ -50,10 +50,16 @@ export const getTeamSideOutPercentage = (game, setNumber = null) => {
   const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets;
 
   setsToProcess.forEach((set) => {
+    console.log(`----- Debugging SO% for Set ${setNumber + 1} -----`);
     set.events.forEach((event) => {
-      if (event.servingTeam === 'opponent') {
+      console.log(`Event ${event + 1}:`, event); 
+      // Opponent serve count only increases when the opponent wins a point 
+      // (and therefore serves the next rally)
+      if (event.servingTeam === 'opponent' && event.result === 'point') { 
         opponentServeCount++;
-        if (event.result === 'point' && event.action !== 'serve') { // Side out point
+
+        // A side out point is when the RECEIVING team (not serving) wins the point
+        if (event.action !== 'serve') { 
           sideOutPoints++;
         }
       }
@@ -63,25 +69,35 @@ export const getTeamSideOutPercentage = (game, setNumber = null) => {
   return opponentServeCount > 0 ? (sideOutPoints / opponentServeCount) * 100 : 0;
 };
 
-// Break Point Percentage:
+// Break Point Percentage (Corrected):
 export const getTeamBreakPointPercentage = (game, setNumber = null) => {
   let breakPointsWon = 0;
-  let teamServeCount = 0;
+  let breakPointOpportunities = 0;
 
   const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets;
 
   setsToProcess.forEach((set) => {
-    set.events.forEach((event) => {
-      if (event.servingTeam === 'team') {
-        teamServeCount++;
-        if (event.result === 'point' && event.action !== 'serve') { // Break point won
+    set.events.forEach((event, index) => {
+      // Check if the OPPONENT was serving at the start of this rally
+      let opponentWasServing = false;
+      if (index === 0) {
+        opponentWasServing = JSON.parse(localStorage.getItem(`game-${game.id}-serving`));
+      } else {
+        opponentWasServing = set.events[index - 1].result === 'point';
+      }
+
+      // A break point opportunity is when the team is serving AND the opponent was serving the previous rally 
+      if (event.servingTeam === 'team' && opponentWasServing) { 
+        breakPointOpportunities++; 
+
+        if (event.result === 'point') { // Break point won
           breakPointsWon++;
         }
       }
     });
   });
 
-  return teamServeCount > 0 ? (breakPointsWon / teamServeCount) * 100 : 0;
+  return breakPointOpportunities > 0 ? (breakPointsWon / breakPointOpportunities) * 100 : 0;
 };
 
 // Rotation Effectiveness (Updated):
