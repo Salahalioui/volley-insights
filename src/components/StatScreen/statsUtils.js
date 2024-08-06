@@ -1,6 +1,127 @@
 // statsUtils.js
 
 // Team Stats Calculations
+// Serve Efficiency:
+export const getTeamServeErrorPercentage = (game, setNumber = null) => {
+  let totalServeAttempts = 0;
+  let serveErrors = 0;
+
+  const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets;
+
+  setsToProcess.forEach((set) => {
+    set.events.forEach((event) => {
+      if (event.action === "serve") {
+        totalServeAttempts++;
+        if (event.result === "error") {
+          serveErrors++;
+        }
+      }
+    });
+  });
+
+  return totalServeAttempts > 0 ? (serveErrors / totalServeAttempts) * 100 : 0;
+};
+
+// Block Efficiency:
+export const getTeamBlockErrorPercentage = (game, setNumber = null) => {
+  let totalBlockAttempts = 0;
+  let blockErrors = 0;
+  const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets;
+  
+  setsToProcess.forEach((set) => {    
+    set.events.forEach((event) => {    
+      if (event.action === "block") {
+        totalBlockAttempts++;       
+        if (event.result === "error") {
+          blockErrors++;         
+        }
+      }
+    });
+  });
+
+  return totalBlockAttempts > 0 ? (blockErrors / totalBlockAttempts) * 100 : 0;
+};
+
+// Side Out Percentage:
+export const getTeamSideOutPercentage = (game, setNumber = null) => {
+  let sideOutPoints = 0;
+  let opponentServeCount = 0;
+
+  const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets;
+
+  setsToProcess.forEach((set) => {
+    set.events.forEach((event) => {
+      if (event.servingTeam === 'opponent') {
+        opponentServeCount++;
+        if (event.result === 'point' && event.action !== 'serve') { // Side out point
+          sideOutPoints++;
+        }
+      }
+    });
+  });
+
+  return opponentServeCount > 0 ? (sideOutPoints / opponentServeCount) * 100 : 0;
+};
+
+// Break Point Percentage:
+export const getTeamBreakPointPercentage = (game, setNumber = null) => {
+  let breakPointsWon = 0;
+  let teamServeCount = 0;
+
+  const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets;
+
+  setsToProcess.forEach((set) => {
+    set.events.forEach((event) => {
+      if (event.servingTeam === 'team') {
+        teamServeCount++;
+        if (event.result === 'point' && event.action !== 'serve') { // Break point won
+          breakPointsWon++;
+        }
+      }
+    });
+  });
+
+  return teamServeCount > 0 ? (breakPointsWon / teamServeCount) * 100 : 0;
+};
+
+// Rotation Effectiveness (Updated):
+export const getTeamRotationEffectiveness = (game, setNumber = null) => {
+  const rotationEffectiveness = {};
+  const rotationCounts = {}; // Track the number of times each rotation occurs
+
+  const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets;
+
+  setsToProcess.forEach((set) => {
+    set.events.forEach((event) => {
+      if (event.rotation) {
+        const rotationKey = event.rotation.join("-");
+
+        if (!rotationEffectiveness[rotationKey]) {
+          rotationEffectiveness[rotationKey] = { pointsScored: 0 };
+          rotationCounts[rotationKey] = 0;
+        }
+
+        if (event.result === "point" && event.action !== 'serve') { 
+          rotationEffectiveness[rotationKey].pointsScored++;
+        }
+        // Since a rotation is tied to a serve, we increment the count whenever there's a serve event
+        if (event.action === "serve") { 
+          rotationCounts[rotationKey]++;
+        }
+      }
+    });
+  });
+
+  // Calculate effectiveness percentages
+  for (const rotation in rotationEffectiveness) {
+    rotationEffectiveness[rotation].effectiveness = 
+      rotationCounts[rotation] > 0
+        ? (rotationEffectiveness[rotation].pointsScored / rotationCounts[rotation]) * 100 
+        : "-";
+  }
+
+  return rotationEffectiveness;
+};
 export const getTeamTotalPoints = (game, setNumber = null) => {
     let totalPoints = 0;
     const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets; 
@@ -108,104 +229,6 @@ export const getTeamTotalPoints = (game, setNumber = null) => {
       : 0;
   };
   
-  export const getTeamSideOutPercentage = (game, setNumber = null) => {
-    let pointsWhenReceiving = 0;
-    let totalTimesReceiving = 0;
-  
-    const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets; 
-  
-    setsToProcess.forEach((set) => {
-      set.events.forEach((event, index) => {
-        const opponentServedPrevious = index > 0 && set.events[index - 1].result === "error";
-        if (opponentServedPrevious && event.result === "point") {
-          pointsWhenReceiving++;
-        }
-        if (opponentServedPrevious) {
-          totalTimesReceiving++;
-        }
-      });
-    });
-  
-    return totalTimesReceiving > 0 ? pointsWhenReceiving / totalTimesReceiving : 0;
-  };
-  
-  export const getTeamBreakPointPercentage = (game, setNumber = null) => {
-    let pointsWhenServing = 0;
-    let totalTimesServing = 0;
-  
-    const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets; 
-  
-    setsToProcess.forEach((set) => {
-      set.events.forEach((event, index) => {
-        const teamServedPrevious = index > 0 && set.events[index - 1].result === "point";
-        if (teamServedPrevious && event.result === "point") {
-          pointsWhenServing++;
-        }
-        if (teamServedPrevious) {
-          totalTimesServing++;
-        }
-      });
-    });
-  
-    return totalTimesServing > 0 ? pointsWhenServing / totalTimesServing : 0;
-  };
-  
-/* eslint-disable */ 
-  export const getTeamRotationEffectiveness = (game, setNumber = null, getPlayerName) => {
-    const rotationEffectiveness = {};
-  
-    const setsToProcess = setNumber !== null ? [game.sets[setNumber - 1]] : game.sets; 
-  
-    setsToProcess.forEach((set) => {
-      set.events.forEach((event) => {
-        if (event.rotation) {
-          const rotationKey = event.rotation.join("-");
-  
-          if (!rotationEffectiveness[rotationKey]) {
-            rotationEffectiveness[rotationKey] = {
-              receiveSuccess: 0,
-              blockSuccess: 0,
-              attackSuccess: 0,
-              receiveTotal: 0,
-              blockTotal: 0,
-              attackTotal: 0,
-            };
-          }
-  
-          if (event.action === "receive" && (event.result === "continue" || event.result === "point")) {
-            rotationEffectiveness[rotationKey].receiveSuccess++;
-          }
-          if (event.action === "receive") {
-            rotationEffectiveness[rotationKey].receiveTotal++;
-          }
-  
-          if (event.action === "block" && (event.result === "point" || event.result === "continue")) {
-            rotationEffectiveness[rotationKey].blockSuccess++;
-          }
-          if (event.action === "block") {
-            rotationEffectiveness[rotationKey].blockTotal++;
-          }
-  
-          if (event.action === "spike" && event.result === "point") {
-            rotationEffectiveness[rotationKey].attackSuccess++;
-          }
-          if (event.action === "spike") {
-            rotationEffectiveness[rotationKey].attackTotal++;
-          }
-        }
-      });
-    });
-  
-    // Calculate effectiveness percentages
-    for (const rotation in rotationEffectiveness) {
-      const data = rotationEffectiveness[rotation];
-      data.receiveEffectiveness = data.receiveTotal > 0 ? (data.receiveSuccess / data.receiveTotal).toFixed(2) : "-";
-      data.blockEffectiveness = data.blockTotal > 0 ? (data.blockSuccess / data.blockTotal).toFixed(2) : "-";
-      data.attackEffectiveness = data.attackTotal > 0 ? (data.attackSuccess / data.attackTotal).toFixed(2) : "-";
-    }
-  
-    return rotationEffectiveness;
-  };
   
   // ---------------------
   // Individual Player Stats Calculations 

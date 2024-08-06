@@ -20,7 +20,10 @@
             <tbody>
               <tr v-for="(stat, index) in teamStats" :key="index" :class="{ 'bg-gray-50': index % 2 === 0 }">
                 <td class="px-4 py-2 border border-gray-300 font-medium">{{ stat.name }}</td>
-                <td class="px-4 py-2 border border-gray-300">{{ stat.value }}</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  <span v-if="stat.type === 'percentage'">{{ stat.value.toFixed(2) }}%</span> 
+                  <span v-else>{{ stat.value }}</span> 
+                </td>
               </tr>
             </tbody>
           </table>
@@ -32,19 +35,15 @@
             <thead class="bg-gray-100">
               <tr>
                 <th class="px-4 py-2 text-left border border-gray-300">Rotation (Player Names)</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Receive Effectiveness</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Block Effectiveness</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Attack Effectiveness</th>
+                <th class="px-4 py-2 text-left border border-gray-300">Effectiveness (%)</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(data, rotationKey) in getTeamRotationEffectiveness()" :key="rotationKey" class="hover:bg-gray-50">
                 <td class="px-4 py-2 border border-gray-300">
-                  {{ formatRotation(rotationKey) }}
+                  {{ formatRotationKey(rotationKey) }} <span v-if="data.pointsScored">({{ data.pointsScored }} points)</span>
                 </td>
-                <td class="px-4 py-2 border border-gray-300">{{ data.receiveEffectiveness }}</td>
-                <td class="px-4 py-2 border border-gray-300">{{ data.blockEffectiveness }}</td>
-                <td class="px-4 py-2 border border-gray-300">{{ data.attackEffectiveness }}</td>
+                <td class="px-4 py-2 border border-gray-300">{{ data.effectiveness }}</td>
               </tr>
             </tbody>
           </table>
@@ -80,13 +79,13 @@ export default {
   computed: {
     teamStats() {
       return [
-        { name: "Total Points", value: this.getTeamTotalPoints() },
-        { name: "Total Errors", value: this.getTeamTotalErrors() },
-        { name: "Serve Efficiency", value: this.getTeamServeEfficiency().toFixed(2) },
-        { name: "Attack Efficiency", value: this.getTeamAttackEfficiency().toFixed(2) },
-        { name: "Block Efficiency", value: this.getTeamBlockEfficiency().toFixed(2) },
-        { name: "Side Out Percentage", value: this.getTeamSideOutPercentage().toFixed(2) },
-        { name: "Break Point Percentage", value: this.getTeamBreakPointPercentage().toFixed(2) },
+        { name: "Total Points", value: this.getTeamTotalPoints(), type: 'number' },
+        { name: "Total Errors", value: this.getTeamTotalErrors(), type: 'number' },
+        { name: "Serve Error Percentage", value: this.getTeamServeErrorPercentage(), type: 'percentage' }, 
+        { name: "Attack Efficiency", value: this.getTeamAttackEfficiency(), type: 'percentage' },
+        { name: "Block Error Percentage", value: this.getTeamBlockErrorPercentage(), type: 'percentage' }, 
+        { name: "Side Out Percentage", value: this.getTeamSideOutPercentage(), type: 'percentage' },
+        { name: "Break Point Percentage", value: this.getTeamBreakPointPercentage(), type: 'percentage' },
       ];
     },
   },
@@ -94,26 +93,20 @@ export default {
     toggleSection() {
       this.isOpen = !this.isOpen;
     },
-    formatRotation(rotationKey) {
-      return rotationKey
-        .split("-")
-        .map((playerId, index) => `P${index + 1}: ${this.getPlayerName(parseInt(playerId))}`)
-        .join(", ");
-    },
     getTeamTotalPoints() {
       return statsUtils.getTeamTotalPoints(this.game, this.currentSetNumber);
     },
     getTeamTotalErrors() {
       return statsUtils.getTeamTotalErrors(this.game, this.currentSetNumber);
     },
-    getTeamServeEfficiency() {
-      return statsUtils.getTeamServeEfficiency(this.game, this.currentSetNumber);
+    getTeamServeErrorPercentage() {
+      return statsUtils.getTeamServeErrorPercentage(this.game, this.currentSetNumber);
     },
     getTeamAttackEfficiency() {
-      return statsUtils.getTeamAttackEfficiency(this.game, this.currentSetNumber);
+      return statsUtils.getTeamAttackEfficiency(this.game, this.currentSetNumber) * 100; 
     },
-    getTeamBlockEfficiency() {
-      return statsUtils.getTeamBlockEfficiency(this.game, this.currentSetNumber);
+    getTeamBlockErrorPercentage() {
+      return statsUtils.getTeamBlockErrorPercentage(this.game, this.currentSetNumber);
     },
     getTeamSideOutPercentage() {
       return statsUtils.getTeamSideOutPercentage(this.game, this.currentSetNumber);
@@ -122,25 +115,14 @@ export default {
       return statsUtils.getTeamBreakPointPercentage(this.game, this.currentSetNumber);
     },
     getTeamRotationEffectiveness() {
-      return statsUtils.getTeamRotationEffectiveness(this.game, this.currentSetNumber, this.getPlayerName);
+      return statsUtils.getTeamRotationEffectiveness(this.game, this.currentSetNumber);
+    },
+    formatRotationKey(rotationKey) {
+      return rotationKey
+        .split('-')
+        .map((playerId, index) => `P${index + 1}: ${this.getPlayerName(parseInt(playerId))}`)
+        .join(', ');
     },
   },
 };
 </script>
-
-<style scoped>
-.section-header {
-  @apply flex justify-between items-center w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-300 ease-in-out;
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s, max-height 0.3s;
-  max-height: 2000px;
-  overflow: hidden;
-}
-
-.fade-enter, .fade-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-</style>

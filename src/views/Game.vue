@@ -299,7 +299,8 @@ export default {
       const newEvent = {
         id: Date.now(),
         ...event,
-        rotation: [...game.value.currentRotation]
+        rotation: [...game.value.currentRotation],
+        servingTeam: isOpponentServing.value ? 'opponent' : 'team' // Add servingTeam
       };
 
       undoStack.value.push({ 
