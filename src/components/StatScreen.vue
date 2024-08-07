@@ -1,53 +1,69 @@
 <template>
-  <div class="stat-screen p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">
-      Game Statistics
-    </h2>
+  <div class="stat-screen bg-gray-100 min-h-screen">
+    <header class="bg-blue-600 text-white p-4 shadow-md">
+      <h2 class="text-2xl font-bold">Game Statistics</h2>
+    </header>
 
-    <!-- Filter Section (Tabs) -->
-    <div class="filter-section flex space-x-4 mb-4">
-      <button
-        @click="setActiveTab('set')"
-        :class="{ 'active': activeTab === 'set' }"
-        class="px-4 py-2 rounded-md bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        Set Stats
-      </button>
-      <button
-        @click="setActiveTab('game')"
-        :class="{ 'active': activeTab === 'game' }"
-        class="px-4 py-2 rounded-md bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        Game Stats
-      </button>
-    </div>
+    <nav class="bg-white shadow-md">
+      <ul class="flex">
+        <li 
+          @click="setActiveTab('set')" 
+          :class="{ 'active': activeTab === 'set' }" 
+          class="tab-item"
+        >
+          Set Stats
+        </li>
+        <li 
+          @click="setActiveTab('game')" 
+          :class="{ 'active': activeTab === 'game' }" 
+          class="tab-item"
+        >
+          Game Stats
+        </li>
+      </ul>
+    </nav>
 
-    <GameSummary v-if="activeTab === 'game'" :game="game" />
+    <main class="p-4">
+      <transition name="fade" mode="out-in">
+        <GameSummary 
+          v-if="activeTab === 'game'" 
+          :game="game" 
+        />
+      </transition>
 
-    <TeamStats 
-      v-if="activeTab === 'set' || activeTab === 'game'" 
-      :game="game" 
-      :currentSetNumber="currentSetNumber" 
-      :getPlayerName="getPlayerName" 
-    />
+      <transition name="fade" mode="out-in">
+        <TeamStats 
+          v-if="activeTab === 'set' || activeTab === 'game'" 
+          :game="game" 
+          :currentSetNumber="currentSetNumber" 
+          :getPlayerName="getPlayerName" 
+        />
+      </transition>
 
-    <PlayerStats
-      :game="game"
-      :selectedPlayer="selectedPlayer"
-      :getPlayerName="getPlayerName"
-      :currentSetNumber="currentSetNumber"  
-      @player-selected="selectedPlayer = $event" 
-    />
-
+      <PlayerStats
+        :game="game"
+        :selectedPlayer="selectedPlayer"
+        :getPlayerName="getPlayerName"
+        :currentSetNumber="currentSetNumber"  
+        @player-selected="handlePlayerSelected"
+      />
+    </main>
   </div>
 </template>
 
 <script>
+import { ref, computed } from 'vue';
 import GameSummary from './StatScreen/GameSummary.vue';
 import TeamStats from './StatScreen/TeamStats.vue';
 import PlayerStats from './StatScreen/PlayerStats.vue';
 
 export default {
+  name: 'StatScreen',
+  components: {
+    GameSummary,
+    TeamStats,
+    PlayerStats
+  },
   props: {
     game: {
       type: Object,
@@ -58,27 +74,46 @@ export default {
       required: true,
     },
   },
-  components: { GameSummary, TeamStats, PlayerStats }, 
-  data() {
-    return {
-      activeTab: 'set',
-      selectedPlayer: null,
+  setup(props) {
+    const activeTab = ref('set');
+    const selectedPlayer = ref(null);
+
+    const currentSetNumber = computed(() => {
+      return activeTab.value === 'set' ? props.game.currentSet : null;
+    });
+
+    const setActiveTab = (tab) => {
+      activeTab.value = tab;
     };
-  },
-  computed: {
-    currentSetNumber() {
-      return this.activeTab === 'set' ? this.game.currentSet : null;
-    },
-  },
-  mounted() {
-    if (this.game.playerDetails && this.game.playerDetails.length > 0) {
-      this.selectedPlayer = this.game.playerDetails[0].id;
-    }
-  },
-  methods: {
-    setActiveTab(tab) {
-      this.activeTab = tab;
-    },
-  },
+
+    const handlePlayerSelected = (playerId) => {
+      selectedPlayer.value = playerId;
+    };
+
+    return {
+      activeTab,
+      selectedPlayer,
+      currentSetNumber,
+      setActiveTab,
+      handlePlayerSelected
+    };
+  }
 };
 </script>
+
+<style scoped>
+.tab-item {
+  @apply px-4 py-2 cursor-pointer transition-colors duration-200;
+}
+.tab-item.active {
+  @apply bg-blue-600 text-white;
+}
+.fade-enter-active, 
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, 
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
