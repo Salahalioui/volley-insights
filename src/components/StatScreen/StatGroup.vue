@@ -5,7 +5,9 @@
       </h4>
       <div v-for="(value, key) in group.stats" :key="key" class="stat-card mb-4">
         <h5 class="text-sm font-medium text-gray-600 mb-1">{{ formatKey(key) }}</h5>
-        <div v-if="isPercentage(value)" class="relative pt-1">
+  
+        <!-- Percentage Stat -->
+        <div v-if="isPercentageStat(key)" class="relative pt-1">
           <div class="overflow-hidden h-2 mb-2 text-xs flex rounded bg-blue-200">
             <div
               class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
@@ -14,19 +16,25 @@
           </div>
           <p class="text-right text-sm font-semibold text-blue-600">{{ value.toFixed(2) }}%</p>
         </div>
+  
+        <!-- Raw Count Stat -->
+        <p v-else-if="typeof value === 'number'" class="text-lg font-semibold text-blue-600">{{ value }}</p>
+  
+        <!-- Object or Array Stat (for typePerPoint, targetPerPoint, setTargetDistribution) -->
         <div v-else-if="typeof value === 'object'" class="text-sm">
           <ul v-if="Array.isArray(value)">
-            <li v-for="(item, index) in value" :key="index" class="mb-1">
-              {{ item }}
-            </li>
+            <li v-for="(item, index) in value" :key="index" class="mb-1">{{ item }}</li>
           </ul>
           <ul v-else>
             <li v-for="(subValue, subKey) in value" :key="subKey" class="mb-1">
-              {{ formatKey(subKey) }}: {{ formatValue(subValue) }}
+              {{ formatKey(subKey) }}: 
+              <span v-if="isPercentage(subValue)">{{ subValue.toFixed(2) }}%</span> 
+              <span v-else>{{ subValue }}</span>
             </li>
           </ul>
         </div>
-        <p v-else class="text-lg font-semibold text-blue-600">{{ value }}</p>
+  
+        <p v-else class="text-lg font-semibold text-blue-600">-</p> 
       </div>
     </div>
   </template>
@@ -43,14 +51,15 @@
       formatKey(key) {
         return key.split(/(?=[A-Z])/).join(' ').replace(/^\w/, c => c.toUpperCase());
       },
-      formatValue(value) {
-        if (typeof value === 'number') {
-          return value.toFixed(2);
-        }
-        return value;
-      },
       isPercentage(value) {
         return typeof value === 'number' && value >= 0 && value <= 100;
+      },
+      // Function to check if a stat key represents a percentage 
+      isPercentageStat(key) {
+        return ['aceServePercentage', 'validServePercentage',
+                'validReceptionPercentage', 'successfulSetPercentage',
+                'killPercentage', 'validAttackPercentage', 
+                'efficiency'].includes(key); 
       },
     },
   };
