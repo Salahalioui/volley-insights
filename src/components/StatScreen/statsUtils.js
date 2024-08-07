@@ -490,7 +490,7 @@ export const getAdvancedAttackStats = (game, playerId, setNumber = null) => {
 
   const killPercentage = totalAttempts > 0 ? (points - errors) / totalAttempts * 100 : 0;
   const validAttackPercentage = totalAttempts > 0 
-    ? (points + perfectAttacks + goodAttacks - errors) / totalAttempts * 100 
+    ? (perfectAttacks + goodAttacks - errors) / totalAttempts * 100 
     : 0;
 
   // Calculate percentages for targetPerPoint (keep these as percentages)
