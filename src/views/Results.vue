@@ -62,7 +62,7 @@
             class="game-item bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           >
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-              <h3 class="text-xl font-semibold text-gray-800">{{ game.name }}</h3>
+              <h1 class="text-xl font-semibold text-gray-800">{{ game.name }}</h1>
               <span 
                 class="text-sm font-medium px-3 py-1 rounded-full mt-2 sm:mt-0"
                 :class="{

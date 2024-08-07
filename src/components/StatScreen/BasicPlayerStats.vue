@@ -17,16 +17,21 @@
                 <th class="px-4 py-2 text-left border border-gray-300">Total Attempts</th>
                 <th class="px-4 py-2 text-left border border-gray-300">Points</th>
                 <th class="px-4 py-2 text-left border border-gray-300">Errors</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Efficiency</th>
+                <th class="px-4 py-2 text-left border border-gray-300">Efficiency (%)</th> 
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(stat, index) in playerStats" :key="index" :class="{ 'bg-gray-50': index % 2 === 0 }" class="hover:bg-gray-100 transition-colors duration-150">
+              <tr 
+                v-for="(stat, index) in playerStats" 
+                :key="index" 
+                :class="{ 'bg-gray-50': index % 2 === 0 }" 
+                class="hover:bg-gray-100 transition-colors duration-150"
+              >
                 <td class="px-4 py-2 border border-gray-300 font-medium">{{ stat.category }}</td>
                 <td class="px-4 py-2 border border-gray-300">{{ stat.totalAttempts }}</td>
                 <td class="px-4 py-2 border border-gray-300">{{ stat.points }}</td>
                 <td class="px-4 py-2 border border-gray-300">{{ stat.errors }}</td>
-                <td class="px-4 py-2 border border-gray-300">{{ stat.efficiency }}</td>
+                <td class="px-4 py-2 border border-gray-300">{{ stat.efficiency }}</td> 
               </tr>
             </tbody>
           </table>
@@ -52,10 +57,6 @@ export default {
     currentSetNumber: {
       type: Number,
     },
-    getPlayerName: {
-      type: Function,
-      required: true,
-    },
   },
   data() {
     return {
@@ -67,32 +68,32 @@ export default {
       return [
         {
           category: 'Serve',
-          ...this.getServeStats(),
+          ...statsUtils.getServeStats(this.game, this.playerId, this.currentSetNumber),
         },
         {
           category: 'Reception',
-          ...this.getReceptionStats(),
+          ...statsUtils.getReceptionStats(this.game, this.playerId, this.currentSetNumber),
         },
         {
           category: 'Setting',
-          ...this.getSettingStats(),
+          ...statsUtils.getSettingStats(this.game, this.playerId, this.currentSetNumber),
         },
         {
           category: 'Attack',
-          ...this.getAttackStats(),
+          ...statsUtils.getAttackStats(this.game, this.playerId, this.currentSetNumber),
         },
         {
           category: 'Block',
-          ...this.getBlockStats(),
+          ...statsUtils.getBlockStats(this.game, this.playerId, this.currentSetNumber),
         },
         {
           category: 'Dig',
-          ...this.getDigStats(),
-          efficiency: '-',
+          ...statsUtils.getDigStats(this.game, this.playerId, this.currentSetNumber),
         },
       ].map(stat => ({
         ...stat,
-        efficiency: typeof stat.efficiency === 'number' ? stat.efficiency.toFixed(2) : stat.efficiency,
+        // Efficiency is now always a percentage 
+        efficiency: (stat.efficiency * 100).toFixed(2) + '%', 
       }));
     },
   },
@@ -100,41 +101,6 @@ export default {
     toggleSection() {
       this.isOpen = !this.isOpen;
     },
-    getServeStats() {
-      return statsUtils.getServeStats(this.game, this.playerId, this.currentSetNumber);
-    },
-    getReceptionStats() {
-      return statsUtils.getReceptionStats(this.game, this.playerId, this.currentSetNumber);
-    },
-    getSettingStats() {
-      return statsUtils.getSettingStats(this.game, this.playerId, this.currentSetNumber);
-    },
-    getAttackStats() {
-      return statsUtils.getAttackStats(this.game, this.playerId, this.currentSetNumber);
-    },
-    getBlockStats() {
-      return statsUtils.getBlockStats(this.game, this.playerId, this.currentSetNumber);
-    },
-    getDigStats() {
-      return statsUtils.getDigStats(this.game, this.playerId, this.currentSetNumber);
-    },
   },
 };
 </script>
-
-<style scoped>
-.section-header {
-  @apply flex justify-between items-center w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-300 ease-in-out;
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s, max-height 0.3s;
-  max-height: 1000px;
-  overflow: hidden;
-}
-
-.fade-enter, .fade-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-</style>

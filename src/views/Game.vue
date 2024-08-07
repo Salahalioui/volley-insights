@@ -408,7 +408,7 @@ export default {
     const endGame = () => {
       game.value.status = 'completed';
       saveGame();
-      router.push({ name: 'GameSummary', params: { id: game.value.id } });
+      router.push({ name: 'StatScreen', params: { id: game.value.id } }); // Redirect to StatScreen
     };
 
     const saveGame = () => {
