@@ -2,11 +2,16 @@
   <div class="event-input">
     <h2 class="title">Record Event</h2>
     <div v-if="!isAdvancedInput" class="simple-input">
+      <div class="selection-indicator">
+        <span :class="{ 'completed': selectedPlayer }">1. Select Player</span>
+        <span :class="{ 'completed': selectedAction }">2. Select Action</span>
+        <span :class="{ 'completed': selectedPlayer && selectedAction }">3. Select Result</span>
+      </div>
       <div class="player-buttons"> 
         <button 
           v-for="playerId in currentRotation" 
           :key="playerId"
-          @click="selectedPlayer = playerId"
+          @click="selectPlayer(playerId)"
           :class="['btn', 'btn-player', { 'active': selectedPlayer === playerId }]"
         >
           <span class="player-name">{{ getPlayerName(playerId) }}</span> 
@@ -16,7 +21,7 @@
         <button 
           v-for="action in actions" 
           :key="action"
-          @mouseover="selectedAction = action"
+          @click="selectAction(action)"
           :class="['btn', 'btn-action', { 'active': selectedAction === action }]"
         >
           <span class="action-text">{{ action }}</span> 
@@ -28,6 +33,7 @@
           :key="result"
           @click="recordEvent({ player: selectedPlayer, action: selectedAction, result: result })"
           :class="['btn', 'btn-result', result === 'point' ? 'btn-point' : result === 'error' ? 'btn-error' : result === 'continue' ? 'btn-continue' : '']"
+          :disabled="!selectedPlayer || !selectedAction"
         >
           <span class="result-text">{{ result }}</span> 
         </button>
@@ -93,6 +99,14 @@ export default {
     };
   },
   methods: {
+    selectPlayer(playerId) {
+      this.selectedPlayer = playerId;
+      this.$emit('selectPlayer', playerId);
+    },
+    selectAction(action) {
+      this.selectedAction = action;
+      this.$emit('selectAction', action);
+    },
     recordEvent(eventData) { 
       if (!eventData.player || !eventData.action || !eventData.result) {
         alert('Please fill in all required event details'); 
@@ -102,7 +116,10 @@ export default {
       this.resetSelection();
     },
     recordAdvancedEvent() {
-      console.log('Advanced Event selected:', this.selectedPlayer, this.selectedAction, this.selectedType, this.selectedEvaluation, this.selectedResult, this.selectedTarget);
+      if (!this.selectedPlayer || !this.selectedAction || !this.selectedType || !this.selectedEvaluation || !this.selectedResult) {
+        alert('Please fill in all required event details');
+        return;
+      }
       this.$emit('recordAdvancedEvent', {
         player: this.selectedPlayer,
         action: this.selectedAction,
@@ -125,117 +142,147 @@ export default {
 };
 </script>
 
-  <style scoped>
-  .player-buttons, 
+<style scoped>
+.event-input {
+  background-color: #f3f4f6;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.simple-input, .advanced-input {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.player-buttons, 
 .action-buttons, 
 .result-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Adjust minmax for button size */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem; 
+}
+
+.btn {
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-player {
+  background-color: #60a5fa;
+  color: white;
+}
+
+.btn-action {
+  background-color: #73d334;
+  color: white;
+}
+
+.btn-player.active, .btn-action.active {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid #3b82f6;
+}
+
+.btn-player.active {
+  background-color: #3b82f6;
+}
+
+.btn-action.active {
+  background-color: #10b981;
+}
+
+.btn-point {
+  background-color: #48bb78;
+  color: white;
+}
+
+.btn-error {
+  background-color: #f72424;
+  color: white;
+}
+
+.btn-continue {
+  background-color: #ed8e36;
+  color: white;
+}
+
+.btn-record {
+  background-color: #8b5cf6;
+  color: white;
+  padding: 1rem;
+  font-size: 1.1rem;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .player-name,
 .action-text,
 .result-text {
-    font-weight: bold;
-    font-size: 1.15rem; /* Adjust font size as needed */
+  font-weight: bold;
+  font-size: 1.15rem;
 }
 
-/* Color-coding for results */
-.btn-point {
-  background-color: #48bb78; /* Green for Point */
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  font-size: 1rem;
+}
+
+.selection-indicator {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.selection-indicator span {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.selection-indicator span.completed {
+  background-color: #10b981;
   color: white;
 }
 
-.btn-error {
-  background-color: #f72424; /* Red for Error */
-  color: white;
-}
-
-.btn-continue {
-  background-color: #ed8e36; /* Orange for Continue */
-  color: white;
-}
-  .event-input {
-    background-color: #f3f4f6;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    color: #374151;
-  }
-  
-  .simple-input, .advanced-input {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
+@media (max-width: 640px) {
   .player-buttons, .action-buttons, .result-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 0.5rem;
-  }
-  
-  .btn {
-    padding: 0.75rem 1rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .btn-player {
-    background-color: #60a5fa;
-    color: white;
-  }
-  
-  .btn-action {
-    background-color: #73d334;
-    color: white;
-  }
-  
-  
-  .btn-record {
-    background-color: #8b5cf6;
-    color: white;
-    padding: 1rem;
-    font-size: 1.1rem;
-  }
-  
-  .btn:hover, .btn.active {
-    opacity: 0.8;
-    transform: translateY(-2px);
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .input-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr;
   }
-  
-  .form-select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    background-color: white;
-    font-size: 1rem;
-  }
-  
-  @media (max-width: 640px) {
-    .player-buttons, .action-buttons, .result-buttons {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .input-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-  </style>
+}
+</style>
