@@ -1,126 +1,223 @@
 <template>
-    <div class="about-screen bg-gradient-to-b from-blue-50 to-white min-h-screen">
-      <div class="max-w-4xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
-        <h1 class="text-3xl sm:text-4xl font-bold mb-8 text-center text-blue-600">About Volley Insights</h1>
-  
-        <!-- App Description -->
-        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h2 class="text-2xl font-semibold mb-4 flex items-center text-blue-700">
-            <i class="fas fa-info-circle mr-3 text-blue-500"></i>
-            What is Volley Insights?
-          </h2>
-          <p class="text-gray-700 mb-4 leading-relaxed">
-            Volley Insights is a comprehensive volleyball match analysis app designed to help coaches, players, and staff track and analyze game performance. Whether you're a professional team or an amateur enthusiast, our app provides powerful tools to elevate your volleyball strategy.
-          </p>
-          <p class="text-gray-700 leading-relaxed">
-            Part of a PhD thesis project, Volley Insights aims to revolutionize how volleyball games are recorded, analyzed, and understood.
-          </p>
-        </section>
-  
-        <!-- Key Features -->
-        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h2 class="text-2xl font-semibold mb-6 flex items-center text-yellow-600">
-            <i class="fas fa-star mr-3 text-yellow-500"></i>
-            Key Features
-          </h2>
-          <ul class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <li v-for="feature in features" :key="feature.text" class="flex items-start p-3 bg-gray-50 rounded-lg">
-              <i :class="['fas', feature.icon, 'mt-1', 'mr-3', 'text-green-500']"></i>
-              <span class="text-gray-700">{{ feature.text }}</span>
-            </li>
-          </ul>
-        </section>
-  
-        <!-- Version Info -->
-        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h2 class="text-2xl font-semibold mb-4 flex items-center text-purple-700">
-            <i class="fas fa-code-branch mr-3 text-purple-500"></i>
-            Version Information
-          </h2>
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-            <div>
-              <p class="text-gray-700 mb-2">
-                <strong>Current Version:</strong> {{ appVersion }}
-              </p>
-              <p class="text-gray-700">
-                <strong>Last Updated:</strong> {{ lastUpdated }}
-              </p>
-            </div>
-            <button @click="showChangeLog" class="mt-4 sm:mt-0 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
-              View Changelog
+  <div class="about-page bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen p-4 sm:p-8">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-4xl sm:text-5xl font-bold mb-8 text-center text-blue-600 animate-fade-in">
+        About Volley Insights
+      </h1>
+
+      <!-- App Description -->
+      <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-3xl font-semibold mb-4 text-blue-700">What is Volley Insights?</h2>
+        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
+          Volley Insights is a cutting-edge volleyball match analysis app, developed as part of an innovative PhD project at Tissemsilt University. Our mission is to revolutionize how volleyball games are recorded, analyzed, and understood.
+        </p>
+        <p class="text-lg text-gray-700 leading-relaxed">
+          Whether you're coaching a professional team or leading an amateur club, Volley Insights provides the tools you need to gain a competitive edge and elevate your game strategy.
+        </p>
+      </section>
+
+      <!-- Video Tutorial -->
+      <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-3xl font-semibold mb-4 text-green-700">Quick Start Video Tutorial</h2>
+        <p class="text-lg text-gray-700 mb-4 leading-relaxed">
+          Get up to speed with Volley Insights in just a few minutes. Our comprehensive video tutorial walks you through all the key features and functionalities.
+        </p>
+        <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
+          <iframe 
+            :src="tutorialVideoUrl" 
+            frameborder="0" 
+            allow="autoplay; encrypted-media" 
+            allowfullscreen
+            class="w-full h-full"
+          ></iframe>
+        </div>
+      </section>
+
+      <!-- Key Features -->
+      <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-3xl font-semibold mb-6 text-yellow-600">Key Features</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="feature in features" :key="feature.title" 
+               class="feature-card p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow transition-all duration-300 hover:shadow-md hover:scale-105">
+            <i :class="['fas', feature.icon, 'text-3xl', 'mb-3', 'text-blue-500']"></i>
+            <h3 class="font-semibold text-xl mb-2 text-gray-800">{{ feature.title }}</h3>
+            <p class="text-gray-700">{{ feature.text }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Our Team -->
+      <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-3xl font-semibold mb-6 text-purple-700">Our Team</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="member in teamMembers" :key="member.name" class="team-member-card p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow transition-all duration-300 hover:shadow-md hover:scale-105">
+            <img :src="member.image" :alt="member.name" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+            <h3 class="font-semibold text-xl mb-2 text-gray-800">{{ member.name }}</h3>
+            <p class="text-gray-600 mb-2">{{ member.role }}</p>
+            <p class="text-gray-700">{{ member.description }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Guide Section -->
+      <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-3xl font-semibold mb-6 text-indigo-700">Guides</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div v-for="guide in guides" :key="guide.title" class="guide-card p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow transition-all duration-300 hover:shadow-md hover:scale-105">
+            <h3 class="font-semibold text-xl mb-2 text-gray-800">{{ guide.title }}</h3>
+            <p class="text-gray-700 mb-4">{{ guide.description }}</p>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300" @click="showGuide(guide.id)">
+              Read Guide
             </button>
           </div>
-        </section>
-  
-        <!-- Contact Information -->
-        <section class="mb-8 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h2 class="text-2xl font-semibold mb-6 flex items-center text-red-700">
-            <i class="fas fa-envelope mr-3 text-red-500"></i>
-            Contact Us
-          </h2>
-          <div class="space-y-4">
-            <a href="mailto:support@volleyinsights.com" class="flex items-center text-blue-500 hover:text-blue-600 transition duration-300">
-              <i class="fas fa-envelope mr-3"></i>
-              Test@volleyinsights.com
-            </a>
-            <a href="https://www.volleyinsights.com" target="_blank" rel="noopener noreferrer" class="flex items-center text-blue-500 hover:text-blue-600 transition duration-300">
-              <i class="fas fa-globe mr-3"></i>
-              www.Testvolleyinsights.com
-            </a>
-            <a href="https://twitter.com/VolleyInsights" target="_blank" rel="noopener noreferrer" class="flex items-center text-blue-500 hover:text-blue-600 transition duration-300">
-              <i class="fab fa-twitter mr-3"></i>
-              @VolleyInsights
-            </a>
+        </div>
+      </section>
+
+      <!-- Version Info -->
+      <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-3xl font-semibold mb-4 text-blue-700">Version Information</h2>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <div>
+            <p class="text-lg text-gray-700 mb-2">
+              <strong>Current Version:</strong> {{ appVersion }}
+            </p>
+            <p class="text-lg text-gray-700">
+              <strong>Last Updated:</strong> {{ lastUpdated }}
+            </p>
           </div>
-        </section>
-  
-        <!-- Acknowledgments -->
-        <section class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <h2 class="text-2xl font-semibold mb-4 flex items-center text-yellow-700">
-            <i class="fas fa-award mr-3 text-yellow-600"></i>
-            Acknowledgments
-          </h2>
-          <p class="text-gray-700 leading-relaxed">
-            Volley Insights was developed as part of a PhD thesis project at Tissemsilt university. We would like to thank all the coaches, players, and volleyball enthusiasts who contributed to the development and testing of this app.
-          </p>
-        </section>
-      </div>
+          <button @click="showChangeLog" class="mt-4 sm:mt-0 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 transform hover:scale-105 text-lg">
+            View Changelog
+          </button>
+        </div>
+      </section>
+
+      <!-- Contact Information -->
+      <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-3xl font-semibold mb-6 text-red-700">Get in Touch</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <a href="mailto:support@volleyinsights.com" class="contact-link">
+            <i class="fas fa-envelope text-3xl mb-2"></i>
+            <span>Test@volleyinsights.com</span>
+          </a>
+          <a href="https://www.volleyinsights.com" target="_blank" rel="noopener noreferrer" class="contact-link">
+            <i class="fas fa-globe text-3xl mb-2"></i>
+            <span>www.Testvolleyinsights.com</span>
+          </a>
+          <a href="https://twitter.com/VolleyInsights" target="_blank" rel="noopener noreferrer" class="contact-link">
+            <i class="fab fa-twitter text-3xl mb-2"></i>
+            <span>@VolleyInsights</span>
+          </a>
+        </div>
+      </section>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'AboutView',
-    data() {
-      return {
-        appVersion: '1.0.0',
-        lastUpdated: 'July 30, 2024',
-        features: [
-          { icon: 'fa-clock', text: 'Real-time game recording and event tracking' },
-          { icon: 'fa-chart-bar', text: 'Advanced statistics and performance analysis' },
-          { icon: 'fa-sync', text: 'Player rotation management' },
-          { icon: 'fa-users', text: 'Customizable team and player profiles' },
-          { icon: 'fa-file-export', text: 'Export and share game data' },
-          { icon: 'fa-mobile-alt', text: 'Intuitive and user-friendly interface' }
-        ]
-      }
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'AboutView',
+  data() {
+    return {
+      appVersion: '1.0.0',
+      lastUpdated: 'August 09, 2024',
+      tutorialVideoUrl: 'https://www.youtube.com/embed/HrdCEpsJ67o',
+      features: [
+        { icon: 'fa-clock', title: 'Real-time Tracking', text: 'Record game events as they happen with our intuitive interface.' },
+        { icon: 'fa-chart-bar', title: 'Advanced Analytics', text: 'Gain deep insights with our comprehensive performance analysis tools.' },
+        { icon: 'fa-sync', title: 'Rotation Management', text: 'Easily manage and track player rotations throughout the game.' },
+        { icon: 'fa-users', title: 'Team Profiles', text: 'Create and customize detailed profiles for your teams and players.' },
+        { icon: 'fa-file-export', title: 'Data Export', text: 'Share and analyze your game data with easy export options.' },
+        { icon: 'fa-mobile-alt', title: 'Mobile Friendly', text: 'Access Volley Insights on any device with our responsive design.' }
+      ],
+      teamMembers: [
+        { 
+          name: 'Your Name', 
+          role: 'PhD Student & Developer', 
+          image: 'path_to_your_image.jpg', 
+          description: 'Creator and lead developer of Volley Insights, passionate about volleyball and data analysis.' 
+        },
+        { 
+          name: 'Supervisor Name', 
+          role: 'PhD Supervisor', 
+          image: 'path_to_supervisor_image.jpg', 
+          description: 'Guiding the research and development process with expertise in sports science and data analytics.' 
+        },
+        { 
+          name: 'Assistant Supervisor Name', 
+          role: 'Assistant Supervisor', 
+          image: 'path_to_assistant_supervisor_image.jpg', 
+          description: 'Supporting the project with specialized knowledge in volleyball tactics and performance analysis.' 
+        }
+      ],
+      guides: [
+        { 
+          id: 'event-recording', 
+          title: 'Event Recording Guide', 
+          description: 'Learn how to accurately record game events for optimal analysis.' 
+        },
+        { 
+          id: 'stats-explanation', 
+          title: 'Statistics Guide', 
+          description: 'Understand the various statistics provided by Volley Insights and how to interpret them.' 
+        }
+      ]
+    }
+  },
+  methods: {
+    showChangeLog() {
+      // Implement changelog display logic here
+      alert('Changelog feature coming soon!');
     },
-    methods: {
-      showChangeLog() {
-        // Implement changelog display logic here
-        alert('Changelog feature coming soon!');
-      }
+    showGuide(guideId) {
+      // Implement guide display logic here
+      alert(`Guide for ${guideId} will be available soon!`);
     }
   }
-  </script>
-  
-  <style scoped>
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+}
+</script>
+
+<style scoped>
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+section {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.contact-link {
+  @apply flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg text-blue-500 hover:text-blue-600 transition duration-300 hover:bg-gray-100;
+}
+
+.feature-card, .team-member-card, .guide-card {
+  @apply flex flex-col items-center text-center;
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .about-page {
+    padding: 2rem 1rem;
   }
-  
-  section {
-    animation: fadeIn 0.5s ease-out;
+
+  h1 {
+    font-size: 2.5rem;
   }
-  </style>
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  .feature-card, .team-member-card, .guide-card {
+    padding: 1rem;
+  }
+
+  .contact-link {
+    padding: 1rem;
+  }
+}
+</style>
