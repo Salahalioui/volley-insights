@@ -59,7 +59,32 @@
   "edit": "Edit",
   "remove": "Remove",
   "searchPlayers": "Search players...",
-  "allRoles": "All Roles"
+  "allRoles": "All Roles",
+  "gameName": "Game Name",
+  "enterGameName": "Enter game name",
+  "gameDate": "Game Date",
+  "gameTime": "Game Time",
+  "opponentTeamName": "Opponent Team Name",
+  "enterOpponentTeamName": "Enter opponent team name",
+  "location": "Location",
+  "enterGameLocation": "Enter game location",
+  "selectPlayers": "Select Players (minimum 6)",
+  "selectMinimumPlayers": "Please select at least 6 players.",
+  "setInitialRotation": "Set Initial Rotation",
+  "position": "Position {number}",
+  "assignUniquePlayer": "Please assign a unique player to each position.",
+  "selectInputMethod": "Select Input Method",
+  "basic": "Basic",
+  "advanced": "Advanced",
+  "selectInputMethodPrompt": "Please select an input method.",
+  "confirmGameCreation": "Confirm Game Creation",
+  "dateAndTime": "Date & Time",
+  "opponent": "Opponent",
+  "inputMethod": "Input Method",
+  "confirmGameCreationPrompt": "Are you sure you want to create this game?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "gameCreatedSuccessfully": "Game created successfully!"
   
   
     

@@ -1,57 +1,57 @@
 <template>
   <div class="create-game p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-3xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6 text-gray-800">Create New Game</h2>
+    <h2 class="text-3xl font-bold mb-6 text-gray-800">{{ $t('createNewGame') }}</h2>
 
     <form @submit.prevent="showConfirmationModal" class="space-y-6">
       <!-- Game Name -->
       <div class="form-group">
-        <label for="gameName" class="form-label">Game Name</label>
-        <input type="text" id="gameName" v-model="gameName" required class="form-input" placeholder="Enter game name">
+        <label for="gameName" class="form-label">{{ $t('gameName') }}</label>
+        <input type="text" id="gameName" v-model="gameName" required class="form-input" :placeholder="$t('enterGameName')">
       </div>
 
       <!-- Game Date and Time -->
       <div class="form-group grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label for="gameDate" class="form-label">Game Date</label>
+          <label for="gameDate" class="form-label">{{ $t('gameDate') }}</label>
           <input type="date" id="gameDate" v-model="gameDate" required class="form-input">
         </div>
         <div>
-          <label for="gameTime" class="form-label">Game Time</label>
+          <label for="gameTime" class="form-label">{{ $t('gameTime') }}</label>
           <input type="time" id="gameTime" v-model="gameTime" required class="form-input">
         </div>
       </div>
 
       <!-- Opponent Team Name -->
       <div class="form-group">
-        <label for="opponentTeam" class="form-label">Opponent Team Name</label>
-        <input type="text" id="opponentTeam" v-model="opponentTeam" required class="form-input" placeholder="Enter opponent team name">
+        <label for="opponentTeam" class="form-label">{{ $t('opponentTeamName') }}</label>
+        <input type="text" id="opponentTeam" v-model="opponentTeam" required class="form-input" :placeholder="$t('enterOpponentTeamName')">
       </div>
 
       <!-- Location -->
       <div class="form-group">
-        <label for="location" class="form-label">Location</label>
-        <input type="text" id="location" v-model="location" required class="form-input" placeholder="Enter game location">
+        <label for="location" class="form-label">{{ $t('location') }}</label>
+        <input type="text" id="location" v-model="location" required class="form-input" :placeholder="$t('enterGameLocation')">
       </div>
 
       <!-- Player Selection -->
       <div class="form-group">
-        <label class="form-label mb-2">Select Players (minimum 6)</label>
+        <label class="form-label mb-2">{{ $t('selectPlayers') }}</label>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
           <div v-for="player in players" :key="player.id" class="flex items-center bg-white p-2 rounded-lg shadow-sm">
             <input type="checkbox" :id="'player-' + player.id" v-model="selectedPlayers" :value="player.id" class="form-checkbox">
             <label :for="'player-' + player.id" class="ml-2 text-sm text-gray-900 flex-grow">
-              {{ player.name }} (#{{ player.shirtNumber }}) - <span class="text-xs text-gray-500">({{ player.role }})</span>
+              {{ player.name }} (#{{ player.shirtNumber }}) - <span class="text-xs text-gray-500">({{ $t(player.role) }})</span>
             </label>
           </div>
         </div>
         <p v-if="selectedPlayers.length < 6" class="mt-2 text-sm text-red-600">
-          Please select at least 6 players.
+          {{ $t('selectMinimumPlayers') }}
         </p>
       </div>
 
       <!-- Initial Rotation -->
       <div v-if="selectedPlayers.length >= 6" class="form-group">
-        <label class="form-label mb-2">Set Initial Rotation</label>
+        <label class="form-label mb-2">{{ $t('setInitialRotation') }}</label>
         <div class="relative w-full aspect-[3/2] bg-blue-100 border-2 border-blue-500 rounded-lg p-2">
           <!-- Court layout (Corrected Order) -->
           <div class="grid grid-cols-3 grid-rows-2 gap-2 h-full">
@@ -64,7 +64,7 @@
               }"
             >
               <select v-model="initialRotation[position - 1]" class="w-full p-1 text-sm rounded">
-                <option value="">Position {{ position }}</option>
+                <option value="">{{ $t('position', { number: position }) }}</option>
                 <option v-for="playerId in selectedPlayers" :key="playerId" :value="playerId">
                   {{ getPlayerName(playerId) }} (#{{ getPlayerShirtNumber(playerId) }})
                 </option>
@@ -75,25 +75,25 @@
           <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-500"></div>
         </div>
         <p v-if="!isRotationValid(initialRotation)" class="mt-2 text-sm text-red-600">
-          Please assign a unique player to each position.
+          {{ $t('assignUniquePlayer') }}
         </p>
       </div>
 
       <!-- Input Method Selection -->
       <div class="form-group">
-        <label class="form-label mb-2">Select Input Method</label>
+        <label class="form-label mb-2">{{ $t('selectInputMethod') }}</label>
         <div class="flex gap-4">
           <button 
             type="button"
             :class="['btn', inputMethod === 'basic' ? 'btn-blue' : 'btn-gray']" 
-            @click="selectInputMethod('basic')">Basic</button>
+            @click="selectInputMethod('basic')">{{ $t('basic') }}</button>
           <button 
             type="button"
             :class="['btn', inputMethod === 'advanced' ? 'btn-blue' : 'btn-gray']" 
-            @click="selectInputMethod('advanced')">Advanced</button>
+            @click="selectInputMethod('advanced')">{{ $t('advanced') }}</button>
         </div>
         <p v-if="!inputMethodSelected" class="mt-2 text-sm text-red-600">
-          Please select an input method.
+          {{ $t('selectInputMethodPrompt') }}
         </p>
       </div>
 
@@ -101,26 +101,26 @@
               :disabled="!isFormValid"
               :class="['w-full p-3 rounded transition duration-300', 
                        isFormValid ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed']">
-        Create Game
+        {{ $t('createGame') }}
       </button>
     </form>
 
     <!-- Confirmation Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center p-4">
       <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-        <h3 class="text-xl font-bold mb-4">Confirm Game Creation</h3>
+        <h3 class="text-xl font-bold mb-4">{{ $t('confirmGameCreation') }}</h3>
         <div class="mb-4 space-y-2">
-          <p><strong>Game Name:</strong> {{ gameName }}</p>
-          <p><strong>Date & Time:</strong> {{ gameDate }} {{ gameTime }}</p>
-          <p><strong>Opponent:</strong> {{ opponentTeam }}</p>
-          <p><strong>Location:</strong> {{ location }}</p>
-          <p><strong>Players:</strong> {{ selectedPlayers.length }}</p>
-          <p><strong>Input Method:</strong> {{ inputMethod }}</p>
+          <p><strong>{{ $t('gameName') }}:</strong> {{ gameName }}</p>
+          <p><strong>{{ $t('dateAndTime') }}:</strong> {{ gameDate }} {{ gameTime }}</p>
+          <p><strong>{{ $t('opponent') }}:</strong> {{ opponentTeam }}</p>
+          <p><strong>{{ $t('location') }}:</strong> {{ location }}</p>
+          <p><strong>{{ $t('players') }}:</strong> {{ selectedPlayers.length }}</p>
+          <p><strong>{{ $t('inputMethod') }}:</strong> {{ $t(inputMethod) }}</p>
         </div>
-        <p class="mb-4">Are you sure you want to create this game?</p>
+        <p class="mb-4">{{ $t('confirmGameCreationPrompt') }}</p>
         <div class="flex justify-end space-x-3">
-          <button @click="showModal = false" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition duration-300">Cancel</button>
-          <button @click="createGame" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">Confirm</button>
+          <button @click="showModal = false" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition duration-300">{{ $t('cancel') }}</button>
+          <button @click="createGame" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">{{ $t('confirm') }}</button>
         </div>
       </div>
     </div>
@@ -130,10 +130,12 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'CreateGame',
   setup() {
+    const { t } = useI18n();
     const router = useRouter();
     const gameName = ref('');
     const gameDate = ref('');
@@ -143,8 +145,8 @@ export default {
     const players = ref([]);
     const selectedPlayers = ref([]);
     const initialRotation = ref(Array(6).fill(''));
-    const inputMethod = ref(''); // Add input method
-    const inputMethodSelected = ref(true); // Validation flag
+    const inputMethod = ref('');
+    const inputMethodSelected = ref(true);
     const showModal = ref(false);
 
     onMounted(() => {
@@ -164,7 +166,6 @@ export default {
       return player ? player.shirtNumber : '';
     };
 
-    // Make `isRotationValid` a pure function
     const isRotationValid = (rotation) => {
       const filledPositions = rotation.filter(p => p !== '');
       const uniquePositions = new Set(filledPositions);
@@ -179,7 +180,7 @@ export default {
              location.value.trim() !== '' &&
              selectedPlayers.value.length >= 6 &&
              isRotationValid(initialRotation.value) &&
-             inputMethod.value !== ''; // Add input method validation
+             inputMethod.value !== '';
     });
 
     const selectInputMethod = (method) => {
@@ -203,7 +204,7 @@ export default {
         location: location.value,
         players: selectedPlayers.value,
         initialRotation: initialRotation.value,
-        inputMethod: inputMethod.value, // Add input method to game data
+        inputMethod: inputMethod.value,
         sets: [],
         currentSet: 1,
         status: 'not_started'
@@ -225,11 +226,12 @@ export default {
 
       showModal.value = false;
 
-      alert('Game created successfully!');
+      alert(t('gameCreatedSuccessfully'));
       router.push({ name: 'GameView', params: { id: gameData.id } });
     };
 
     return {
+      t,
       gameName,
       gameDate,
       gameTime,
@@ -243,7 +245,7 @@ export default {
       showModal,
       getPlayerName,
       getPlayerShirtNumber,
-      isRotationValid, // Pure function
+      isRotationValid,
       isFormValid,
       selectInputMethod,
       showConfirmationModal,
@@ -252,6 +254,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .form-group {
