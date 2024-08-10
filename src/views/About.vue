@@ -127,11 +127,13 @@
 
 <script>
 import EventRecordingGuide from '@/components/About/EventRecordingGuide.vue';
+import StatsGuide from '@/components/About/StatsGuide.vue';
 
 export default {
   name: 'AboutView',
   components: {
-    EventRecordingGuide
+    EventRecordingGuide,
+    StatsGuide
   },
   data() {
     return {
