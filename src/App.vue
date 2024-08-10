@@ -20,8 +20,15 @@
               <router-link v-for="(link, index) in navLinks" :key="index" :to="link.path" 
                            class="block mt-4 lg:inline-block lg:mt-0 hover:text-blue-200 mr-4" 
                            active-class="font-bold text-blue-200">
-                {{ link.name }}
+                {{ $t(link.name) }}
               </router-link>
+            </div>
+            <div class="mt-4 lg:mt-0 lg:ml-auto">
+              <select v-model="$i18n.locale" class="bg-blue-600 text-white border border-white rounded px-3 py-1">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="ar">Arabic</option>
+              </select>
             </div>
           </div>
         </nav>
@@ -40,6 +47,7 @@
   </div>
 </template>
 
+
 <script>
 import { ref } from 'vue';
 
@@ -48,11 +56,11 @@ export default {
   setup() {
     const isMenuOpen = ref(false);
     const navLinks = [
-      { name: 'Home', path: '/' },
-      { name: 'My Team', path: '/team' },
-      { name: 'Create Game', path: '/create-game' },
-      { name: 'Results', path: '/results' },
-      { name: 'About', path: '/about' }
+      { name: 'home', path: '/' },
+      { name: 'myTeam', path: '/team' },
+      { name: 'createGame', path: '/create-game' },
+      { name: 'results', path: '/results' },
+      { name: 'about', path: '/about' }
     ];
 
     const toggleMenu = () => {
@@ -66,6 +74,7 @@ export default {
     };
   }
 }
+
 </script>
 
 <style scoped>

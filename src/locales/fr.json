@@ -1,0 +1,21 @@
+{
+    "welcome": "Bienvenue sur Volley Insights",
+    "elevateAnalysis": "Élevez Votre Analyse de Volleyball",
+    "appDescription": "Volley Insights est votre outil complet pour l'analyse des matchs de volleyball. Enregistrez les jeux, suivez les performances des joueurs et obtenez des informations précieuses pour améliorer la stratégie de votre équipe.",
+    "startNewGame": "Commencer un Nouveau Match",
+    "newGameDescription": "Enregistrez un nouveau match avec un suivi des événements en temps réel et des statistiques avancées.",
+    "createNewGame": "Créer un Nouveau Match",
+    "manageTeam": "Gérer Votre Équipe",
+    "manageTeamDescription": "Mettez à jour votre effectif, ajoutez des joueurs et gérez les informations de l'équipe.",
+    "goToMyTeam": "Aller à Mon Équipe",
+    "recentGames": "Matchs Récents",
+    "viewStats": "Voir les Stats",
+    "continueGame": "Continuer le Match",
+    "noRecentGames": "Pas de matchs récents. Commencez par créer un nouveau match !",
+    "viewAllGames": "Voir Tous les Matchs",
+    "teamOverview": "Aperçu de l'Équipe",
+    "totalGames": "Total des Matchs",
+    "winPercentage": "Pourcentage de Victoires",
+    "players": "Joueurs",
+    "topScorer": "Meilleur Marqueur"
+  }
