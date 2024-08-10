@@ -22,9 +22,9 @@
         <p class="text-lg text-gray-700 mb-4 leading-relaxed">
           Get up to speed with Volley Insights in just a few minutes. Our comprehensive video tutorial walks you through all the key features and functionalities.
         </p>
-        <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
+        <div class="w-full" style="height: 500px;">
           <iframe 
-            :src="tutorialVideoUrl" 
+            src="https://www.youtube.com/embed/HrdCEpsJ67o" 
             frameborder="0" 
             allow="autoplay; encrypted-media" 
             allowfullscreen
@@ -66,7 +66,7 @@
           <div v-for="guide in guides" :key="guide.title" class="guide-card p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow transition-all duration-300 hover:shadow-md hover:scale-105">
             <h3 class="font-semibold text-xl mb-2 text-gray-800">{{ guide.title }}</h3>
             <p class="text-gray-700 mb-4">{{ guide.description }}</p>
-            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300" @click="showGuide(guide.id)">
+            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300" @click="showGuide(guide)">
               Read Guide
             </button>
           </div>
@@ -95,13 +95,13 @@
       <section class="mb-12 bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
         <h2 class="text-3xl font-semibold mb-6 text-red-700">Get in Touch</h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <a href="mailto:support@volleyinsights.com" class="contact-link">
+          <a href="mailto:salahallioui32000@gmai.com" class="contact-link">
             <i class="fas fa-envelope text-3xl mb-2"></i>
-            <span>Test@volleyinsights.com</span>
+            <span>salahallioui32000@gmai.com</span>
           </a>
-          <a href="https://www.volleyinsights.com" target="_blank" rel="noopener noreferrer" class="contact-link">
+          <a href="https://volley-insights.vercel.app/" target="_blank" rel="noopener noreferrer" class="contact-link">
             <i class="fas fa-globe text-3xl mb-2"></i>
-            <span>www.Testvolleyinsights.com</span>
+            <span>www.volleyinsights.com</span>
           </a>
           <a href="https://twitter.com/VolleyInsights" target="_blank" rel="noopener noreferrer" class="contact-link">
             <i class="fab fa-twitter text-3xl mb-2"></i>
@@ -109,18 +109,35 @@
           </a>
         </div>
       </section>
+
+      <!-- Guide Modal -->
+      <div v-if="selectedGuide" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full relative overflow-y-auto max-h-screen">
+          <button @click="closeGuide" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800">
+            <i class="fas fa-times text-2xl"></i>
+          </button>
+          <h2 class="text-2xl font-semibold mb-4 text-blue-700">{{ selectedGuide.title }}</h2>
+          <p class="text-lg text-gray-700 mb-4 leading-relaxed">{{ selectedGuide.description }}</p>
+          <component :is="selectedGuide.component" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import EventRecordingGuide from '@/components/About/EventRecordingGuide.vue';
+
 export default {
   name: 'AboutView',
+  components: {
+    EventRecordingGuide
+  },
   data() {
     return {
-      appVersion: '1.0.0',
-      lastUpdated: 'August 09, 2024',
-      tutorialVideoUrl: 'https://www.youtube.com/embed/HrdCEpsJ67o',
+      appVersion: '2.1.0',
+      lastUpdated: 'August 10, 2024',
+      selectedGuide: null,
       features: [
         { icon: 'fa-clock', title: 'Real-time Tracking', text: 'Record game events as they happen with our intuitive interface.' },
         { icon: 'fa-chart-bar', title: 'Advanced Analytics', text: 'Gain deep insights with our comprehensive performance analysis tools.' },
@@ -131,21 +148,21 @@ export default {
       ],
       teamMembers: [
         { 
-          name: 'Your Name', 
+          name: 'SALAH DINE ALIOUI', 
           role: 'PhD Student & Developer', 
-          image: 'path_to_your_image.jpg', 
+          image: require('@/assets/salah.jpg'),
           description: 'Creator and lead developer of Volley Insights, passionate about volleyball and data analysis.' 
         },
         { 
-          name: 'Supervisor Name', 
+          name: 'Prof. Benrabeh Kheireddine', 
           role: 'PhD Supervisor', 
-          image: 'path_to_supervisor_image.jpg', 
+          image: require('@/assets/Benrabehkhayreddine.jpg'),
           description: 'Guiding the research and development process with expertise in sports science and data analytics.' 
         },
         { 
-          name: 'Assistant Supervisor Name', 
+          name: 'Dr.Bennadja Mohamed', 
           role: 'Assistant Supervisor', 
-          image: 'path_to_assistant_supervisor_image.jpg', 
+          image: require('@/assets/BEn.jpg'),
           description: 'Supporting the project with specialized knowledge in volleyball tactics and performance analysis.' 
         }
       ],
@@ -153,12 +170,14 @@ export default {
         { 
           id: 'event-recording', 
           title: 'Event Recording Guide', 
-          description: 'Learn how to accurately record game events for optimal analysis.' 
+          description: 'Learn how to accurately record game events for optimal analysis.', 
+          component: 'EventRecordingGuide' 
         },
         { 
           id: 'stats-explanation', 
           title: 'Statistics Guide', 
-          description: 'Understand the various statistics provided by Volley Insights and how to interpret them.' 
+          description: 'Understand the various statistics provided by Volley Insights and how to interpret them.', 
+          component: 'StatsGuide' // Placeholder for another guide component
         }
       ]
     }
@@ -168,9 +187,13 @@ export default {
       // Implement changelog display logic here
       alert('Changelog feature coming soon!');
     },
-    showGuide(guideId) {
-      // Implement guide display logic here
-      alert(`Guide for ${guideId} will be available soon!`);
+    showGuide(guide) {
+      this.selectedGuide = guide;
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    },
+    closeGuide() {
+      this.selectedGuide = null;
+      document.body.style.overflow = 'auto'; // Re-enable background scrolling
     }
   }
 }
@@ -196,6 +219,10 @@ section {
 
 .animate-fade-in {
   animation: fadeIn 1s ease-out;
+}
+
+.fixed {
+  overflow-y: auto;
 }
 
 /* Responsive adjustments */
