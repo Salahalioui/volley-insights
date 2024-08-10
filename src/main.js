@@ -18,6 +18,8 @@ defineRule('numeric', numeric);
 
 // Set up Vue I18n
 const i18n = createI18n({
+  legacy: false, // Set this to false
+  globalInjection: true, // This allows you to use $t in templates
   locale: 'en', // Set the default language
   fallbackLocale: 'en', // Fallback language
   messages: {

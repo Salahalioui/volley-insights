@@ -1,6 +1,6 @@
 <template>
   <div class="my-team p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6 text-gray-800">My Team</h2>
+    <h2 class="text-3xl font-bold mb-6 text-gray-800">{{ $t('myTeam') }}</h2>
 
     <!-- Search and Filter -->
     <SearchFilter
@@ -31,14 +31,14 @@
     <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
       <button @click="exportPlayers" 
               class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300">
-        <i class="fas fa-file-export mr-2"></i> Export Players (JSON)
+        <i class="fas fa-file-export mr-2"></i> {{ $t('exportPlayersJSON') }}
       </button>
       <button @click="exportPlayersCSV"
               class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300">
-        <i class="fas fa-file-export mr-2"></i> Export Players (CSV)
+        <i class="fas fa-file-export mr-2"></i> {{ $t('exportPlayersCSV') }}
       </button>
       <label class="flex-1 bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition duration-300 cursor-pointer text-center">
-        <i class="fas fa-file-import mr-2"></i> Import Players
+        <i class="fas fa-file-import mr-2"></i> {{ $t('importPlayers') }}
         <input type="file" @change="importPlayers" accept=".json, .csv" class="hidden">
       </label>
     </div>
@@ -58,6 +58,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Papa from 'papaparse';
 import SearchFilter from '../components/team/SearchFilter.vue';
 import PlayerList from '../components/team/PlayerList.vue';
@@ -75,6 +76,7 @@ export default {
     ConfirmModal
   },
   setup() {
+    const { t } = useI18n();
     const players = ref([]);
     const searchQuery = ref('');
     const roleFilter = ref('');
@@ -89,16 +91,16 @@ export default {
     const showConfirmModal = ref(false);
     const playerToRemove = ref(null);
 
-    const roles = [
-      'Setter',
-      'Outside Hitter',
-      'Opposite',
-      'Middle Blocker',
-      'Libero'
-    ];
+    const roles = computed(() => [
+  'setter',
+  'outsideHitter',
+  'opposite',
+  'middleBlocker',
+  'libero'
+]);
 
     const showNotification = (message, type = 'success') => {
-      notification.value = { message, type };
+      notification.value = { message: t(message), type };
       setTimeout(() => {
         notification.value = null;
       }, 3000);
@@ -121,7 +123,7 @@ export default {
         p.id !== currentPlayer.value.id 
       );
       if (existingPlayer) {
-        shirtNumberError.value = 'Shirt number already in use';
+        shirtNumberError.value = t('shirtNumberInUse');
         return;
       }
       shirtNumberError.value = null;
@@ -129,13 +131,13 @@ export default {
       if (currentPlayer.value.id) {
         const index = players.value.findIndex(p => p.id === currentPlayer.value.id);
         players.value[index] = { ...currentPlayer.value };
-        showNotification('Player updated successfully');
+        showNotification('playerUpdated');
       } else {
         players.value.push({
           ...currentPlayer.value,
           id: Date.now()
         });
-        showNotification('Player added successfully');
+        showNotification('playerAdded');
       }
 
       savePlayers();
@@ -154,7 +156,7 @@ export default {
     const removePlayer = () => {
       players.value = players.value.filter(p => p.id !== playerToRemove.value.id);
       savePlayers();
-      showNotification('Player removed successfully');
+      showNotification('playerRemoved');
       showConfirmModal.value = false;
       playerToRemove.value = null;
     };
@@ -177,7 +179,7 @@ export default {
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
-      showNotification('Players exported successfully (JSON)');
+      showNotification('playersExportedJSON');
     };
 
     const exportPlayersCSV = () => {
@@ -191,9 +193,8 @@ export default {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showNotification('Players exported successfully (CSV)');
+      showNotification('playersExportedCSV');
     };
-
 
     const importPlayers = (event) => {
       const file = event.target.files[0];
@@ -208,9 +209,9 @@ export default {
             const importedPlayers = JSON.parse(fileContent);
             players.value = importedPlayers;
             savePlayers();
-            showNotification('Players imported successfully');
+            showNotification('playersImported');
           } catch (error) {
-            showNotification('Error: Invalid JSON file', 'error');
+            showNotification('invalidJSONFile', 'error');
           }
         } else if (fileExtension === 'csv') {
           Papa.parse(fileContent, {
@@ -218,16 +219,16 @@ export default {
             complete: (results) => {
               if (results.errors.length > 0) {
                 console.error('CSV parsing errors:', results.errors);
-                showNotification('Error parsing CSV file. Please check the format.', 'error');
+                showNotification('invalidCSVFormat', 'error');
                 return;
               }
               players.value = results.data; 
               savePlayers();
-              showNotification('Players imported successfully');
+              showNotification('playersImported');
             }
           });
         } else {
-          showNotification('Error: Invalid file type', 'error');
+          showNotification('invalidFileType', 'error');
         }
       };
       reader.readAsText(file);
