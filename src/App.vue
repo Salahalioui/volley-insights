@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="min-h-screen flex flex-col bg-gray-100">
+  <div id="app" class="min-h-screen flex flex-col bg-gray-100" :dir="direction">
     <header class="bg-blue-600 text-white shadow-md">
       <div class="container mx-auto px-4">
         <nav class="flex items-center justify-between flex-wrap py-4">
@@ -24,7 +24,7 @@
               </router-link>
             </div>
             <div class="mt-4 lg:mt-0 lg:ml-auto">
-              <select v-model="$i18n.locale" class="bg-blue-600 text-white border border-white rounded px-3 py-1">
+              <select v-model="$i18n.locale" @change="handleLanguageChange" class="bg-blue-600 text-white border border-white rounded px-3 py-1">
                 <option value="en">{{ $t('english') }}</option>
                 <option value="fr">{{ $t('french') }}</option>
                 <option value="ar">{{ $t('arabic') }}</option>
@@ -48,11 +48,13 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'App',
   setup() {
+    const { locale } = useI18n();
     const isMenuOpen = ref(false);
     const navLinks = [
       { name: 'home', path: '/' },
@@ -66,16 +68,45 @@ export default {
       isMenuOpen.value = !isMenuOpen.value;
     };
 
+    const direction = computed(() => {
+      return locale.value === 'ar' ? 'rtl' : 'ltr';
+    });
+
+    const handleLanguageChange = () => {
+      document.documentElement.dir = direction.value;
+      document.documentElement.lang = locale.value;
+    };
+
+    // Set initial direction and lang
+    handleLanguageChange();
+
     return {
       isMenuOpen,
       navLinks,
-      toggleMenu
+      toggleMenu,
+      direction,
+      handleLanguageChange
     };
   }
 }
 </script>
 
-<style scoped>
+<style>
+/* Add these global styles */
+body {
+  transition: all 0.3s ease;
+}
+
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.ltr {
+  direction: ltr;
+  text-align: left;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
