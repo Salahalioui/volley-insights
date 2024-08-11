@@ -4,31 +4,37 @@
     <div class="serving-team">
       <span class="icon" :class="{ 'opponent': isOpponentServing }">🏐</span>
       <p class="team-name">
-        {{ isOpponentServing ? game.opponentTeam : 'Our Team' }}
+        {{ isOpponentServing ? game.opponentTeam : $t('ourTeam') }}
       </p>
     </div>
     <button @click="toggleServingTeam" class="btn-switch" :class="{ 'opponent': isOpponentServing }">
       <span class="btn-icon">
-        {{ isOpponentServing ? '⬅ Serve' : 'Serve ➡' }} 
+        {{ isOpponentServing ? $t('serveLeft') : $t('serveRight') }}
       </span>
     </button>
   </div>
 </template>
-  
-  <script>
-  export default {
-    props: {
-      isOpponentServing: Boolean,
-      game: Object
-    },
-    emits: ['toggleServingTeam'],
-    methods: {
-      toggleServingTeam() {
-        this.$emit('toggleServingTeam');
-      }
+
+<script>
+import { useI18n } from 'vue-i18n';
+
+export default {
+  props: {
+    isOpponentServing: Boolean,
+    game: Object
+  },
+  emits: ['toggleServingTeam'],
+  setup() {
+    const { t } = useI18n();
+    return { t };
+  },
+  methods: {
+    toggleServingTeam() {
+      this.$emit('toggleServingTeam');
     }
-  };
-  </script>
+  }
+};
+</script>
   <style scoped>
   .serving-indicator {
     background-color: #f3e8ff;

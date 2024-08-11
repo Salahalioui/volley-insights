@@ -4,33 +4,34 @@
     
     <!-- Game Info and Controls -->
     <div class="game-info-controls mb-4 flex flex-col items-center bg-gray-100 rounded-lg p-4">
-  <div class="game-info text-center mb-2"> <p><strong>{{ game.opponentTeam }}</strong> </p>
-    <p class="text-sm text-gray-600">
-      {{ formatDate(game.date) }} 
-    </p>
-    <p>
-      <span 
-        class="status-indicator"
-        :class="{ 
-          'in-progress': game.status === 'in_progress', 
-          'paused': game.status === 'paused',
-          'not-started': game.status === 'not_started' || game.status === 'completed' 
-        }"
-      > 
-        {{ game.status === 'in_progress' ? 'In Progress' : game.status === 'paused' ? 'Paused' : game.status }} 
-      </span>
-    </p>
-  </div>
+      <div class="game-info text-center mb-2">
+        <p><strong>{{ game.opponentTeam }}</strong></p>
+        <p class="text-sm text-gray-600">
+          {{ formatDate(game.date) }}
+        </p>
+        <p>
+          <span 
+            class="status-indicator"
+            :class="{ 
+              'in-progress': game.status === 'in_progress', 
+              'paused': game.status === 'paused',
+              'not-started': game.status === 'not_started' || game.status === 'completed' 
+            }"
+          > 
+            {{ $t(game.status) }}
+          </span>
+        </p>
+      </div>
 
-  <GameControls 
-    :canUndo="canUndo"
-    :canRedo="canRedo"
-    :game="game"
-    @undoLastEvent="undoLastEvent"
-    @redoLastEvent="redoLastEvent"
-    @toggleGameStatus="toggleGameStatus"
-  />
-</div>
+      <GameControls 
+        :canUndo="canUndo"
+        :canRedo="canRedo"
+        :game="game"
+        @undoLastEvent="undoLastEvent"
+        @redoLastEvent="redoLastEvent"
+        @toggleGameStatus="toggleGameStatus"
+      />
+    </div>
 
     <!-- Scoreboard -->
     <GameScoreboard
@@ -92,7 +93,7 @@
 
     <!-- Stat Screen Toggle -->
     <button @click="toggleStatScreen" class="btn btn-blue mt-4 w-full">
-      {{ showStatScreen ? 'Hide Stats' : 'Show Stats' }}
+      {{ showStatScreen ? $t('hideStats') : $t('showStats') }}
     </button>
 
     <!-- Stat Screen Component -->
@@ -103,7 +104,8 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { cloneDeep } from 'lodash'; // Import cloneDeep for deep copying
+import { useI18n } from 'vue-i18n';
+import { cloneDeep } from 'lodash';
 import StatScreen from '../components/StatScreen.vue';
 import EventInput from '../components/Game/EventInput.vue';
 import GameScoreboard from '../components/Game/ScoreboardComp.vue';
@@ -128,6 +130,7 @@ export default {
     ServingIndicator
   },
   setup() {
+    const { t } = useI18n();
     const route = useRoute();
     const router = useRouter();
     const game = ref(null);
@@ -148,17 +151,14 @@ export default {
           router.push({ name: 'Home' });
           return;
         }
-        // Load isOpponentServing if it exists
         const savedServingState = localStorage.getItem(`game-${game.value.id}-serving`);
         if (savedServingState) {
           isOpponentServing.value = JSON.parse(savedServingState);
         }
-        // Load game status
         const savedGameStatus = localStorage.getItem(`game-${game.value.id}-status`);
         if (savedGameStatus) {
           game.value.status = savedGameStatus; 
         }
-        // Load currentRotation 
         const savedRotation = localStorage.getItem(`game-${game.value.id}-rotation`);
         if (savedRotation) {
           game.value.currentRotation = JSON.parse(savedRotation);
@@ -189,7 +189,7 @@ export default {
 
       } catch (error) {
         console.error("Error loading game data:", error);
-        alert("An error occurred while loading the game. Please try again.");
+        alert(t('errorLoadingGame'));
         router.push({ name: 'Home' });
       }
     });
@@ -215,47 +215,45 @@ export default {
     const canUndo = computed(() => undoStack.value.length > 0);
     const canRedo = computed(() => redoStack.value.length > 0);
 
-    const getActionTypes =  (action) => {
-      console.log('getActionTypes called');
+    const getActionTypes = (action) => {
       switch (action) {
         case 'serve':
-          return ['Float', 'Jump', 'Topspin'];
+          return [t('float'), t('jump'), t('topspin')];
         case 'receive':
-          return ['Forearm', 'Overhead'];
+          return [t('forearm'), t('overhead')];
         case 'set':
-          return ['Front', 'Back', 'Jump'];
+          return [t('front'), t('back'), t('jump')];
         case 'spike':
-          return ['Power', 'Off-speed', 'Tip'];
+          return [t('power'), t('offSpeed'), t('tip')];
         case 'block':
-          return ['Stuff', 'Soft'];
+          return [t('stuff'), t('soft')];
         case 'dig':
-          return ['Forearm', 'Overhead', 'Dive'];
+          return [t('forearm'), t('overhead'), t('dive')];
         default:
           return [];
       }
     };
 
     const getEvaluations = computed(() => {
-      return ['Perfect', 'Good', 'OK', 'Poor'];
+      return [t('perfect'), t('good'), t('ok'), t('poor')];
     });
 
     const getTargets = (action) => {
-      console.log('getTargets called');
       if (['serve', 'spike'].includes(action)) {
-        return ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5', 'Zone 6'];
+        return [t('zone1'), t('zone2'), t('zone3'), t('zone4'), t('zone5'), t('zone6')];
       } else if (action === 'set') {
-        return ['2', '3', '4', 'Back Row'];
+        return [t('position2'), t('position3'), t('position4'), t('backRow')];
       }
       return [];
     };
 
     const getPlayerName = (playerId) => {
       const player = players.value.find(p => p.id === playerId);
-      return player ? player.name : 'Unknown Player';
+      return player ? player.name : t('unknownPlayer');
     };
 
     const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString();
+      return new Date(dateString).toLocaleDateString(t('locale'));
     };
 
     const startNewSet = () => {
@@ -280,19 +278,18 @@ export default {
 
     const rotateManually = () => {
       rotateTeam();
-      localStorage.setItem(`game-${game.value.id}-rotation`, JSON.stringify(game.value.currentRotation)); // Save rotation
+      localStorage.setItem(`game-${game.value.id}-rotation`, JSON.stringify(game.value.currentRotation));
       saveGame();
     };
 
-     // Save serving state to local storage whenever it changes
-     const toggleServingTeam = () => {
+    const toggleServingTeam = () => {
       isOpponentServing.value = !isOpponentServing.value;
       localStorage.setItem(`game-${game.value.id}-serving`, JSON.stringify(isOpponentServing.value));
     };
 
     const recordEvent = (event) => {
       if (!event.player || !event.action || !event.result) {
-        alert('Please fill in all required event details');
+        alert(t('fillAllEventDetails'));
         return;
       }
 
@@ -300,17 +297,17 @@ export default {
         id: Date.now(),
         ...event,
         rotation: [...game.value.currentRotation],
-        servingTeam: isOpponentServing.value ? 'opponent' : 'team' // Add servingTeam
+        servingTeam: isOpponentServing.value ? 'opponent' : 'team'
       };
 
       undoStack.value.push({ 
         type: 'event', 
         data: { 
-          set: cloneDeep(currentSet.value), // Deep copy
+          set: cloneDeep(currentSet.value),
           rotation: [...game.value.currentRotation],
           isOpponentServing: isOpponentServing.value,
-          endedSet: false, // Flag for set end
-          endedGame: false // Flag for game end
+          endedSet: false,
+          endedGame: false
         } 
       });
       redoStack.value = [];
@@ -338,22 +335,22 @@ export default {
     const recordAdvancedEvent = (event) => {
       if (!event.player || !event.action || !event.type || 
           !event.evaluation || !event.result) {
-        alert('Please fill in all required event details');
+        alert(t('fillAllEventDetails'));
         return;
       }
 
-      recordEvent(event); // Use the same logic as basic event recording
+      recordEvent(event);
     };
 
     const makeSubstitution = (substitution) => {
       if (!substitution.outPlayer || !substitution.inPlayer) {
-        alert('Please select both players for substitution');
+        alert(t('selectBothPlayers'));
         return;
       }
 
       const outIndex = currentRotation.value.indexOf(substitution.outPlayer);
       if (outIndex === -1) {
-        alert('Selected player is not in the current rotation');
+        alert(t('playerNotInRotation'));
         return;
       }
 
@@ -408,7 +405,7 @@ export default {
     const endGame = () => {
       game.value.status = 'completed';
       saveGame();
-      router.push({ name: 'StatScreen', params: { id: game.value.id } }); // Redirect to StatScreen
+      router.push({ name: 'StatScreen', params: { id: game.value.id } });
     };
 
     const saveGame = () => {
@@ -421,22 +418,21 @@ export default {
       }
       localStorage.setItem(`game-${game.value.id}-serving`, JSON.stringify(isOpponentServing.value));
       localStorage.setItem(`game-${game.value.id}-rotation`, JSON.stringify(game.value.currentRotation)); 
-      localStorage.setItem(`game-${game.value.id}-setsWon`, JSON.stringify(setsWon.value)); // Save setsWon
+      localStorage.setItem(`game-${game.value.id}-setsWon`, JSON.stringify(setsWon.value));
     };
 
     const undoLastEvent = () => {
       if (undoStack.value.length === 0) return;
 
       const lastAction = undoStack.value.pop();
-      // Create a deep copy of the current state *before* undoing 
       redoStack.value.push({
         type: lastAction.type,
         data: {
-          set: cloneDeep(currentSet.value), // Deep copy 
+          set: cloneDeep(currentSet.value),
           rotation: [...game.value.currentRotation], 
           isOpponentServing: isOpponentServing.value,
-          setsWon: { ...setsWon.value }, // Capture setsWon 
-          gameStatus: game.value.status // Capture game status
+          setsWon: { ...setsWon.value },
+          gameStatus: game.value.status
         }
       });
 
@@ -444,15 +440,14 @@ export default {
         Object.assign(currentSet.value, lastAction.data.set);
         game.value.currentRotation = [...lastAction.data.rotation];
         isOpponentServing.value = lastAction.data.isOpponentServing;
-        setsWon.value = { ...lastAction.data.setsWon }; // Restore setsWon
+        setsWon.value = { ...lastAction.data.setsWon };
         
-        // Check if we need to revert a set end or game end
         if (lastAction.data.endedSet) {
-          game.value.sets.pop(); // Remove the last set
+          game.value.sets.pop();
           game.value.currentSet--; 
         } 
         if (lastAction.data.endedGame) {
-          game.value.status = 'in_progress'; // Revert to in progress
+          game.value.status = 'in_progress';
         }
       } else if (lastAction.type === 'substitution') {
         game.value.currentRotation = [...lastAction.data.rotation];
@@ -467,7 +462,6 @@ export default {
 
       const nextAction = redoStack.value.pop();
 
-      // Deep copy for undo stack
       undoStack.value.push({
         type: nextAction.type,
         data: {
@@ -485,9 +479,8 @@ export default {
         isOpponentServing.value = nextAction.data.isOpponentServing;
         setsWon.value = { ...nextAction.data.setsWon };
 
-        // Redo set end or game end
         if (nextAction.data.endedSet) {
-          startNewSet(); // Restart the set that was ended
+          startNewSet();
         }
         if (nextAction.data.endedGame) {
           game.value.status = 'completed'; 
@@ -500,7 +493,7 @@ export default {
       saveGame();
     };
 
-    const adjustScore = (team, amount) => {
+        const adjustScore = (team, amount) => {
       undoStack.value.push({ 
         type: 'score', 
         data: { 
@@ -538,9 +531,7 @@ export default {
         game.value.status = 'in_progress';
       }
 
-      // Save the game status to localStorage immediately:
       localStorage.setItem(`game-${game.value.id}-status`, game.value.status);
-
       saveGame();
     };
 
@@ -614,7 +605,8 @@ export default {
       toggleServingTeam,
       showStatScreen,
       toggleStatScreen,
-      gameWithPlayerDetails
+      gameWithPlayerDetails,
+      t // Make sure to return the t function for use in the template
     };
   }
 };

@@ -1,4 +1,3 @@
-// src\components\Game\GameControls.vue
 <template>
   <div class="game-controls">
     <button @click="toggleGameStatus" class="btn btn-control" :class="{ 'btn-paused': game.status !== 'in_progress' }">
@@ -6,7 +5,7 @@
         {{ game.status === 'in_progress' ? '⏸' : '▶' }}
       </span>
       <span class="text">
-        {{ game.status === 'in_progress' ? 'Pause' : 'Resume' }}
+        {{ game.status === 'in_progress' ? $t('pause') : $t('resume') }}
       </span>
     </button>
     <div class="button-group">
@@ -19,27 +18,34 @@
     </div>
   </div>
 </template>
-  <script>
-  export default {
-    props: {
-      canUndo: Boolean,
-      canRedo: Boolean,
-      game: Object
+
+<script>
+import { useI18n } from 'vue-i18n';
+
+export default {
+  props: {
+    canUndo: Boolean,
+    canRedo: Boolean,
+    game: Object
+  },
+  emits: ['undoLastEvent', 'redoLastEvent', 'toggleGameStatus'],
+  setup() {
+    const { t } = useI18n();
+    return { t };
+  },
+  methods: {
+    undoLastEvent() {
+      this.$emit('undoLastEvent');
     },
-    emits: ['undoLastEvent', 'redoLastEvent', 'toggleGameStatus'],
-    methods: {
-      undoLastEvent() {
-        this.$emit('undoLastEvent');
-      },
-      redoLastEvent() {
-        this.$emit('redoLastEvent');
-      },
-      toggleGameStatus() {
-        this.$emit('toggleGameStatus');
-      }
+    redoLastEvent() {
+      this.$emit('redoLastEvent');
+    },
+    toggleGameStatus() {
+      this.$emit('toggleGameStatus');
     }
-  };
-  </script>
+  }
+};
+</script>
   <style scoped>
   .game-controls {
     display: flex;

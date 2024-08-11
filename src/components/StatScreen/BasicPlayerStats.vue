@@ -3,7 +3,7 @@
     <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 rounded-t-md">
       <div class="flex items-center">
         <i class="fas fa-user-chart text-green-500 mr-2"></i>
-        <h3 class="text-xl font-semibold">Basic Stats</h3>
+        <h3 class="text-xl font-semibold">{{ $t('basicStats') }}</h3>
       </div>
       <i :class="['fas', isOpen ? 'fa-chevron-up' : 'fa-chevron-down', 'transition-transform duration-300']"></i>
     </button>
@@ -16,17 +16,17 @@
     >
       <div v-if="isOpen" class="section-content bg-white p-6 rounded-b-md shadow-md">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          <StatCard v-for="stat in summaryStats" :key="stat.name" :title="stat.name" :value="stat.value" :type="stat.type" />
+          <StatCard v-for="stat in summaryStats" :key="stat.name" :title="$t(stat.name)" :value="stat.value" :type="stat.type" />
         </div>
         <div class="overflow-x-auto">
           <table class="w-full table-auto border-collapse border border-gray-300">
             <thead class="bg-gray-100">
               <tr>
-                <th class="px-4 py-2 text-left border border-gray-300">Category</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Attempts</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Points</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Errors</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Efficiency</th> 
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('category') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('attempts') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('points') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('errors') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('efficiency') }}</th> 
               </tr>
             </thead>
             <tbody>
@@ -35,7 +35,7 @@
                 :key="stat.category" 
                 class="hover:bg-gray-50 transition-colors duration-150"
               >
-                <td class="px-4 py-2 border border-gray-300 font-medium">{{ stat.category }}</td>
+                <td class="px-4 py-2 border border-gray-300 font-medium">{{ $t(stat.category) }}</td>
                 <td class="px-4 py-2 border border-gray-300">{{ stat.totalAttempts }}</td>
                 <td class="px-4 py-2 border border-gray-300">{{ stat.points }}</td>
                 <td class="px-4 py-2 border border-gray-300">{{ stat.errors }}</td>
@@ -58,6 +58,7 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import * as statsUtils from './statsUtils';
 import StatCard from './StatCard.vue';
 
@@ -77,12 +78,13 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const isOpen = ref(true);
 
     const playerStats = computed(() => {
-      const categories = ['Serve', 'Reception', 'Setting', 'Attack', 'Block', 'Dig'];
+      const categories = ['serve', 'reception', 'setting', 'attack', 'block', 'dig'];
       return categories.map(category => {
-        const stats = statsUtils[`get${category}Stats`](props.game, props.playerId, props.currentSetNumber);
+        const stats = statsUtils[`get${category.charAt(0).toUpperCase() + category.slice(1)}Stats`](props.game, props.playerId, props.currentSetNumber);
         return {
           category,
           ...stats,
@@ -98,9 +100,9 @@ export default {
       const overallEfficiency = totalAttempts > 0 ? ((totalPoints - totalErrors) / totalAttempts * 100).toFixed(2) + '%' : '0%';
 
       return [
-        { name: 'Total Points', value: totalPoints, type: 'number' },
-        { name: 'Total Errors', value: totalErrors, type: 'number' },
-        { name: 'Overall Efficiency', value: overallEfficiency, type: 'percentage' },
+        { name: 'totalPoints', value: totalPoints, type: 'number' },
+        { name: 'totalErrors', value: totalErrors, type: 'number' },
+        { name: 'overallEfficiency', value: overallEfficiency, type: 'percentage' },
       ];
     });
 
@@ -121,6 +123,7 @@ export default {
     };
 
     return {
+      t,
       isOpen,
       playerStats,
       summaryStats,

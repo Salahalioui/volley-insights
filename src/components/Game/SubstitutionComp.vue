@@ -1,12 +1,11 @@
-// src\components\Game\SubstitutionComp.vue
 <template>
   <div class="substitution">
-    <h2 class="title">Substitutions</h2>
+    <h2 class="title">{{ $t('substitutions') }}</h2>
     <div class="player-selection">
       <div class="select-wrapper">
-        <label for="player-out">Player Out</label>
+        <label for="player-out">{{ $t('playerOut') }}</label>
         <select id="player-out" v-model="selectedOutPlayer" class="form-select">
-          <option value="">Select player</option>
+          <option value="">{{ $t('selectPlayer') }}</option>
           <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
             {{ getPlayerName(playerId) }}
           </option>
@@ -14,9 +13,9 @@
       </div>
       <div class="swap-icon">↔️</div>
       <div class="select-wrapper">
-        <label for="player-in">Player In</label>
+        <label for="player-in">{{ $t('playerIn') }}</label>
         <select id="player-in" v-model="selectedInPlayer" class="form-select">
-          <option value="">Select player</option>
+          <option value="">{{ $t('selectPlayer') }}</option>
           <option v-for="playerId in benchPlayers" :key="playerId" :value="playerId">
             {{ getPlayerName(playerId) }}
           </option>
@@ -24,12 +23,15 @@
       </div>
     </div>
     <button @click="makeSubstitution" class="btn btn-substitute" :disabled="!canSubstitute">
-      Substitute
+      {{ $t('substitute') }}
     </button>
   </div>
 </template>
 
 <script>
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
 export default {
   props: {
     currentRotation: Array,
@@ -37,34 +39,42 @@ export default {
     getPlayerName: Function
   },
   emits: ['makeSubstitution'],
-  data() {
-    return {
-      selectedOutPlayer: '',
-      selectedInPlayer: ''
-    };
-  },
-  computed: {
-    canSubstitute() {
-      return this.selectedOutPlayer && this.selectedInPlayer;
-    }
-  },
-  methods: {
-    makeSubstitution() {
-      if (this.canSubstitute) {
+  setup() {
+    const { t } = useI18n();
+    const selectedOutPlayer = ref('');
+    const selectedInPlayer = ref('');
+
+    const canSubstitute = computed(() => {
+      return selectedOutPlayer.value && selectedInPlayer.value;
+    });
+
+    const makeSubstitution = () => {
+      if (canSubstitute.value) {
         this.$emit('makeSubstitution', {
-          outPlayer: this.selectedOutPlayer,
-          inPlayer: this.selectedInPlayer
+          outPlayer: selectedOutPlayer.value,
+          inPlayer: selectedInPlayer.value
         });
-        this.resetSelection();
+        resetSelection();
       }
-    },
-    resetSelection() {
-      this.selectedOutPlayer = '';
-      this.selectedInPlayer = '';
-    }
+    };
+
+    const resetSelection = () => {
+      selectedOutPlayer.value = '';
+      selectedInPlayer.value = '';
+    };
+
+    return {
+      t,
+      selectedOutPlayer,
+      selectedInPlayer,
+      canSubstitute,
+      makeSubstitution,
+      resetSelection
+    };
   }
 };
 </script>
+
 
 <style scoped>
 .substitution {

@@ -3,7 +3,7 @@
     <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 hover:bg-gray-50 transition-colors duration-200">
       <div class="flex items-center">
         <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
-        <h3 class="text-xl font-semibold">Team Stats</h3>
+        <h3 class="text-xl font-semibold">{{ $t('teamStats') }}</h3>
       </div>
       <i :class="['fas', isOpen ? 'fa-chevron-up' : 'fa-chevron-down', 'transition-transform duration-300']"></i>
     </button>
@@ -16,23 +16,25 @@
     >
       <div v-if="isOpen" class="section-content p-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          <StatCard v-for="stat in teamStats" :key="stat.name" :title="stat.name" :value="stat.value" :type="stat.type" />
+          <StatCard v-for="stat in teamStats" :key="stat.name" :title="$t(stat.name)" :value="stat.value" :type="stat.type" />
         </div>
 
-        <h4 class="text-lg font-semibold mb-3">Rotation Effectiveness</h4>
+        <h4 class="text-lg font-semibold mb-3">{{ $t('rotationEffectiveness') }}</h4>
         <div class="overflow-x-auto">
           <table class="w-full table-auto border-collapse border border-gray-300">
             <thead class="bg-gray-100">
               <tr>
-                <th class="px-4 py-2 text-left border border-gray-300">Rotation (Player Names)</th>
-                <th class="px-4 py-2 text-left border border-gray-300">Effectiveness (%)</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('rotationPlayerNames') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('effectiveness') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(data, rotationKey) in rotationEffectiveness" :key="rotationKey" class="hover:bg-gray-50 transition-colors duration-200">
                 <td class="px-4 py-2 border border-gray-300">
                   {{ formatRotationKey(rotationKey) }} 
-                  <span v-if="data.pointsScored" class="text-sm text-gray-500">({{ data.pointsScored }} points)</span>
+                  <span v-if="data.pointsScored" class="text-sm text-gray-500">
+                    ({{ $t('pointsScored', { count: data.pointsScored }) }})
+                  </span>
                 </td>
                 <td class="px-4 py-2 border border-gray-300">
                   <div class="flex items-center">
@@ -53,6 +55,7 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import * as statsUtils from "./statsUtils";
 import StatCard from './StatCard.vue';
 
@@ -73,16 +76,17 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const isOpen = ref(true);
 
     const teamStats = computed(() => [
-      { name: "Total Points", value: statsUtils.getTeamTotalPoints(props.game, props.currentSetNumber), type: 'number' },
-      { name: "Total Errors", value: statsUtils.getTeamTotalErrors(props.game, props.currentSetNumber), type: 'number' },
-      { name: "Serve Error %", value: statsUtils.getTeamServeErrorPercentage(props.game, props.currentSetNumber), type: 'percentage' },
-      { name: "Attack Efficiency", value: statsUtils.getTeamAttackEfficiency(props.game, props.currentSetNumber) * 100, type: 'percentage' },
-      { name: "Block Error %", value: statsUtils.getTeamBlockErrorPercentage(props.game, props.currentSetNumber), type: 'percentage' },
-      { name: "Side Out %", value: statsUtils.getTeamSideOutPercentage(props.game, props.currentSetNumber), type: 'percentage' },
-      { name: "Break Point %", value: statsUtils.getTeamBreakPointPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+      { name: "totalPoints", value: statsUtils.getTeamTotalPoints(props.game, props.currentSetNumber), type: 'number' },
+      { name: "totalErrors", value: statsUtils.getTeamTotalErrors(props.game, props.currentSetNumber), type: 'number' },
+      { name: "serveErrorPercentage", value: statsUtils.getTeamServeErrorPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+      { name: "attackEfficiency", value: statsUtils.getTeamAttackEfficiency(props.game, props.currentSetNumber) * 100, type: 'percentage' },
+      { name: "blockErrorPercentage", value: statsUtils.getTeamBlockErrorPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+      { name: "sideOutPercentage", value: statsUtils.getTeamSideOutPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+      { name: "breakPointPercentage", value: statsUtils.getTeamBreakPointPercentage(props.game, props.currentSetNumber), type: 'percentage' },
     ]);
 
     const rotationEffectiveness = computed(() => 
@@ -96,7 +100,7 @@ export default {
     const formatRotationKey = (rotationKey) => {
       return rotationKey
         .split('-')
-        .map((playerId, index) => `P${index + 1}: ${props.getPlayerName(parseInt(playerId))}`)
+        .map((playerId, index) => `${t('position', { number: index + 1 })}: ${props.getPlayerName(parseInt(playerId))}`)
         .join(', ');
     };
 
@@ -113,6 +117,7 @@ export default {
     };
 
     return {
+      t,
       isOpen,
       teamStats,
       rotationEffectiveness,

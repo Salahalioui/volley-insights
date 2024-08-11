@@ -1,11 +1,11 @@
 <template>
   <div class="event-input">
-    <h2 class="title">Record Event</h2>
+    <h2 class="title">{{ $t('recordEvent') }}</h2>
     <div v-if="!isAdvancedInput" class="simple-input">
       <div class="selection-indicator">
-        <span :class="{ 'completed': selectedPlayer }">1. Select Player</span>
-        <span :class="{ 'completed': selectedAction }">2. Select Action</span>
-        <span :class="{ 'completed': selectedPlayer && selectedAction }">3. Select Result</span>
+        <span :class="{ 'completed': selectedPlayer }">{{ $t('step1SelectPlayer') }}</span>
+        <span :class="{ 'completed': selectedAction }">{{ $t('step2SelectAction') }}</span>
+        <span :class="{ 'completed': selectedPlayer && selectedAction }">{{ $t('step3SelectResult') }}</span>
       </div>
       <div class="player-buttons"> 
         <button 
@@ -24,7 +24,7 @@
           @click="selectAction(action)"
           :class="['btn', 'btn-action', { 'active': selectedAction === action }]"
         >
-          <span class="action-text">{{ action }}</span> 
+          <span class="action-text">{{ $t(action) }}</span> 
         </button>
       </div>
       <div class="result-buttons">
@@ -35,47 +35,49 @@
           :class="['btn', 'btn-result', result === 'point' ? 'btn-point' : result === 'error' ? 'btn-error' : result === 'continue' ? 'btn-continue' : '']"
           :disabled="!selectedPlayer || !selectedAction"
         >
-          <span class="result-text">{{ result }}</span> 
+          <span class="result-text">{{ $t(result) }}</span> 
         </button>
       </div>
     </div>
     <div v-else class="advanced-input">
       <div class="input-grid">
         <select v-model="selectedPlayer" class="form-select">
-          <option value="">Select Player</option>
+          <option value="">{{ $t('selectPlayer') }}</option>
           <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
             {{ getPlayerName(playerId) }}
           </option>
         </select>
         <select v-model="selectedAction" class="form-select">
-          <option value="">Select Action</option>
-          <option v-for="action in actions" :key="action" :value="action">{{ action }}</option>
+          <option value="">{{ $t('selectAction') }}</option>
+          <option v-for="action in actions" :key="action" :value="action">{{ $t(action) }}</option>
         </select>
         <select v-if="selectedAction" v-model="selectedType" class="form-select">
-          <option value="">Type of Action</option>
-          <option v-for="type in getActionTypes(selectedAction)" :key="type" :value="type">{{ type }}</option>
+          <option value="">{{ $t('typeOfAction') }}</option>
+          <option v-for="type in getActionTypes(selectedAction)" :key="type" :value="type">{{ $t(type) }}</option>
         </select>
         <select v-if="selectedAction" v-model="selectedEvaluation" class="form-select">
-          <option value="">Evaluation</option>
-          <option v-for="evaluation in getEvaluations" :key="evaluation" :value="evaluation">{{ evaluation }}</option>
+          <option value="">{{ $t('evaluation') }}</option>
+          <option v-for="evaluation in getEvaluations" :key="evaluation" :value="evaluation">{{ $t(evaluation) }}</option>
         </select>
         <select v-model="selectedResult" class="form-select">
-          <option value="">Result</option>
-          <option v-for="result in results" :key="result" :value="result">{{ result }}</option>
+          <option value="">{{ $t('result') }}</option>
+          <option v-for="result in results" :key="result" :value="result">{{ $t(result) }}</option>
         </select>
         <select v-if="['serve', 'spike', 'set'].includes(selectedAction)" v-model="selectedTarget" class="form-select">
-          <option value="">Target</option>
-          <option v-for="target in getTargets(selectedAction)" :key="target" :value="target">{{ target }}</option>
+          <option value="">{{ $t('target') }}</option>
+          <option v-for="target in getTargets(selectedAction)" :key="target" :value="target">{{ $t(target) }}</option>
         </select>
       </div>
       <button @click="recordAdvancedEvent" class="btn btn-record">
-        Record Advanced Event
+        {{ $t('recordAdvancedEvent') }}
       </button>
     </div>
   </div>
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
+
 export default {
   props: {
     currentRotation: Array,
@@ -86,6 +88,10 @@ export default {
     getTargets: Function
   },
   emits: ['selectPlayer', 'selectAction', 'selectResult', 'recordEvent', 'recordAdvancedEvent'],
+  setup() {
+    const { t } = useI18n();
+    return { t };
+  },
   data() {
     return {
       selectedPlayer: '',
@@ -109,7 +115,7 @@ export default {
     },
     recordEvent(eventData) { 
       if (!eventData.player || !eventData.action || !eventData.result) {
-        alert('Please fill in all required event details'); 
+        alert(this.t('fillAllEventDetails')); 
         return; 
       }
       this.$emit('recordEvent', eventData);
@@ -117,7 +123,7 @@ export default {
     },
     recordAdvancedEvent() {
       if (!this.selectedPlayer || !this.selectedAction || !this.selectedType || !this.selectedEvaluation || !this.selectedResult) {
-        alert('Please fill in all required event details');
+        alert(this.t('fillAllEventDetails'));
         return;
       }
       this.$emit('recordAdvancedEvent', {
@@ -141,6 +147,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .event-input {

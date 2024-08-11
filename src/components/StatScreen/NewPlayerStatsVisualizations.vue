@@ -3,7 +3,7 @@
     <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 rounded-t-md">
       <div class="flex items-center">
         <i class="fas fa-chart-pie text-purple-500 mr-2"></i>
-        <h3 class="text-xl font-semibold">Stats Visualizations</h3>
+        <h3 class="text-xl font-semibold">{{ $t('statsVisualizations') }}</h3>
       </div>
       <i :class="['fas', isOpen ? 'fa-chevron-up' : 'fa-chevron-down', 'transition-transform duration-300']"></i>
     </button>
@@ -23,7 +23,7 @@
             :class="['px-4 py-2 mr-2 rounded-t-lg', 
                      activeTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300']"
           >
-            {{ tab }}
+            {{ $t(tab) }}
           </button>
         </div>
         <div class="chart-container" style="height: 400px;">
@@ -34,7 +34,7 @@
           />
         </div>
         <div class="mt-4 text-sm text-gray-600">
-          {{ activeChart.description }}
+          {{ $t(activeChart.description) }}
         </div>
       </div>
     </transition>
@@ -43,6 +43,7 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import * as statsUtils from './statsUtils';
 import PieChart from './charts/PieChart.vue';
 import BarChart from './charts/BarChart.vue';
@@ -67,35 +68,36 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const isOpen = ref(true);
-    const activeTab = ref('Serve Types');
+    const activeTab = ref('serveTypes');
 
-    const tabs = ['Serve Types', 'Serve Targets', 'Attack Types', 'Attack Targets'];
+    const tabs = ['serveTypes', 'serveTargets', 'attackTypes', 'attackTargets'];
 
     const charts = computed(() => {
       const serveStats = statsUtils.getAdvancedServeStats(props.game, props.playerId, props.currentSetNumber);
       const attackStats = statsUtils.getAdvancedAttackStats(props.game, props.playerId, props.currentSetNumber);
 
       return {
-        'Serve Types': {
+        'serveTypes': {
           type: 'PieChart',
           data: formatPieChartData(serveStats.typePerPoint),
-          description: 'Distribution of different serve types used by the player.'
+          description: 'serveTypesDescription'
         },
-        'Serve Targets': {
+        'serveTargets': {
           type: 'BarChart',
           data: formatBarChartData(serveStats.targetPerPoint),
-          description: 'Effectiveness of serves to different court areas.'
+          description: 'serveTargetsDescription'
         },
-        'Attack Types': {
+        'attackTypes': {
           type: 'PieChart',
           data: formatPieChartData(attackStats.typePerPoint),
-          description: 'Distribution of different attack types used by the player.'
+          description: 'attackTypesDescription'
         },
-        'Attack Targets': {
+        'attackTargets': {
           type: 'BarChart',
           data: formatBarChartData(attackStats.targetPerPoint),
-          description: 'Effectiveness of attacks to different court areas.'
+          description: 'attackTargetsDescription'
         },
       };
     });
@@ -109,9 +111,9 @@ export default {
 
     const formatPieChartData = (data) => {
       if (!data || typeof data !== 'object') {
-        return { labels: ['No Data'], datasets: [{ data: [1], backgroundColor: ['#CCCCCC'] }] };
+        return { labels: [t('noData')], datasets: [{ data: [1], backgroundColor: ['#CCCCCC'] }] };
       }
-      const labels = Object.keys(data);
+      const labels = Object.keys(data).map(key => t(key));
       const values = Object.values(data);
       return {
         labels,
@@ -124,9 +126,9 @@ export default {
 
     const formatBarChartData = (data) => {
       if (!data || typeof data !== 'object') {
-        return { labels: ['No Data'], datasets: [{ data: [0], backgroundColor: '#CCCCCC' }] };
+        return { labels: [t('noData')], datasets: [{ data: [0], backgroundColor: '#CCCCCC' }] };
       }
-      const labels = Object.keys(data);
+      const labels = Object.keys(data).map(key => t(key));
       const points = labels.map(target => data[target]?.points || 0);
       const percentages = labels.map(target => (data[target]?.percentage || 0) * 100);
       
@@ -134,12 +136,12 @@ export default {
         labels,
         datasets: [
           {
-            label: 'Points',
+            label: t('points'),
             data: points,
             backgroundColor: '#36A2EB',
           },
           {
-            label: 'Percentage',
+            label: t('percentage'),
             data: percentages,
             backgroundColor: '#FF6384',
           },
@@ -164,6 +166,7 @@ export default {
     };
 
     return {
+      t,
       isOpen,
       activeTab,
       tabs,

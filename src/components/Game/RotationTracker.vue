@@ -1,50 +1,56 @@
-// src\components\Game\RotationTracker.vue
 <template>
-    <div class="rotation-tracker">
-      <h2 class="title">Current Rotation</h2>
-      <div class="court">
-        <!-- Back Row -->
-        <div v-for="position in [1, 6, 5]" :key="position" 
-             class="player back-row"
-             :class="`player-${position}`">
-          <div class="player-info">
-            <span class="position">P{{ position }}</span>
-            <span class="name">{{ getPlayerName(currentRotation[position - 1]) }}</span>
-          </div>
+  <div class="rotation-tracker">
+    <h2 class="title">{{ $t('currentRotation') }}</h2>
+    <div class="court">
+      <!-- Back Row -->
+      <div v-for="position in [1, 6, 5]" :key="position" 
+           class="player back-row"
+           :class="`player-${position}`">
+        <div class="player-info">
+          <span class="position">{{ $t('position', { number: position }) }}</span>
+          <span class="name">{{ getPlayerName(currentRotation[position - 1]) }}</span>
         </div>
-        <!-- Front Row -->
-        <div v-for="position in [2, 3, 4]" :key="position"
-             class="player front-row"
-             :class="`player-${position}`">
-          <div class="player-info">
-            <span class="position">P{{ position }}</span>
-            <span class="name">{{ getPlayerName(currentRotation[position - 1]) }}</span>
-          </div>
-        </div>
-        <!-- Net -->
-        <div class="net"></div>
       </div>
-      <button @click="rotateManually" class="btn-rotate">
-        Rotate Manually
-      </button>
+      <!-- Front Row -->
+      <div v-for="position in [2, 3, 4]" :key="position"
+           class="player front-row"
+           :class="`player-${position}`">
+        <div class="player-info">
+          <span class="position">{{ $t('position', { number: position }) }}</span>
+          <span class="name">{{ getPlayerName(currentRotation[position - 1]) }}</span>
+        </div>
+      </div>
+      <!-- Net -->
+      <div class="net"></div>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    props: {
-      currentRotation: Array,
-      getPlayerName: Function
-    },
-    emits: ['rotateManually'],
-    methods: {
-      rotateManually() {
-        this.$emit('rotateManually');
-      }
+    <button @click="rotateManually" class="btn-rotate">
+      {{ $t('rotateManually') }}
+    </button>
+  </div>
+</template>
+
+<script>
+import { useI18n } from 'vue-i18n';
+
+export default {
+  props: {
+    currentRotation: Array,
+    getPlayerName: Function
+  },
+  emits: ['rotateManually'],
+  setup() {
+    const { t } = useI18n();
+    return { t };
+  },
+  methods: {
+    rotateManually() {
+      this.$emit('rotateManually');
     }
-  };
-  </script>
-  
+  }
+};
+</script>
+
+
   <style scoped>
   .rotation-tracker {
     background-color: #e0f2fe;

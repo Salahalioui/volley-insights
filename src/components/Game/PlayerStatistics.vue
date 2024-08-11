@@ -1,53 +1,58 @@
-// src\components\Game\PlayerStatistics.vue
 <template>
-    <div class="player-statistics">
-      <h2 class="title">Player Statistics</h2>
-      <div class="table-container">
-        <table class="stats-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Points</th>
-              <th>Errors</th>
-              <th>Serves</th>
-              <th>Attacks</th>
-              <th>Blocks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="playerId in game.players" :key="playerId">
-              <td class="player-name">{{ getPlayerName(playerId) }}</td>
-              <td>
-                <span class="stat-value">{{ getPlayerStat(playerId, 'points') }}</span>
-              </td>
-              <td>
-                <span class="stat-value">{{ getPlayerStat(playerId, 'errors') }}</span>
-              </td>
-              <td>
-                <span class="stat-value">{{ getPlayerStat(playerId, 'serves') }}</span>
-              </td>
-              <td>
-                <span class="stat-value">{{ getPlayerStat(playerId, 'attacks') }}</span>
-              </td>
-              <td>
-                <span class="stat-value">{{ getPlayerStat(playerId, 'blocks') }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="player-statistics">
+    <h2 class="title">{{ $t('playerStatistics') }}</h2>
+    <div class="table-container">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>{{ $t('player') }}</th>
+            <th>{{ $t('points') }}</th>
+            <th>{{ $t('errors') }}</th>
+            <th>{{ $t('serves') }}</th>
+            <th>{{ $t('attacks') }}</th>
+            <th>{{ $t('blocks') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="playerId in game.players" :key="playerId">
+            <td class="player-name">{{ getPlayerName(playerId) }}</td>
+            <td>
+              <span class="stat-value">{{ getPlayerStat(playerId, 'points') }}</span>
+            </td>
+            <td>
+              <span class="stat-value">{{ getPlayerStat(playerId, 'errors') }}</span>
+            </td>
+            <td>
+              <span class="stat-value">{{ getPlayerStat(playerId, 'serves') }}</span>
+            </td>
+            <td>
+              <span class="stat-value">{{ getPlayerStat(playerId, 'attacks') }}</span>
+            </td>
+            <td>
+              <span class="stat-value">{{ getPlayerStat(playerId, 'blocks') }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    props: {
-      game: Object,
-      getPlayerName: Function,
-      getPlayerStat: Function
-    }
-  };
-  </script>
+  </div>
+</template>
+
+<script>
+import { useI18n } from 'vue-i18n';
+
+export default {
+  props: {
+    game: Object,
+    getPlayerName: Function,
+    getPlayerStat: Function
+  },
+  setup() {
+    const { t } = useI18n();
+    return { t };
+  }
+};
+</script>
   
   <style scoped>
   .player-statistics {

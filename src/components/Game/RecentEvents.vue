@@ -1,51 +1,56 @@
-// src\components\Game\RecentEvents.vue
 <template>
-    <div class="recent-events">
-      <h2 class="title">Recent Events</h2>
-      <ul class="events-list">
-        <li v-for="event in recentEvents" :key="event.id" class="event-item">
-          <div class="event-icon" :class="getEventIconClass(event)"></div>
-          <div class="event-content">
-            <template v-if="event.type === 'substitution'">
-              <span class="event-action">Substitution:</span>
-              <span class="player-name">{{ getPlayerName(event.outPlayer) }}</span> out,
-              <span class="player-name">{{ getPlayerName(event.inPlayer) }}</span> in
-            </template>
-            <template v-else>
-              <span class="player-name">{{ getPlayerName(event.player) }}</span>
-              <span class="event-action">{{ event.action }}</span>
-              <span v-if="event.type" class="event-detail">{{ event.type }}</span>
-              <span v-if="event.evaluation" class="event-detail">{{ event.evaluation }}</span>
-              <span class="event-result">{{ event.result }}</span>
-              <span v-if="event.target" class="event-detail">Target: {{ event.target }}</span>
-            </template>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    props: {
-      recentEvents: Array,
-      getPlayerName: Function
-    },
-    methods: {
-      getEventIconClass(event) {
-        // Define icon classes based on event type or action
-        const iconClasses = {
-          substitution: 'icon-substitution',
-          serve: 'icon-serve',
-          attack: 'icon-attack',
-          block: 'icon-block',
-          // Add more event types as needed
-        };
-        return iconClasses[event.type] || iconClasses[event.action] || 'icon-default';
-      }
+  <div class="recent-events">
+    <h2 class="title">{{ $t('recentEvents') }}</h2>
+    <ul class="events-list">
+      <li v-for="event in recentEvents" :key="event.id" class="event-item">
+        <div class="event-icon" :class="getEventIconClass(event)"></div>
+        <div class="event-content">
+          <template v-if="event.type === 'substitution'">
+            <span class="event-action">{{ $t('substitution') }}:</span>
+            <span class="player-name">{{ getPlayerName(event.outPlayer) }}</span> {{ $t('out') }},
+            <span class="player-name">{{ getPlayerName(event.inPlayer) }}</span> {{ $t('in') }}
+          </template>
+          <template v-else>
+            <span class="player-name">{{ getPlayerName(event.player) }}</span>
+            <span class="event-action">{{ $t(event.action) }}</span>
+            <span v-if="event.type" class="event-detail">{{ $t(event.type) }}</span>
+            <span v-if="event.evaluation" class="event-detail">{{ $t(event.evaluation) }}</span>
+            <span class="event-result">{{ $t(event.result) }}</span>
+            <span v-if="event.target" class="event-detail">{{ $t('target') }}: {{ $t(event.target) }}</span>
+          </template>
+        </div>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import { useI18n } from 'vue-i18n';
+
+export default {
+  props: {
+    recentEvents: Array,
+    getPlayerName: Function
+  },
+  setup() {
+    const { t } = useI18n();
+    return { t };
+  },
+  methods: {
+    getEventIconClass(event) {
+      // Define icon classes based on event type or action
+      const iconClasses = {
+        substitution: 'icon-substitution',
+        serve: 'icon-serve',
+        attack: 'icon-attack',
+        block: 'icon-block',
+        // Add more event types as needed
+      };
+      return iconClasses[event.type] || iconClasses[event.action] || 'icon-default';
     }
-  };
-  </script>
+  }
+};
+</script>
   
   <style scoped>
   .recent-events {

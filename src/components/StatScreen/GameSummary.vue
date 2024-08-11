@@ -1,44 +1,44 @@
 <template>
   <div class="game-summary bg-white rounded-lg shadow-md p-6 mb-6">
-    <h3 class="text-xl font-semibold mb-4">Game Summary</h3>
+    <h3 class="text-xl font-semibold mb-4">{{ $t('gameSummary') }}</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="game-info">
         <p class="text-gray-600">
-          <span class="font-medium">Date:</span> {{ formattedDate }}
+          <span class="font-medium">{{ $t('date') }}:</span> {{ formattedDate }}
         </p>
         <p class="text-gray-600">
-          <span class="font-medium">Opponent:</span> {{ game.opponentTeam }}
+          <span class="font-medium">{{ $t('opponent') }}:</span> {{ game.opponentTeam }}
         </p>
         <p class="text-gray-600">
-          <span class="font-medium">Location:</span> {{ game.location || 'Not specified' }}
+          <span class="font-medium">{{ $t('location') }}:</span> {{ game.location || $t('notSpecified') }}
         </p>
       </div>
       <div class="game-status">
         <p class="text-gray-600">
-          <span class="font-medium">Status:</span> 
-          <span :class="statusClass">{{ capitalizedStatus }}</span>
+          <span class="font-medium">{{ $t('status') }}:</span> 
+          <span :class="statusClass">{{ $t(game.status) }}</span>
         </p>
         <p class="text-gray-600">
-          <span class="font-medium">Score:</span> 
+          <span class="font-medium">{{ $t('score') }}:</span> 
           <span class="text-lg font-bold">
             {{ game.setsWon.team }} - {{ game.setsWon.opponent }}
           </span>
         </p>
         <p class="text-gray-600" v-if="game.status === 'completed'">
-          <span class="font-medium">Result:</span>
-          <span :class="resultClass">{{ gameResult }}</span>
+          <span class="font-medium">{{ $t('result') }}:</span>
+          <span :class="resultClass">{{ $t(gameResult) }}</span>
         </p>
       </div>
     </div>
     <div class="mt-4">
-      <h4 class="text-lg font-semibold mb-2">Set Scores</h4>
+      <h4 class="text-lg font-semibold mb-2">{{ $t('setScores') }}</h4>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Set</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opponent</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'set' }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('team') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('opponent') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -56,6 +56,7 @@
 
 <script>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'GameSummary',
@@ -66,16 +67,10 @@ export default {
     }
   },
   setup(props) {
-    const formattedDate = computed(() => {
-      return new Date(props.game.date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    });
+    const { t, d } = useI18n();
 
-    const capitalizedStatus = computed(() => {
-      return props.game.status.charAt(0).toUpperCase() + props.game.status.slice(1);
+    const formattedDate = computed(() => {
+      return d(new Date(props.game.date), 'long');
     });
 
     const statusClass = computed(() => {
@@ -87,17 +82,17 @@ export default {
     });
 
     const gameResult = computed(() => {
-      if (props.game.status !== 'completed') return 'N/A';
-      return props.game.setsWon.team > props.game.setsWon.opponent ? 'Win' : 'Loss';
+      if (props.game.status !== 'completed') return 'notApplicable';
+      return props.game.setsWon.team > props.game.setsWon.opponent ? 'win' : 'loss';
     });
 
     const resultClass = computed(() => {
-      return gameResult.value === 'Win' ? 'text-green-500' : 'text-red-500';
+      return gameResult.value === 'win' ? 'text-green-500' : 'text-red-500';
     });
 
     return {
+      t,
       formattedDate,
-      capitalizedStatus,
       statusClass,
       gameResult,
       resultClass

@@ -1,7 +1,7 @@
 <template>
   <div class="stat-screen bg-gray-100 min-h-screen">
     <header class="bg-blue-600 text-white p-4 shadow-md">
-      <h2 class="text-2xl font-bold">Game Statistics</h2>
+      <h2 class="text-2xl font-bold">{{ $t('gameStatistics') }}</h2>
     </header>
 
     <nav class="bg-white shadow-md">
@@ -11,14 +11,14 @@
           :class="{ 'active': activeTab === 'set' }" 
           class="tab-item"
         >
-          Set Stats
+          {{ $t('setStats') }}
         </li>
         <li 
           @click="setActiveTab('game')" 
           :class="{ 'active': activeTab === 'game' }" 
           class="tab-item"
         >
-          Game Stats
+          {{ $t('gameStats') }}
         </li>
       </ul>
     </nav>
@@ -53,6 +53,7 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import GameSummary from './StatScreen/GameSummary.vue';
 import TeamStats from './StatScreen/TeamStats.vue';
 import PlayerStats from './StatScreen/PlayerStats.vue';
@@ -75,6 +76,7 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const activeTab = ref('set');
     const selectedPlayer = ref(null);
 
@@ -91,6 +93,7 @@ export default {
     };
 
     return {
+      t,
       activeTab,
       selectedPlayer,
       currentSetNumber,
@@ -100,6 +103,9 @@ export default {
   }
 };
 </script>
+
+
+
 
 <style scoped>
 .tab-item {

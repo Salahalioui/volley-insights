@@ -1,13 +1,12 @@
-// src\components\Game\ScoreboardComp.vue
 <template>
   <div class="scoreboard">
     <div class="team-score">
-      <h3 class="team-name">Our Team</h3> 
+      <h3 class="team-name">{{ $t('ourTeam') }}</h3> 
       <div class="score-container">
         <p class="score">{{ currentSet.teamScore }}</p>
         <div class="score-buttons">
-          <button @click="handleAdjustScore('team', 1)" class="btn btn-increment" aria-label="Increase Our Team score">+</button>
-          <button @click="handleAdjustScore('team', -1)" class="btn btn-decrement" aria-label="Decrease Our Team score">-</button>
+          <button @click="handleAdjustScore('team', 1)" class="btn btn-increment" :aria-label="$t('increaseOurTeamScore')">+</button>
+          <button @click="handleAdjustScore('team', -1)" class="btn btn-decrement" :aria-label="$t('decreaseOurTeamScore')">-</button>
         </div>
       </div> 
     </div>
@@ -20,8 +19,8 @@
       <div class="score-container">
         <p class="score">{{ currentSet.opponentScore }}</p>
         <div class="score-buttons">
-          <button @click="handleAdjustScore('opponent', 1)" class="btn btn-increment" aria-label="Increase Opponent score">+</button>
-          <button @click="handleAdjustScore('opponent', -1)" class="btn btn-decrement" aria-label="Decrease Opponent score">-</button>
+          <button @click="handleAdjustScore('opponent', 1)" class="btn btn-increment" :aria-label="$t('increaseOpponentScore')">+</button>
+          <button @click="handleAdjustScore('opponent', -1)" class="btn btn-decrement" :aria-label="$t('decreaseOpponentScore')">-</button>
         </div>
       </div>
     </div>
@@ -29,6 +28,8 @@
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
+
 export default {
   props: {
     currentSet: Object,
@@ -36,6 +37,10 @@ export default {
     setsWon: Object
   },
   emits: ['adjustScore'],
+  setup() {
+    const { t } = useI18n();
+    return { t };
+  },
   methods: {
     handleAdjustScore(team, amount) {
       this.$emit('adjustScore', team, amount);
@@ -43,6 +48,8 @@ export default {
   }
 };
 </script>
+
+
 <style scoped>
 .scoreboard {
   display: flex;

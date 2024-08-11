@@ -4,14 +4,14 @@
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center">
           <i class="fas fa-user-circle text-blue-500 text-2xl mr-3"></i>
-          <h3 class="text-xl font-semibold">Individual Player Stats</h3>
+          <h3 class="text-xl font-semibold">{{ $t('individualPlayerStats') }}</h3>
         </div>
         <div v-if="game.inputMethod === 'advanced'" class="flex space-x-2">
           <button @click="toggleAdvancedStats" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200">
-            {{ showAdvancedStats ? 'Hide Advanced' : 'Show Advanced' }}
+            {{ showAdvancedStats ? $t('hideAdvanced') : $t('showAdvanced') }}
           </button>
           <button @click="toggleVisualizations" class="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors duration-200">
-            {{ showVisualizations ? 'Hide Charts' : 'Show Charts' }}
+            {{ showVisualizations ? $t('hideCharts') : $t('showCharts') }}
           </button>
         </div>
       </div>
@@ -21,7 +21,7 @@
           class="w-full p-3 border border-gray-300 rounded-md appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           @change="emitPlayerSelected"
         >
-          <option value="" disabled>Select a player</option>
+          <option value="" disabled>{{ $t('selectPlayer') }}</option>
           <option
             v-for="player in game.playerDetails"
             :key="player.id"
@@ -66,7 +66,7 @@
       </div>
       <div v-else key="no-player" class="text-center text-gray-500 py-8">
         <i class="fas fa-user-slash text-4xl mb-4"></i>
-        <p>Please select a player to view their stats</p>
+        <p>{{ $t('selectPlayerToViewStats') }}</p>
       </div>
     </transition>
   </div>
@@ -74,6 +74,7 @@
 
 <script>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BasicPlayerStats from './BasicPlayerStats.vue';
 import AdvancedPlayerStats from './AdvancedPlayerStats.vue';
 import PlayerStatsVisualizations from './NewPlayerStatsVisualizations.vue';
@@ -103,6 +104,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const { t } = useI18n();
     const selectedPlayerId = ref(props.selectedPlayer);
     const showAdvancedStats = ref(false);
     const showVisualizations = ref(false);
@@ -124,6 +126,7 @@ export default {
     };
 
     return {
+      t,
       selectedPlayerId,
       showAdvancedStats,
       showVisualizations,
