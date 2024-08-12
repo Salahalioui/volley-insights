@@ -1,6 +1,5 @@
 <template>
   <div class="rotation-tracker">
-    <h2 class="title">{{ $t('currentRotation') }}</h2>
     <div class="court">
       <!-- Back Row -->
       <div v-for="position in [1, 6, 5]" :key="position" 

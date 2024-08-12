@@ -1,7 +1,7 @@
 <template>
   <div v-if="game" class="game-page p-2 md:p-4 max-w-4xl mx-auto">
     <h1 class="text-2xl md:text-3xl font-bold mb-4 text-center">{{ game.name }}</h1>
-    
+    <SectionCustomizer :gameId="game.id" @update:preferences="updateSectionPreferences" />
     <!-- Game Info and Controls -->
     <div class="game-info-controls mb-4 flex flex-col items-center bg-gray-100 rounded-lg p-4">
       <div class="game-info text-center mb-2">
@@ -24,6 +24,7 @@
       </div>
 
       <GameControls 
+       v-if="sectionPreferences.gameControls !== false"
         :canUndo="canUndo"
         :canRedo="canRedo"
         :game="game"
@@ -33,23 +34,26 @@
       />
     </div>
 
-    <!-- Scoreboard -->
-    <GameScoreboard
+  
+    <!-- Serving Team Switch -->
+    <ServingIndicator
+      v-if="sectionPreferences.servingIndicator !== false"
+      :isOpponentServing="isOpponentServing"
+      :game="game"
+      @toggleServingTeam="toggleServingTeam"
+    />
+     <!-- Scoreboard -->
+     <GameScoreboard
+      v-if="sectionPreferences.gameScoreboard !== false"
       :currentSet="currentSet"
       :game="game"
       :setsWon="setsWon"
       @adjustScore="adjustScore"
     />
 
-    <!-- Serving Team Switch -->
-    <ServingIndicator
-      :isOpponentServing="isOpponentServing"
-      :game="game"
-      @toggleServingTeam="toggleServingTeam"
-    />
-
     <!-- Event Input -->
     <EventInput
+      v-if="sectionPreferences.eventInput !== false"
       :currentRotation="currentRotation"
       :isAdvancedInput="game.inputMethod === 'advanced'"
       :getPlayerName="getPlayerName"
@@ -63,23 +67,25 @@
       @recordAdvancedEvent="recordAdvancedEvent"
     />
 
+    <!-- Rotation Tracker -->
+    <RotationTracker
+      v-if="sectionPreferences.rotationTracker !== false"
+      :currentRotation="currentRotation"
+      :getPlayerName="getPlayerName"
+      @rotateManually="rotateManually"
+    />
     <!-- Substitution Section -->
     <PlayerSubstitution
+      v-if="sectionPreferences.playerSubstitution !== false"
       :currentRotation="currentRotation"
       :benchPlayers="benchPlayers"
       :getPlayerName="getPlayerName"
       @makeSubstitution="makeSubstitution"
     />
 
-    <!-- Rotation Tracker -->
-    <RotationTracker
-      :currentRotation="currentRotation"
-      :getPlayerName="getPlayerName"
-      @rotateManually="rotateManually"
-    />
-
     <!-- Player Statistics -->
     <PlayerStatistics
+      v-if="sectionPreferences.playerStatistics !== false"
       :game="game"
       :getPlayerName="getPlayerName"
       :getPlayerStat="getPlayerStat"
@@ -87,6 +93,7 @@
 
     <!-- Recent Events -->
     <RecentEvents
+      v-if="sectionPreferences.recentEvents !== false"
       :recentEvents="recentEvents"
       :getPlayerName="getPlayerName"
     />
@@ -106,6 +113,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
+import SectionCustomizer from '../components/Game/SectionCustomizer.vue';
 import StatScreen from '../components/StatScreen.vue';
 import EventInput from '../components/Game/EventInput.vue';
 import GameScoreboard from '../components/Game/ScoreboardComp.vue';
@@ -127,7 +135,8 @@ export default {
     PlayerStatistics,
     RecentEvents,
     GameControls,
-    ServingIndicator
+    ServingIndicator,
+    SectionCustomizer
   },
   setup() {
     const { t } = useI18n();
@@ -139,6 +148,10 @@ export default {
     const players = ref([]);
     const undoStack = ref([]);
     const redoStack = ref([]);
+    const sectionPreferences = ref({});
+    const updateSectionPreferences = (newPreferences) => {
+      sectionPreferences.value = newPreferences;
+    };
     const isAdvancedInput = ref(false);
     const isOpponentServing = ref(false);
     const setsWon = ref({ team: 0, opponent: 0 });
@@ -167,6 +180,22 @@ export default {
         if (savedSetsWon) {
           setsWon.value = JSON.parse(savedSetsWon);
         }
+        const storedPreferences = localStorage.getItem(`game-${game.value.id}-section-preferences`);
+      if (storedPreferences) {
+        sectionPreferences.value = JSON.parse(storedPreferences);
+      } else {
+        // Initialize with all sections visible
+        sectionPreferences.value = {
+          gameControls: true,
+          scoreboard: true,
+          servingIndicator: true,
+          eventInput: true,
+          playerSubstitution: true,
+          rotationTracker: true,
+          playerStatistics: true,
+          recentEvents: true
+        };
+      }
         const storedPlayers = JSON.parse(localStorage.getItem('players') || '[]');
         players.value = storedPlayers;
 
@@ -606,6 +635,8 @@ export default {
       showStatScreen,
       toggleStatScreen,
       gameWithPlayerDetails,
+      sectionPreferences,
+      updateSectionPreferences,
       t // Make sure to return the t function for use in the template
     };
   }

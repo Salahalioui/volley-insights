@@ -1,6 +1,5 @@
 <template>
   <div class="event-input">
-    <h2 class="title">{{ $t('recordEvent') }}</h2>
     <div v-if="!isAdvancedInput" class="simple-input">
       <div class="selection-indicator">
         <span :class="{ 'completed': selectedPlayer }">{{ $t('step1SelectPlayer') }}</span>

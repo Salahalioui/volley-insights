@@ -1,6 +1,6 @@
 <template>
   <div class="home bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen p-4 md:p-8">
-    <h1 class="text-3xl md:text-5xl font-bold mb-6 text-center text-blue-600 animate-fade-in">
+    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-center text-blue-600 animate-fade-in">
       {{ $t('welcome') }}
     </h1>
 
@@ -8,31 +8,31 @@
       <!-- App Description -->
       <div class="bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105">
         <div class="flex items-center mb-4">
-          <img src="@/assets/logo.png" alt="Volleyball" class="w-12 h-12 mr-4 animate-bounce" />
-          <h2 class="text-2xl font-semibold text-blue-700">{{ $t('elevateAnalysis') }}</h2>
+          <img src="@/assets/logo.png" alt="Volleyball" class="w-12 h-12 mr-4 animate-bounce" loading="lazy" />
+          <h2 class="text-xl md:text-2xl font-semibold text-blue-700">{{ $t('elevateAnalysis') }}</h2>
         </div>
-        <p class="text-gray-700 text-lg leading-relaxed">
+        <p class="text-gray-700 text-base md:text-lg leading-relaxed">
           {{ $t('appDescription') }}
         </p>
       </div>
 
       <!-- Quick Actions -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
         <div class="bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105">
-          <h3 class="text-xl font-semibold mb-4 text-blue-600">{{ $t('startNewGame') }}</h3>
+          <h3 class="text-lg md:text-xl font-semibold mb-4 text-blue-600">{{ $t('startNewGame') }}</h3>
           <p class="text-gray-700 mb-4">
             {{ $t('newGameDescription') }}
           </p>
-          <BaseButton @click="navigateToCreateGame" class="w-full bg-blue-500 hover:bg-blue-600 text-white">
+          <BaseButton @click="navigateToCreateGame" class="w-full bg-blue-500 hover:bg-blue-600 text-white" :aria-label="$t('createNewGame')">
             {{ $t('createNewGame') }}
           </BaseButton>
         </div>
         <div class="bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105">
-          <h3 class="text-xl font-semibold mb-4 text-blue-600">{{ $t('manageTeam') }}</h3>
+          <h3 class="text-lg md:text-xl font-semibold mb-4 text-blue-600">{{ $t('manageTeam') }}</h3>
           <p class="text-gray-700 mb-4">
             {{ $t('manageTeamDescription') }}
           </p>
-          <BaseButton @click="navigateToTeam" class="w-full bg-green-500 hover:bg-green-600 text-white">
+          <BaseButton @click="navigateToTeam" class="w-full bg-green-500 hover:bg-green-600 text-white" :aria-label="$t('goToMyTeam')">
             {{ $t('goToMyTeam') }}
           </BaseButton>
         </div>
@@ -40,7 +40,7 @@
 
       <!-- Recent Games -->
       <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-semibold mb-4 text-blue-600">{{ $t('recentGames') }}</h3>
+        <h3 class="text-lg md:text-xl font-semibold mb-4 text-blue-600">{{ $t('recentGames') }}</h3>
         <div v-if="recentGames.length > 0" class="space-y-4">
           <div v-for="game in recentGames" :key="game.id" 
                class="p-4 bg-gray-50 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
@@ -50,26 +50,26 @@
             </div>
             <div class="flex space-x-2">
               <BaseButton v-if="game.status === 'completed'" @click="viewGameStats(game.id)" 
-                          size="small" class="bg-blue-500 hover:bg-blue-600 text-white">
+                          size="small" class="bg-blue-500 hover:bg-blue-600 text-white" :aria-label="$t('viewStats')">
                 {{ $t('viewStats') }}
               </BaseButton>
               <BaseButton v-else @click="continueGame(game.id)" 
-                          size="small" class="bg-green-500 hover:bg-green-600 text-white">
+                          size="small" class="bg-green-500 hover:bg-green-600 text-white" :aria-label="$t('continueGame')">
                 {{ $t('continueGame') }}
               </BaseButton>
             </div>
           </div>
         </div>
         <p v-else class="text-gray-700">{{ $t('noRecentGames') }}</p>
-        <BaseButton @click="navigateToResults" class="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white">
+        <BaseButton @click="navigateToResults" class="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white" :aria-label="$t('viewAllGames')">
           {{ $t('viewAllGames') }}
         </BaseButton>
       </div>
 
       <!-- Quick Stats -->
       <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-semibold mb-4 text-blue-600">{{ $t('teamOverview') }}</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <h3 class="text-lg md:text-xl font-semibold mb-4 text-blue-600">{{ $t('teamOverview') }}</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard :title="$t('totalGames')" :value="totalGames" color="blue" />
           <StatCard :title="$t('winPercentage')" :value="`${winPercentage}%`" color="green" />
           <StatCard :title="$t('players')" :value="totalPlayers" color="purple" />
@@ -173,3 +173,21 @@ export default {
   }
 };
 </script>
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.transition-transform {
+  transition: transform 0.3s ease-in-out;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+</style>

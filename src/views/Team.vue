@@ -1,6 +1,6 @@
 <template>
-  <div class="my-team p-4 sm:p-6 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6 text-gray-800">{{ $t('myTeam') }}</h2>
+  <div class="my-team p-4 sm:p-6 lg:p-8 bg-gray-100 rounded-lg shadow-md max-w-4xl mx-auto">
+    <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-gray-800">{{ $t('myTeam') }}</h2>
 
     <!-- Search and Filter -->
     <SearchFilter
@@ -12,11 +12,13 @@
     />
 
     <!-- Player List -->
-    <PlayerList
-      :filteredPlayers="filteredPlayers"
-      @edit-player="editPlayer"
-      @confirm-remove-player="confirmRemovePlayer"
-    />
+    <transition-group name="list" tag="div">
+      <PlayerList
+        :filteredPlayers="filteredPlayers"
+        @edit-player="editPlayer"
+        @confirm-remove-player="confirmRemovePlayer"
+      />
+    </transition-group>
 
     <!-- Add/Edit Player Form -->
     <PlayerForm
@@ -28,31 +30,38 @@
     />
 
     <!-- Import/Export Buttons -->
-    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
       <button @click="exportPlayers" 
-              class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300">
+              class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+              :aria-label="$t('exportPlayersJSON')">
         <i class="fas fa-file-export mr-2"></i> {{ $t('exportPlayersJSON') }}
       </button>
       <button @click="exportPlayersCSV"
-              class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300">
+              class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+              :aria-label="$t('exportPlayersCSV')">
         <i class="fas fa-file-export mr-2"></i> {{ $t('exportPlayersCSV') }}
       </button>
-      <label class="flex-1 bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition duration-300 cursor-pointer text-center">
+      <label class="flex-1 bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition duration-300 cursor-pointer text-center focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-opacity-50">
         <i class="fas fa-file-import mr-2"></i> {{ $t('importPlayers') }}
-        <input type="file" @change="importPlayers" accept=".json, .csv" class="hidden">
+        <input type="file" @change="importPlayers" accept=".json, .csv" class="hidden" :aria-label="$t('importPlayers')">
       </label>
     </div>
 
     <!-- Notification -->
-    <PlayerNotification :notification="notification" />
+    <transition name="fade">
+      <PlayerNotification :notification="notification" />
+    </transition>
 
     <!-- Confirmation Modal -->
-    <ConfirmModal
-      :showConfirmModal="showConfirmModal"
-      :playerToRemove="playerToRemove"
-      @cancel-remove="cancelRemove"
-      @remove-player="removePlayer"
-    />
+    <transition name="fade">
+      <ConfirmModal
+        v-if="showConfirmModal"
+        :showConfirmModal="showConfirmModal"
+        :playerToRemove="playerToRemove"
+        @cancel-remove="cancelRemove"
+        @remove-player="removePlayer"
+      />
+    </transition>
   </div>
 </template>
 
@@ -277,4 +286,28 @@ export default {
 </script>
 
 <style scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 640px) {
+  .my-team {
+    padding: 1rem;
+  }
+}
 </style>
