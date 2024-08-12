@@ -39,7 +39,7 @@ export default {
     getPlayerName: Function
   },
   emits: ['makeSubstitution'],
-  setup() {
+  setup(props, { emit }) {  // Add the { emit } destructuring here
     const { t } = useI18n();
     const selectedOutPlayer = ref('');
     const selectedInPlayer = ref('');
@@ -50,7 +50,7 @@ export default {
 
     const makeSubstitution = () => {
       if (canSubstitute.value) {
-        this.$emit('makeSubstitution', {
+        emit('makeSubstitution', {  // Use emit instead of this.$emit
           outPlayer: selectedOutPlayer.value,
           inPlayer: selectedInPlayer.value
         });
@@ -74,6 +74,7 @@ export default {
   }
 };
 </script>
+
 
 
 <style scoped>
