@@ -14,7 +14,7 @@
       <!-- Set Info -->
       <div class="set-info text-center mx-2">
         <p class="sets-won text-lg sm:text-2xl font-bold">{{ setsWon.team }} - {{ setsWon.opponent }}</p>
-        <p class="current-set text-xs sm:text-lg font-semibold">{{ $t('set') }} {{ game.currentSet }}</p>
+        <p class="current-set text-xs sm:text-lg font-semibold">{{ 'set' }} {{ game.currentSet }}</p>
       </div>
 
       <!-- Opponent Team -->

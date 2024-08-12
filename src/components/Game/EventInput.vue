@@ -267,7 +267,7 @@ export default {
 .selection-indicator {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0,2rem;
 }
 
 .selection-indicator span {
