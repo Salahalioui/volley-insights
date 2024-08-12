@@ -1,28 +1,25 @@
 <template>
-  <div class="substitution">
-    <h2 class="title">{{ $t('substitutions') }}</h2>
-    <div class="player-selection">
-      <div class="select-wrapper">
-        <label for="player-out">{{ $t('playerOut') }}</label>
-        <select id="player-out" v-model="selectedOutPlayer" class="form-select">
-          <option value="">{{ $t('selectPlayer') }}</option>
+  <div class="substitution bg-white rounded-lg p-3 sm:p-4 shadow-md">
+    <h2 class="title text-lg sm:text-xl font-bold mb-2 text-gray-800">{{ $t('substitutions') }}</h2>
+    <div class="player-selection flex flex-row justify-between items-center space-x-2">
+      <div class="select-wrapper flex-1">
+        <select v-model="selectedOutPlayer" class="form-select text-sm sm:text-base" :aria-label="$t('playerOut')">
+          <option value="">{{ $t('playerOut') }}</option>
           <option v-for="playerId in currentRotation" :key="playerId" :value="playerId">
             {{ getPlayerName(playerId) }}
           </option>
         </select>
       </div>
-      <div class="swap-icon">↔️</div>
-      <div class="select-wrapper">
-        <label for="player-in">{{ $t('playerIn') }}</label>
-        <select id="player-in" v-model="selectedInPlayer" class="form-select">
-          <option value="">{{ $t('selectPlayer') }}</option>
+      <div class="select-wrapper flex-1">
+        <select v-model="selectedInPlayer" class="form-select text-sm sm:text-base" :aria-label="$t('playerIn')">
+          <option value="">{{ $t('playerIn') }}</option>
           <option v-for="playerId in benchPlayers" :key="playerId" :value="playerId">
             {{ getPlayerName(playerId) }}
           </option>
         </select>
       </div>
     </div>
-    <button @click="makeSubstitution" class="btn btn-substitute" :disabled="!canSubstitute">
+    <button @click="makeSubstitution" class="btn-substitute mt-2 w-full" :disabled="!canSubstitute">
       {{ $t('substitute') }}
     </button>
   </div>
@@ -75,92 +72,38 @@ export default {
 };
 </script>
 
-
-
 <style scoped>
-.substitution {
-  background-color: #ffffff;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #000000;
-}
-
-.player-selection {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.select-wrapper {
-  flex: 1;
-}
-
-.swap-icon {
-  font-size: 1.5rem;
-  color: #0e5792;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-  color: #000000;
-}
-
 .form-select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #fbbf24;
-  border-radius: 0.5rem;
-  background-color: white;
-  font-size: 1rem;
-  color: #92400e;
-  transition: border-color 0.3s ease;
+  @apply w-full py-1 px-2 border-2 border-yellow-400 rounded-md bg-white text-yellow-800 transition-colors duration-300 ease-in-out;
 }
 
 .form-select:focus {
-  outline: none;
-  border-color: #f59e0b;
+  @apply outline-none border-yellow-500 ring-2 ring-yellow-200;
 }
 
 .btn-substitute {
-  width: 100%;
-  padding: 1rem;
-  background-color: #fbbf24;
-  color: #92400e;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  @apply py-2 px-4 bg-yellow-400 text-yellow-800 rounded-md font-bold text-sm sm:text-base transition-colors duration-300 ease-in-out;
 }
 
 .btn-substitute:hover:not(:disabled) {
-  background-color: #f59e0b;
+  @apply bg-yellow-500;
 }
 
 .btn-substitute:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  @apply opacity-50 cursor-not-allowed;
 }
 
 @media (max-width: 640px) {
-  .player-selection {
-    flex-direction: column;
+  .substitution {
+    @apply p-2;
   }
-
-  .swap-icon {
-    transform: rotate(90deg);
-    margin: 0.5rem 0;
+  
+  .title {
+    @apply text-base mb-1;
+  }
+  
+  .form-select, .btn-substitute {
+    @apply text-xs py-1 px-2;
   }
 }
 </style>
