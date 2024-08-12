@@ -11,6 +11,7 @@ import { createI18n } from 'vue-i18n'; // Import Vue I18n
 import en from './locales/en.json';
 import fr from './locales/fr.json';
 import ar from './locales/ar.json';
+import './registerServiceWorker'
 
 // Define VeeValidate rules
 defineRule('required', required);
