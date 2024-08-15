@@ -1,5 +1,5 @@
 <template>
-  <div class="player-stats bg-white rounded-lg shadow-md mb-8">
+  <div id="player-stats" class="player-stats bg-white rounded-lg shadow-md mb-8">
     <div class="p-6 border-b border-gray-200">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center">

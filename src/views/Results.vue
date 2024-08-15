@@ -280,8 +280,8 @@ export default {
     };
 
     const viewGameStats = (gameId) => {
-      router.push({ name: 'StatScreen', params: { id: gameId } });
-    };
+  router.push({ name: 'StatScreen', params: { id: gameId.toString() } });
+};
 
     const continueGame = (gameId) => {
       router.push({ name: 'GameView', params: { id: gameId } });

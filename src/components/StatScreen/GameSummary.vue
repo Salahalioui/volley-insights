@@ -1,5 +1,5 @@
 <template>
-  <div class="game-summary bg-white rounded-lg shadow-md p-6 mb-6">
+  <div id="game-summary" class="game-summary bg-white rounded-lg shadow-md p-6 mb-6">
     <h3 class="text-xl font-semibold mb-4">{{ $t('gameSummary') }}</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="game-info">

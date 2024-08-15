@@ -1,5 +1,5 @@
 <template>
-  <div class="team-stats bg-white rounded-lg shadow-md mb-6">
+  <div id="team-stats" class="team-stats bg-white rounded-lg shadow-md mb-6">
     <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 hover:bg-gray-50 transition-colors duration-200">
       <div class="flex items-center">
         <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
