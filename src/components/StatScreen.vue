@@ -1,382 +1,283 @@
 <template>
-    <div v-if="game" class="stat-screen p-4 bg-gray-100 min-h-screen">
-      <h2 class="text-2xl md:text-3xl font-bold mb-6 text-center text-indigo-700">Game Statistics</h2>
-      
-      <!-- Filters and Export -->
-      <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div class="flex items-center space-x-4 w-full sm:w-auto">
-          <label class="font-semibold text-gray-700">Set:</label>
-          <select v-model="selectedSet" class="p-2 border rounded w-full sm:w-auto bg-white shadow-sm focus:ring focus:ring-indigo-200">
-            <option value="all">All Sets</option>
-            <option v-for="n in game.sets.length" :key="n" :value="n">Set {{ n }}</option>
-          </select>
-        </div>
-        <div class="flex space-x-2 w-full sm:w-auto">
-          <button @click="exportStats('csv')" class="flex-1 sm:flex-none bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition shadow">
-            Export CSV
-          </button>
-          <button @click="exportStats('pdf')" class="flex-1 sm:flex-none bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition shadow">
-            Export PDF
-          </button>
-        </div>
-      </div>
-  
-      <!-- Game Summary -->
-      <div class="mb-8 bg-white p-4 rounded-lg shadow-md">
-        <h3 class="text-xl md:text-2xl font-semibold mb-4 text-indigo-600">Game Summary</h3>
-        <div class="flex justify-between">
-          <div class="text-center flex-1">
-            <p class="text-lg font-bold text-gray-800">Our Team</p>
-            <p class="text-2xl md:text-3xl font-bold text-indigo-600">{{ teamScore }}</p>
-            <p class="text-sm text-gray-600">Sets Won: {{ setsWon.team }}</p>
+  <div class="stat-screen bg-gray-100 min-h-screen">
+    <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
+      <h2 class="text-2xl font-bold">{{ $t('gameStatistics') }}</h2>
+      <button @click="showExportModal = true" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-100 transition-colors">
+        {{ $t('export') }}
+      </button>
+    </header>
+
+    <nav class="bg-white shadow-md">
+      <ul class="flex">
+        <li 
+          @click="setActiveTab('set')" 
+          :class="{ 'active': activeTab === 'set' }" 
+          class="tab-item"
+        >
+          {{ $t('setStats') }}
+        </li>
+        <li 
+          @click="setActiveTab('game')" 
+          :class="{ 'active': activeTab === 'game' }" 
+          class="tab-item"
+        >
+          {{ $t('gameStats') }}
+        </li>
+      </ul>
+    </nav>
+
+    <main id="stat-screen-content" class="p-4">
+      <transition name="fade" mode="out-in">
+        <GameSummary 
+          v-if="activeTab === 'game'" 
+          :game="game" 
+        />
+      </transition>
+
+      <transition name="fade" mode="out-in">
+        <TeamStats 
+          v-if="activeTab === 'set' || activeTab === 'game'" 
+          :game="game" 
+          :currentSetNumber="currentSetNumber" 
+          :getPlayerName="getPlayerName" 
+        />
+      </transition>
+
+      <PlayerStats
+        :game="game"
+        :selectedPlayer="selectedPlayer"
+        :getPlayerName="getPlayerName"
+        :currentSetNumber="currentSetNumber"  
+        @player-selected="handlePlayerSelected"
+      />
+    </main>
+
+    <!-- Enhanced Export Modal -->
+    <div v-if="showExportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+        <h3 class="text-xl font-semibold mb-4">{{ $t('exportOptions') }}</h3>
+        
+        <!-- Content Selection -->
+        <div class="mb-4">
+          <h4 class="font-medium mb-2">{{ $t('contentToInclude') }}</h4>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input type="checkbox" v-model="exportOptions.gameSummary" class="mr-2">
+              <span>{{ $t('gameSummary') }}</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" v-model="exportOptions.teamStats" class="mr-2">
+              <span>{{ $t('teamStats') }}</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" v-model="exportOptions.playerStats" class="mr-2">
+              <span>{{ $t('playerStats') }}</span>
+            </label>
           </div>
-          <div class="text-center flex-1">
-            <p class="text-lg font-bold text-gray-800">{{ opponentTeam }}</p>
-            <p class="text-2xl md:text-3xl font-bold text-indigo-600">{{ opponentScore }}</p>
-            <p class="text-sm text-gray-600">Sets Won: {{ setsWon.opponent }}</p>
-          </div>
         </div>
-        <div class="mt-4">
-          <h4 class="text-lg font-semibold mb-2 text-gray-700">Set Scores</h4>
-          <div class="flex flex-wrap justify-around gap-2">
-            <div v-for="(set, index) in game.sets" :key="index" class="text-center bg-gray-100 p-2 rounded">
-              <p class="font-bold text-sm text-gray-700">Set {{ index + 1 }}</p>
-              <p class="text-indigo-600">{{ set.teamScore }} - {{ set.opponentScore }}</p>
+
+        <!-- PDF Styling Options -->
+        <div class="mb-4">
+          <h4 class="font-medium mb-2">{{ $t('pdfStyling') }}</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">{{ $t('pageSize') }}</label>
+              <select v-model="pdfOptions.format" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                <option value="a4">A4</option>
+                <option value="letter">Letter</option>
+                <option value="legal">Legal</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">{{ $t('orientation') }}</label>
+              <select v-model="pdfOptions.orientation" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                <option value="portrait">{{ $t('portrait') }}</option>
+                <option value="landscape">{{ $t('landscape') }}</option>
+              </select>
             </div>
           </div>
         </div>
-      </div>
-  
-      <!-- Team Performance -->
-      <div class="mb-8 bg-white p-4 rounded-lg shadow-md">
-        <h3 class="text-xl md:text-2xl font-semibold mb-4 text-indigo-600">Team Performance</h3>
-        <div class="flex flex-col md:flex-row justify-between gap-4">
-          <div class="w-full md:w-1/2 mb-4">
-            <RadarChart :data="teamPerformanceData" />
-          </div>
-          <div class="w-full md:w-1/2 mb-4">
-            <DonutChart :data="pointsDistributionData" />
-          </div>
-        </div>
-        <div class="mt-4">
-          <h4 class="text-lg font-semibold mb-2 text-gray-700">Team Stats</h4>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <div v-for="(value, key) in teamStats" :key="key" class="bg-gray-100 p-3 rounded text-center shadow">
-              <p class="font-semibold text-sm text-gray-600">{{ formatStat(key) }}</p>
-              <p class="text-xl font-bold text-indigo-600">{{ value }}</p>
-            </div>
+
+        <!-- Header and Footer -->
+        <div class="mb-4">
+          <h4 class="font-medium mb-2">{{ $t('headerAndFooter') }}</h4>
+          <div class="space-y-2">
+            <label class="block">
+              <span class="text-sm font-medium text-gray-700">{{ $t('pdfTitle') }}</span>
+              <input type="text" v-model="pdfOptions.title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" v-model="pdfOptions.includeDateTime" class="mr-2">
+              <span>{{ $t('includeDatetime') }}</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" v-model="pdfOptions.includePageNumbers" class="mr-2">
+              <span>{{ $t('includePageNumbers') }}</span>
+            </label>
           </div>
         </div>
-      </div>
-  
-      <!-- Player Statistics -->
-      <div class="mb-8 bg-white p-4 rounded-lg shadow-md overflow-x-auto">
-        <h3 class="text-xl md:text-2xl font-semibold mb-4 text-indigo-600">Player Statistics</h3>
-        <table class="w-full min-w-max">
-          <thead>
-            <tr class="bg-gray-200">
-              <th v-for="header in playerStatsHeaders" :key="header" class="p-2 text-left text-sm font-semibold text-gray-600">
-                {{ formatStat(header) }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="player in playerStats" :key="player.id" class="border-b hover:bg-gray-50">
-              <td v-for="header in playerStatsHeaders" :key="header" class="p-2 text-sm">
-                {{ player[header] }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-  
-      <!-- Player Performance Charts -->
-      <div class="mb-8 bg-white p-4 rounded-lg shadow-md">
-        <h3 class="text-xl md:text-2xl font-semibold mb-4 text-indigo-600">Player Performance</h3>
-        <div v-for="stat in ['points', 'attacks', 'blocks', 'digs', 'serves', 'sets']" :key="stat" class="mb-6">
-          <h4 class="text-lg font-semibold mb-2 text-gray-700">{{ formatStat(stat) }}</h4>
-          <BarChart :data="getPlayerPerformanceData(stat)" />
-        </div>
-      </div>
-  
-      <!-- Rotation Effectiveness -->
-      <div class="mb-8 bg-white p-4 rounded-lg shadow-md">
-        <h3 class="text-xl md:text-2xl font-semibold mb-4 text-indigo-600">Rotation Effectiveness</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div v-for="rotation in rotationEffectiveness" :key="rotation.position" class="bg-gray-100 p-3 rounded text-center shadow">
-            <p class="font-semibold text-sm text-gray-600">Rotation {{ rotation.position }}</p>
-            <p class="text-xl font-bold text-indigo-600">{{ rotation.effectiveness.toFixed(2) }}</p>
-          </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+          <button @click="showExportModal = false" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+            {{ $t('cancel') }}
+          </button>
+          <button @click="exportToPDF" :disabled="isExporting" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50">
+            {{ isExporting ? $t('exporting') : $t('exportToPDF') }}
+          </button>
         </div>
       </div>
     </div>
-    <div v-else class="p-4 text-center text-xl text-gray-600">
-      <p>No game data available.</p>
-    </div>
-  </template>
-  
-  <script>
-  import { ref, computed } from 'vue';
-  import { RadarChart, DonutChart, BarChart } from 'vue-data-ui';
-  import { jsPDF } from "jspdf";
-  import "jspdf-autotable";
-  
-  export default {
-    name: 'StatScreen',
-    components: {
-      RadarChart,
-      DonutChart,
-      BarChart
-    },
-    props: {
-      game: {
-        type: Object,
-        required: true
-      }
-    },
-    setup(props) {
-      const selectedSet = ref('all');
-  
-      const currentSetData = computed(() => {
-        if (selectedSet.value === 'all') {
-          return props.game.sets.flatMap(set => set.events);
-        }
-        return props.game.sets[selectedSet.value - 1]?.events || [];
-      });
-  
-      const teamScore = computed(() => props.game.sets.reduce((sum, set) => sum + set.teamScore, 0));
-      const opponentScore = computed(() => props.game.sets.reduce((sum, set) => sum + set.opponentScore, 0));
-      const opponentTeam = computed(() => props.game.opponentTeam);
-  
-      const setsWon = computed(() => ({
-        team: props.game.sets.filter(set => set.teamScore > set.opponentScore).length,
-        opponent: props.game.sets.filter(set => set.opponentScore > set.teamScore).length
-      }));
-  
-      const getPlayerStat = (playerId, statType) => {
-        return currentSetData.value.filter(event => 
-          event.player === playerId && 
-          (statType === 'points' ? event.result === 'point' :
-           statType === 'errors' ? event.result === 'error' :
-           statType === event.action)
-        ).length;
-      };
-  
-      const playerStatsHeaders = ['name', 'points', 'errors', 'serves', 'aces', 'attacks', 'kills', 'blocks', 'digs', 'sets', 'assists'];
-  
-      const playerStats = computed(() => {
-        return props.game.players.map(playerId => {
-          const player = props.game.playerDetails.find(p => p.id === playerId);
-          return {
-            id: playerId,
-            name: player.name,
-            points: getPlayerStat(playerId, 'points'),
-            errors: getPlayerStat(playerId, 'errors'),
-            serves: getPlayerStat(playerId, 'serve'),
-            aces: currentSetData.value.filter(e => e.player === playerId && e.action === 'serve' && e.result === 'point').length,
-            attacks: getPlayerStat(playerId, 'spike'),
-            kills: currentSetData.value.filter(e => e.player === playerId && e.action === 'spike' && e.result === 'point').length,
-            blocks: getPlayerStat(playerId, 'block'),
-            digs: getPlayerStat(playerId, 'dig'),
-            sets: getPlayerStat(playerId, 'set'),
-            assists: currentSetData.value.filter(e => e.player === playerId && e.action === 'set' && e.result === 'point').length
-          };
-        });
-      });
-  
-      const teamStats = computed(() => ({
-        totalPoints: teamScore.value,
-        aces: currentSetData.value.filter(e => e.action === 'serve' && e.result === 'point').length,
-        attackPoints: currentSetData.value.filter(e => e.action === 'spike' && e.result === 'point').length,
-        blockPoints: currentSetData.value.filter(e => e.action === 'block' && e.result === 'point').length,
-        digs: currentSetData.value.filter(e => e.action === 'dig').length,
-        assists: currentSetData.value.filter(e => e.action === 'set' && e.result === 'point').length,
-        errors: currentSetData.value.filter(e => e.result === 'error').length,
-        sideouts: calculateSideouts()
-      }));
-  
-      const calculateSideouts = () => {
-        let sideouts = 0;
-        let lastServingTeam = null;
-        for (const event of currentSetData.value) {
-          if (event.result === 'point') {
-            if (lastServingTeam === 'opponent') {
-              sideouts++;
-            }
-            lastServingTeam = 'team';
-          } else if (event.result === 'error') {
-            if (lastServingTeam === 'team') {
-              sideouts++;
-            }
-            lastServingTeam = 'opponent';
-          }
-        }
-        return sideouts;
-      };
-  
-      const teamPerformanceData = computed(() => ({
-        labels: ['Serves', 'Attacks', 'Blocks', 'Digs', 'Sets'],
-        datasets: [{
-          label: 'Team Performance',
-          data: [
-            teamStats.value.aces,
-            teamStats.value.attackPoints,
-            teamStats.value.blockPoints,
-            teamStats.value.digs,
-            teamStats.value.assists
-          ]
-        }]
-      }));
-  
-      const pointsDistributionData = computed(() => [
-        { name: 'Aces', value: teamStats.value.aces },
-        { name: 'Attack Points', value: teamStats.value.attackPoints },
-        { name: 'Block Points', value: teamStats.value.blockPoints },
-        { name: 'Opponent Errors', value: teamStats.value.totalPoints - teamStats.value.aces - teamStats.value.attackPoints - teamStats.value.blockPoints }
-      ]);
-  
-      const getPlayerPerformanceData = (stat) => ({
-        labels: playerStats.value.map(p => p.name),
-        datasets: [{
-          label: formatStat(stat),
-          data: playerStats.value.map(p => p[stat])
-        }]
-      });
-  
-      const rotationEffectiveness = computed(() => {
-        const rotations = [1, 2, 3, 4, 5, 6];
-        return rotations.map(position => {
-          const eventsInRotation = currentSetData.value.filter(e => e.rotation === position);
-          const pointsScored = eventsInRotation.filter(e => e.result === 'point').length;
-          const totalEvents = eventsInRotation.length;
-          const effectiveness = totalEvents > 0 ? pointsScored / totalEvents : 0;
-          return { position, effectiveness };
-        });
-      });
-  
-      const formatStat = (stat) => {
-        return stat.split(/(?=[A-Z])/).join(' ').replace(/\b\w/g, l => l.toUpperCase());
-      };
-  
-      const exportStats = (format) => {
-        if (format === 'csv') {
-          exportCsv();
-        } else if (format === 'pdf') {
-          exportPdf();
-        }
-      };
-  
-      const exportCsv = () => {
-        const headers = playerStatsHeaders.map(formatStat);
-        const csvContent = [
-          headers.join(','),
-          ...playerStats.value.map(p => playerStatsHeaders.map(header => p[header]).join(','))
-        ].join('\n');
-  
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        if (link.download !== undefined) {
-          const url = URL.createObjectURL(blob);
-          link.setAttribute("href", url);
-          link.setAttribute("download", `game_stats_${selectedSet.value === 'all' ? 'all_sets' : `set_${selectedSet.value}`}.csv`);
-          link.style.visibility = 'hidden';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      };
-  
-      const exportPdf = () => {
-      const doc = new jsPDF();
-      
-      // Title
-      doc.setFontSize(18);
-      doc.text("Volley Insights - Game Statistics", 14, 22);
-      
-      // Game Summary
-      doc.setFontSize(14);
-      doc.text(`${props.game.name} - ${formatDate(props.game.date)}`, 14, 32);
-      doc.setFontSize(12);
-      doc.text(`Our Team ${teamScore.value} - ${opponentScore.value} ${opponentTeam.value}`, 14, 40);
-      
-      // Player Stats Table
-      doc.autoTable({
-        head: [playerStatsHeaders.map(formatStat)],
-        body: playerStats.value.map(p => playerStatsHeaders.map(header => p[header])),
-        startY: 50
-      });
-      
-      // Team Stats
-      const teamStatsStartY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(14);
-      doc.text("Team Statistics", 14, teamStatsStartY);
-      doc.setFontSize(12);
-      let yOffset = teamStatsStartY + 10;
-      Object.entries(teamStats.value).forEach(([key, value]) => {
-        doc.text(`${formatStat(key)}: ${value}`, 14, yOffset);
-        yOffset += 7;
-      });
+  </div>
+</template>
 
-      // Rotation Effectiveness
-      doc.addPage();
-      doc.setFontSize(14);
-      doc.text("Rotation Effectiveness", 14, 20);
-      doc.autoTable({
-        head: [["Rotation", "Effectiveness"]],
-        body: rotationEffectiveness.value.map(r => [r.position, r.effectiveness.toFixed(2)]),
-        startY: 30
-      });
+<script>
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import html2pdf from 'html2pdf.js';
+import GameSummary from './StatScreen/GameSummary.vue';
+import TeamStats from './StatScreen/TeamStats.vue';
+import PlayerStats from './StatScreen/PlayerStats.vue';
 
-      // Save the PDF
-      doc.save(`game_stats_${selectedSet.value === 'all' ? 'all_sets' : `set_${selectedSet.value}`}.pdf`);
+export default {
+  name: 'StatScreen',
+  components: {
+    GameSummary,
+    TeamStats,
+    PlayerStats
+  },
+  props: {
+    game: {
+      type: Object,
+      required: true,
+    },
+    getPlayerName: {
+      type: Function,
+      required: true,
+    },
+  },
+  setup(props) {
+    const { t } = useI18n();
+    const activeTab = ref('set');
+    const selectedPlayer = ref(null);
+    const isExporting = ref(false);
+    const showExportModal = ref(false);
+    const exportOptions = ref({
+      gameSummary: true,
+      teamStats: true,
+      playerStats: true
+    });
+    const pdfOptions = ref({
+      format: 'a4',
+      orientation: 'portrait',
+      title: '',
+      includeDateTime: true,
+      includePageNumbers: true
+    });
+
+    const currentSetNumber = computed(() => {
+      return activeTab.value === 'set' ? props.game.currentSet : null;
+    });
+
+    const setActiveTab = (tab) => {
+      activeTab.value = tab;
     };
 
-    const formatDate = (dateString) => {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString(undefined, options);
+    const handlePlayerSelected = (playerId) => {
+      selectedPlayer.value = playerId;
+    };
+
+    const exportToPDF = async () => {
+      if (isExporting.value) return;
+      isExporting.value = true;
+      showExportModal.value = false;
+
+      const element = document.getElementById('stat-screen-content');
+      const clonedElement = element.cloneNode(true);
+
+      // Remove unselected sections
+      if (!exportOptions.value.gameSummary) {
+        const gameSummary = clonedElement.querySelector('#game-summary');
+        if (gameSummary) gameSummary.remove();
+      }
+      if (!exportOptions.value.teamStats) {
+        const teamStats = clonedElement.querySelector('#team-stats');
+        if (teamStats) teamStats.remove();
+      }
+      if (!exportOptions.value.playerStats) {
+        const playerStats = clonedElement.querySelector('#player-stats');
+        if (playerStats) playerStats.remove();
+      }
+
+      // Add custom header
+      const header = document.createElement('div');
+      header.innerHTML = `<h1 style="text-align: center; color: #2563eb; font-size: 24px; margin-bottom: 20px;">${pdfOptions.value.title || 'Game Statistics'}</h1>`;
+      if (pdfOptions.value.includeDateTime) {
+        header.innerHTML += `<p style="text-align: center; font-size: 14px; margin-bottom: 20px;">Generated on: ${new Date().toLocaleString()}</p>`;
+      }
+      clonedElement.insertBefore(header, clonedElement.firstChild);
+
+      const opt = {
+        margin: 10,
+        filename: `game-statistics-${props.game.id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { 
+          unit: 'mm', 
+          format: pdfOptions.value.format, 
+          orientation: pdfOptions.value.orientation 
+        },
+        pagebreak: { mode: 'avoid-all' }
+      };
+
+      if (pdfOptions.value.includePageNumbers) {
+        opt.footer = {
+          height: '20px',
+          contents: {
+            default: '<span style="color: #444; font-size: 10px; float: right; margin-right: 10px;">Page {{page}} of {{pages}}</span>'
+          }
+        };
+      }
+
+      try {
+        await html2pdf().set(opt).from(clonedElement).save();
+      } catch (error) {
+        console.error('Error exporting PDF:', error);
+        // You might want to show an error message to the user here
+      } finally {
+        isExporting.value = false;
+      }
     };
 
     return {
-      selectedSet,
-      teamScore,
-      opponentScore,
-      opponentTeam,
-      setsWon,
-      playerStats,
-      playerStatsHeaders,
-      teamStats,
-      teamPerformanceData,
-      pointsDistributionData,
-      rotationEffectiveness,
-      getPlayerPerformanceData,
-      formatStat,
-      exportStats
+      t,
+      activeTab,
+      selectedPlayer,
+      currentSetNumber,
+      setActiveTab,
+      handlePlayerSelected,
+      exportToPDF,
+      isExporting,
+      exportOptions,
+      pdfOptions,
+      showExportModal
     };
   }
-}
+};
 </script>
 
 <style scoped>
-.stat-screen {
-  font-family: 'Inter', sans-serif;
+.tab-item {
+  @apply px-4 py-2 cursor-pointer transition-colors duration-200;
 }
-
-/* Additional styles for better mobile experience */
-@media (max-width: 640px) {
-  .stat-screen h2 {
-    font-size: 1.5rem;
-  }
-
-  .stat-screen h3 {
-    font-size: 1.25rem;
-  }
-
-  .stat-screen h4 {
-    font-size: 1.1rem;
-  }
-
-  .stat-screen table {
-    font-size: 0.875rem;
-  }
+.tab-item.active {
+  @apply bg-blue-600 text-white;
+}
+.fade-enter-active, 
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, 
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

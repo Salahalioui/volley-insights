@@ -1,0 +1,1426 @@
+
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\AdvancedPlayerStats.vue
+==================================================
+
+<template>
+  <div class="advanced-stats mb-6">
+    <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 rounded-t-md">
+      <div class="flex items-center">
+        <i class="fas fa-chart-line text-blue-500 mr-2"></i>
+        <h3 class="text-xl font-semibold">{{ $t('advancedStats') }}</h3>
+      </div>
+      <i :class="['fas', isOpen ? 'fa-chevron-up' : 'fa-chevron-down', 'transition-transform duration-300']"></i>
+    </button>
+    <transition 
+      name="expand" 
+      @enter="startTransition" 
+      @after-enter="endTransition"
+      @before-leave="startTransition" 
+      @after-leave="endTransition"
+    >
+      <div v-if="isOpen" class="section-content bg-white p-6 rounded-b-md shadow-md">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <StatGroup v-for="(group, index) in statGroups" :key="index" :group="group" />
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script>
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import * as statsUtils from './statsUtils';
+import StatGroup from './StatGroup.vue';
+
+export default {
+  name: 'AdvancedPlayerStats',
+  components: {
+    StatGroup,
+  },
+  props: {
+    game: {
+      type: Object,
+      required: true,
+    },
+    playerId: { 
+      type: Number,
+      required: true 
+    },
+    currentSetNumber: {
+      type: Number,
+    },
+  },
+  setup(props) {
+    const { t } = useI18n();
+    const isOpen = ref(true);
+
+    const statGroups = computed(() => [
+      {
+        title: t('serve'),
+        icon: 'fas fa-volleyball-ball',
+        stats: statsUtils.getAdvancedServeStats(props.game, props.playerId, props.currentSetNumber),
+      },
+      {
+        title: t('reception'),
+        icon: 'fas fa-hands',
+        stats: statsUtils.getAdvancedReceptionStats(props.game, props.playerId, props.currentSetNumber),
+      },
+      {
+        title: t('setting'),
+        icon: 'fas fa-hand-point-up',
+        stats: statsUtils.getAdvancedSettingStats(props.game, props.playerId, props.currentSetNumber),
+      },
+      {
+        title: t('attack'),
+        icon: 'fas fa-fist-raised',
+        stats: statsUtils.getAdvancedAttackStats(props.game, props.playerId, props.currentSetNumber),
+      },
+      {
+        title: t('block'),
+        icon: 'fas fa-shield-alt',
+        stats: statsUtils.getBlockStats(props.game, props.playerId, props.currentSetNumber),
+      },
+      {
+        title: t('dig'),
+        icon: 'fas fa-hand-paper',
+        stats: statsUtils.getDigStats ? statsUtils.getDigStats(props.game, props.playerId, props.currentSetNumber) : {},
+      },
+    ]);
+
+    const toggleSection = () => {
+      isOpen.value = !isOpen.value;
+    };
+
+    const startTransition = (el) => {
+      el.style.height = 'auto';
+      let endHeight = getComputedStyle(el).height;
+      el.style.height = '0px';
+      el.offsetHeight; // force repaint
+      el.style.height = endHeight;
+    };
+
+    const endTransition = (el) => {
+      el.style.height = '';
+    };
+
+    return {
+      t,
+      isOpen,
+      statGroups,
+      toggleSection,
+      startTransition,
+      endTransition,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition: height 0.3s ease-out;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  height: 0;
+}
+</style>
+
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\BasicPlayerStats.vue
+==================================================
+
+<template>
+  <div class="basic-stats mb-6">
+    <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 rounded-t-md">
+      <div class="flex items-center">
+        <i class="fas fa-user-chart text-green-500 mr-2"></i>
+        <h3 class="text-xl font-semibold">{{ $t('basicStats') }}</h3>
+      </div>
+      <i :class="['fas', isOpen ? 'fa-chevron-up' : 'fa-chevron-down', 'transition-transform duration-300']"></i>
+    </button>
+    <transition 
+      name="expand" 
+      @enter="startTransition" 
+      @after-enter="endTransition"
+      @before-leave="startTransition" 
+      @after-leave="endTransition"
+    >
+      <div v-if="isOpen" class="section-content bg-white p-6 rounded-b-md shadow-md">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <StatCard v-for="stat in summaryStats" :key="stat.name" :title="$t(stat.name)" :value="stat.value" :type="stat.type" />
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full table-auto border-collapse border border-gray-300">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('category') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('attempts') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('points') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('errors') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('efficiency') }}</th> 
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                v-for="stat in playerStats" 
+                :key="stat.category" 
+                class="hover:bg-gray-50 transition-colors duration-150"
+              >
+                <td class="px-4 py-2 border border-gray-300 font-medium">{{ $t(stat.category) }}</td>
+                <td class="px-4 py-2 border border-gray-300">{{ stat.totalAttempts }}</td>
+                <td class="px-4 py-2 border border-gray-300">{{ stat.points }}</td>
+                <td class="px-4 py-2 border border-gray-300">{{ stat.errors }}</td>
+                <td class="px-4 py-2 border border-gray-300">
+                  <div class="flex items-center">
+                    <div class="w-16 bg-gray-200 rounded-full h-2.5 mr-2">
+                      <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${parseFloat(stat.efficiency)}%` }"></div>
+                    </div>
+                    <span>{{ stat.efficiency }}</span>
+                  </div>
+                </td> 
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script>
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import * as statsUtils from './statsUtils';
+import StatCard from './StatCard.vue';
+
+export default {
+  components: { StatCard },
+  props: {
+    game: {
+      type: Object,
+      required: true,
+    },
+    playerId: { 
+      type: Number,
+      required: true,
+    },
+    currentSetNumber: {
+      type: Number,
+    },
+  },
+  setup(props) {
+    const { t } = useI18n();
+    const isOpen = ref(true);
+
+    const playerStats = computed(() => {
+      const categories = ['serve', 'reception', 'setting', 'attack', 'block', 'dig'];
+      return categories.map(category => {
+        const stats = statsUtils[`get${category.charAt(0).toUpperCase() + category.slice(1)}Stats`](props.game, props.playerId, props.currentSetNumber);
+        return {
+          category,
+          ...stats,
+          efficiency: (stats.efficiency * 100).toFixed(2) + '%',
+        };
+      });
+    });
+
+    const summaryStats = computed(() => {
+      const totalPoints = playerStats.value.reduce((sum, stat) => sum + stat.points, 0);
+      const totalErrors = playerStats.value.reduce((sum, stat) => sum + stat.errors, 0);
+      const totalAttempts = playerStats.value.reduce((sum, stat) => sum + stat.totalAttempts, 0);
+      const overallEfficiency = totalAttempts > 0 ? ((totalPoints - totalErrors) / totalAttempts * 100).toFixed(2) + '%' : '0%';
+
+      return [
+        { name: 'totalPoints', value: totalPoints, type: 'number' },
+        { name: 'totalErrors', value: totalErrors, type: 'number' },
+        { name: 'overallEfficiency', value: overallEfficiency, type: 'percentage' },
+      ];
+    });
+
+    const toggleSection = () => {
+      isOpen.value = !isOpen.value;
+    };
+
+    const startTransition = (el) => {
+      el.style.height = 'auto';
+      let endHeight = getComputedStyle(el).height;
+      el.style.height = '0px';
+      el.offsetHeight; // force repaint
+      el.style.height = endHeight;
+    };
+
+    const endTransition = (el) => {
+      el.style.height = '';
+    };
+
+    return {
+      t,
+      isOpen,
+      playerStats,
+      summaryStats,
+      toggleSection,
+      startTransition,
+      endTransition,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition: height 0.3s ease-out;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  height: 0;
+}
+</style>
+
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\GameSummary.vue
+==================================================
+
+<template>
+  <div class="game-summary bg-white rounded-lg shadow-md p-6 mb-6">
+    <h3 class="text-xl font-semibold mb-4">{{ $t('gameSummary') }}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="game-info">
+        <p class="text-gray-600">
+          <span class="font-medium">{{ $t('date') }}:</span> {{ formattedDate }}
+        </p>
+        <p class="text-gray-600">
+          <span class="font-medium">{{ $t('opponent') }}:</span> {{ game.opponentTeam }}
+        </p>
+        <p class="text-gray-600">
+          <span class="font-medium">{{ $t('location') }}:</span> {{ game.location || $t('notSpecified') }}
+        </p>
+      </div>
+      <div class="game-status">
+        <p class="text-gray-600">
+          <span class="font-medium">{{ $t('status') }}:</span> 
+          <span :class="statusClass">{{ $t(game.status) }}</span>
+        </p>
+        <p class="text-gray-600">
+          <span class="font-medium">{{ $t('score') }}:</span> 
+          <span class="text-lg font-bold">
+            {{ game.setsWon.team }} - {{ game.setsWon.opponent }}
+          </span>
+        </p>
+        <p class="text-gray-600" v-if="game.status === 'completed'">
+          <span class="font-medium">{{ $t('result') }}:</span>
+          <span :class="resultClass">{{ $t(gameResult) }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="mt-4">
+      <h4 class="text-lg font-semibold mb-2">{{ $t('setScores') }}</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'set' }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('team') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('opponent') }}</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="(set, index) in game.sets" :key="index">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ index + 1 }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ set.teamScore }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ set.opponentScore }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+export default {
+  name: 'GameSummary',
+  props: {
+    game: {
+      type: Object,
+      required: true
+    }
+  },
+  setup(props) {
+    const { t, d } = useI18n();
+
+    const formattedDate = computed(() => {
+      return d(new Date(props.game.date), 'long');
+    });
+
+    const statusClass = computed(() => {
+      return {
+        'text-green-500': props.game.status === 'completed',
+        'text-yellow-500': props.game.status === 'in_progress',
+        'text-red-500': props.game.status === 'not_started'
+      };
+    });
+
+    const gameResult = computed(() => {
+      if (props.game.status !== 'completed') return 'notApplicable';
+      return props.game.setsWon.team > props.game.setsWon.opponent ? 'win' : 'loss';
+    });
+
+    const resultClass = computed(() => {
+      return gameResult.value === 'win' ? 'text-green-500' : 'text-red-500';
+    });
+
+    return {
+      t,
+      formattedDate,
+      statusClass,
+      gameResult,
+      resultClass
+    };
+  }
+};
+</script>
+
+<style scoped>
+.game-summary {
+  @apply transition-all duration-300 ease-in-out;
+}
+</style>
+
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\NewPlayerStatsVisualizations.vue
+==================================================
+
+<template>
+  <div class="player-stats-visualizations mb-6">
+    <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 rounded-t-md">
+      <div class="flex items-center">
+        <i class="fas fa-chart-pie text-purple-500 mr-2"></i>
+        <h3 class="text-xl font-semibold">{{ $t('statsVisualizations') }}</h3>
+      </div>
+      <i :class="['fas', isOpen ? 'fa-chevron-up' : 'fa-chevron-down', 'transition-transform duration-300']"></i>
+    </button>
+    <transition 
+      name="expand" 
+      @enter="startTransition" 
+      @after-enter="endTransition"
+      @before-leave="startTransition" 
+      @after-leave="endTransition"
+    >
+      <div v-if="isOpen" class="section-content bg-white p-6 rounded-b-md shadow-md">
+        <div class="mb-4">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab"
+            @click="activeTab = tab"
+            :class="['px-4 py-2 mr-2 rounded-t-lg', 
+                     activeTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300']"
+          >
+            {{ $t(tab) }}
+          </button>
+        </div>
+        <div class="chart-container" style="height: 400px;">
+          <component 
+            :is="activeChart.type" 
+            :chartData="activeChart.data" 
+            :options="chartOptions"
+          />
+        </div>
+        <div class="mt-4 text-sm text-gray-600">
+          {{ $t(activeChart.description) }}
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script>
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import * as statsUtils from './statsUtils';
+import PieChart from './charts/PieChart.vue';
+import BarChart from './charts/BarChart.vue';
+
+export default {
+  name: 'PlayerStatsVisualizations',
+  components: {
+    PieChart,
+    BarChart,
+  },
+  props: {
+    game: {
+      type: Object,
+      required: true,
+    },
+    playerId: { 
+      type: Number,
+      required: true 
+    },
+    currentSetNumber: {
+      type: Number,
+    },
+  },
+  setup(props) {
+    const { t } = useI18n();
+    const isOpen = ref(true);
+    const activeTab = ref('serveTypes');
+
+    const tabs = ['serveTypes', 'serveTargets', 'attackTypes', 'attackTargets'];
+
+    const charts = computed(() => {
+      const serveStats = statsUtils.getAdvancedServeStats(props.game, props.playerId, props.currentSetNumber);
+      const attackStats = statsUtils.getAdvancedAttackStats(props.game, props.playerId, props.currentSetNumber);
+
+      return {
+        'serveTypes': {
+          type: 'PieChart',
+          data: formatPieChartData(serveStats.typePerPoint),
+          description: 'serveTypesDescription'
+        },
+        'serveTargets': {
+          type: 'BarChart',
+          data: formatBarChartData(serveStats.targetPerPoint),
+          description: 'serveTargetsDescription'
+        },
+        'attackTypes': {
+          type: 'PieChart',
+          data: formatPieChartData(attackStats.typePerPoint),
+          description: 'attackTypesDescription'
+        },
+        'attackTargets': {
+          type: 'BarChart',
+          data: formatBarChartData(attackStats.targetPerPoint),
+          description: 'attackTargetsDescription'
+        },
+      };
+    });
+
+    const activeChart = computed(() => charts.value[activeTab.value]);
+
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+    };
+
+    const formatPieChartData = (data) => {
+      if (!data || typeof data !== 'object') {
+        return { labels: [t('noData')], datasets: [{ data: [1], backgroundColor: ['#CCCCCC'] }] };
+      }
+      const labels = Object.keys(data).map(key => t(key));
+      const values = Object.values(data);
+      return {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+        }],
+      };
+    };
+
+    const formatBarChartData = (data) => {
+      if (!data || typeof data !== 'object') {
+        return { labels: [t('noData')], datasets: [{ data: [0], backgroundColor: '#CCCCCC' }] };
+      }
+      const labels = Object.keys(data).map(key => t(key));
+      const points = labels.map(target => data[target]?.points || 0);
+      const percentages = labels.map(target => (data[target]?.percentage || 0) * 100);
+      
+      return {
+        labels,
+        datasets: [
+          {
+            label: t('points'),
+            data: points,
+            backgroundColor: '#36A2EB',
+          },
+          {
+            label: t('percentage'),
+            data: percentages,
+            backgroundColor: '#FF6384',
+          },
+        ],
+      };
+    };
+
+    const toggleSection = () => {
+      isOpen.value = !isOpen.value;
+    };
+
+    const startTransition = (el) => {
+      el.style.height = 'auto';
+      let endHeight = getComputedStyle(el).height;
+      el.style.height = '0px';
+      el.offsetHeight; // force repaint
+      el.style.height = endHeight;
+    };
+
+    const endTransition = (el) => {
+      el.style.height = '';
+    };
+
+    return {
+      t,
+      isOpen,
+      activeTab,
+      tabs,
+      activeChart,
+      chartOptions,
+      toggleSection,
+      startTransition,
+      endTransition,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition: height 0.3s ease-out;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  height: 0;
+}
+
+.chart-container {
+  width: 100%;
+}
+</style>
+
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\PerformanceBar.vue
+==================================================
+
+<template>
+    <div class="performance-bar">
+      <h5 class="text-sm font-medium text-gray-700 mb-1">{{ title }}</h5>
+      <div class="relative pt-1">
+        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+          <div 
+            :style="{ width: `${(value / max) * 100}%` }" 
+            class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
+          ></div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold inline-block text-blue-600">
+            {{ value }}{{ unit }}
+          </span>
+          <span class="text-xs font-semibold inline-block text-gray-600">
+            {{ max }}{{ unit }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    name: 'PerformanceBar',
+    props: {
+      title: String,
+      value: Number,
+      max: Number,
+      unit: String
+    }
+  };
+  </script>
+  
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\PlayerStats.vue
+==================================================
+
+<template>
+  <div class="player-stats bg-white rounded-lg shadow-md mb-8">
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center">
+          <i class="fas fa-user-circle text-blue-500 text-2xl mr-3"></i>
+          <h3 class="text-xl font-semibold">{{ $t('individualPlayerStats') }}</h3>
+        </div>
+        <div v-if="game.inputMethod === 'advanced'" class="flex space-x-2">
+          <button @click="toggleAdvancedStats" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200">
+            {{ showAdvancedStats ? $t('hideAdvanced') : $t('showAdvanced') }}
+          </button>
+          <button @click="toggleVisualizations" class="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors duration-200">
+            {{ showVisualizations ? $t('hideCharts') : $t('showCharts') }}
+          </button>
+        </div>
+      </div>
+      <div class="relative">
+        <select
+          v-model="selectedPlayerId"
+          class="w-full p-3 border border-gray-300 rounded-md appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          @change="emitPlayerSelected"
+        >
+          <option value="" disabled>{{ $t('selectPlayer') }}</option>
+          <option
+            v-for="player in game.playerDetails"
+            :key="player.id"
+            :value="player.id"
+          >
+            {{ player.name }}
+          </option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+          <i class="fas fa-chevron-down"></i>
+        </div>
+      </div>
+    </div>
+
+    <transition name="fade" mode="out-in">
+      <div v-if="selectedPlayerId" key="stats" class="p-6">
+        <BasicPlayerStats
+          :playerId="selectedPlayerId"
+          :game="game"
+          :currentSetNumber="currentSetNumber"
+          :getPlayerName="getPlayerName"
+        />
+
+        <transition name="fade">
+          <AdvancedPlayerStats
+            v-if="game.inputMethod === 'advanced' && showAdvancedStats"
+            :playerId="selectedPlayerId"
+            :game="game"
+            :currentSetNumber="currentSetNumber"
+            :getPlayerName="getPlayerName"
+          />
+        </transition>
+
+        <transition name="fade">
+          <PlayerStatsVisualizations
+            v-if="game.inputMethod === 'advanced' && showVisualizations"
+            :playerId="selectedPlayerId"
+            :game="game"
+            :currentSetNumber="currentSetNumber"
+          />
+        </transition>
+      </div>
+      <div v-else key="no-player" class="text-center text-gray-500 py-8">
+        <i class="fas fa-user-slash text-4xl mb-4"></i>
+        <p>{{ $t('selectPlayerToViewStats') }}</p>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script>
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import BasicPlayerStats from './BasicPlayerStats.vue';
+import AdvancedPlayerStats from './AdvancedPlayerStats.vue';
+import PlayerStatsVisualizations from './NewPlayerStatsVisualizations.vue';
+
+export default {
+  name: 'PlayerStats',
+  components: { 
+    BasicPlayerStats, 
+    AdvancedPlayerStats,
+    PlayerStatsVisualizations
+  },
+  props: {
+    game: {
+      type: Object,
+      required: true,
+    },
+    selectedPlayer: {
+      type: Number,
+      default: null
+    },
+    getPlayerName: {
+      type: Function,
+      required: true,
+    },
+    currentSetNumber: {
+      type: Number,
+    },
+  },
+  setup(props, { emit }) {
+    const { t } = useI18n();
+    const selectedPlayerId = ref(props.selectedPlayer);
+    const showAdvancedStats = ref(false);
+    const showVisualizations = ref(false);
+
+    watch(() => props.selectedPlayer, (newVal) => {
+      selectedPlayerId.value = newVal;
+    });
+
+    const emitPlayerSelected = () => {
+      emit('player-selected', selectedPlayerId.value);
+    };
+
+    const toggleAdvancedStats = () => {
+      showAdvancedStats.value = !showAdvancedStats.value;
+    };
+
+    const toggleVisualizations = () => {
+      showVisualizations.value = !showVisualizations.value;
+    };
+
+    return {
+      t,
+      selectedPlayerId,
+      showAdvancedStats,
+      showVisualizations,
+      emitPlayerSelected,
+      toggleAdvancedStats,
+      toggleVisualizations,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+</style>
+
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\StatCard.vue
+==================================================
+
+<template>
+    <div class="stat-card bg-gray-50 rounded-lg p-4">
+      <h4 class="text-sm font-medium text-gray-500 mb-1">{{ title }}</h4>
+      <p class="text-2xl font-bold text-gray-900">
+        <template v-if="type === 'percentage'">
+          {{ formatValue(value) }}
+        </template>
+        <template v-else>
+          {{ value }}
+        </template>
+      </p>
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    props: {
+      title: String,
+      value: [Number, String],
+      type: {
+        type: String,
+        default: 'number'
+      }
+    },
+    methods: {
+      formatValue(val) {
+        if (typeof val === 'number') {
+          return val.toFixed(1) + '%';
+        }
+        return val;
+      }
+    }
+  }
+  </script>
+  
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\StatGroup.vue
+==================================================
+
+<template>
+    <div class="stat-group bg-gray-50 p-4 rounded-lg shadow-sm">
+      <h4 class="text-lg font-medium mb-3 flex items-center">
+        <i :class="[group.icon, 'mr-2 text-blue-500']"></i>{{ group.title }}
+      </h4>
+      <div v-for="(value, key) in group.stats" :key="key" class="stat-card mb-4">
+        <h5 class="text-sm font-medium text-gray-600 mb-1">{{ formatKey(key) }}</h5>
+  
+        <!-- Percentage Stat -->
+        <div v-if="isPercentageStat(key)" class="relative pt-1">
+          <div class="overflow-hidden h-2 mb-2 text-xs flex rounded bg-blue-200">
+            <div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
+                 :style="{ width: `${value}%` }"></div>
+          </div>
+          <p class="text-right text-sm font-semibold text-blue-600">{{ value.toFixed(2) }}%</p>
+        </div>
+  
+        <!-- Raw Count Stat -->
+        <p v-else-if="typeof value === 'number'" class="text-lg font-semibold text-blue-600">{{ value }}</p>
+  
+        <!-- Set Target Distribution -->
+        <div v-else-if="key === 'setTargetDistribution'" class="text-sm">
+          <ul>
+            <li v-for="(count, target) in value" :key="target" class="mb-1">
+              {{ formatKey(target) }}: {{ count }} 
+            </li>
+          </ul>
+        </div>
+  
+        <!-- Other types of stats (e.g., objects) -->
+        <p v-else class="text-sm text-gray-600">
+          {{ JSON.stringify(value) }}
+        </p>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    props: {
+      group: {
+        type: Object,
+        required: true,
+      },
+    },
+    methods: {
+      formatKey(key) {
+        return key.split(/(?=[A-Z])/).join(' ').replace(/^\w/, c => c.toUpperCase());
+      },
+      isPercentageStat(key) {
+        return ['aceServePercentage', 'validServePercentage', 'validReceptionPercentage',
+          'successfulSetPercentage', 'killPercentage', 'validAttackPercentage', 'efficiency'].includes(key);
+      },
+    },
+  };
+  </script>
+  
+  <style scoped>
+  .stat-group {
+    transition: all 0.3s ease;
+  }
+  
+  .stat-card {
+    transition: all 0.2s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  </style>
+  
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\TeamStats.vue
+==================================================
+
+<template>
+  <div class="team-stats bg-white rounded-lg shadow-md mb-6">
+    <button @click="toggleSection" class="section-header w-full flex justify-between items-center p-4 hover:bg-gray-50 transition-colors duration-200">
+      <div class="flex items-center">
+        <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
+        <h3 class="text-xl font-semibold">{{ $t('teamStats') }}</h3>
+      </div>
+      <i :class="['fas', isOpen ? 'fa-chevron-up' : 'fa-chevron-down', 'transition-transform duration-300']"></i>
+    </button>
+    <transition 
+      name="expand" 
+      @enter="startTransition" 
+      @after-enter="endTransition"
+      @before-leave="startTransition" 
+      @after-leave="endTransition"
+    >
+      <div v-if="isOpen" class="section-content p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <StatCard v-for="stat in teamStats" :key="stat.name" :title="$t(stat.name)" :value="stat.value" :type="stat.type" />
+        </div>
+
+        <h4 class="text-lg font-semibold mb-3">{{ $t('rotationEffectiveness') }}</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full table-auto border-collapse border border-gray-300">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('rotationPlayerNames') }}</th>
+                <th class="px-4 py-2 text-left border border-gray-300">{{ $t('effectiveness') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(data, rotationKey) in rotationEffectiveness" :key="rotationKey" class="hover:bg-gray-50 transition-colors duration-200">
+                <td class="px-4 py-2 border border-gray-300">
+                  {{ formatRotationKey(rotationKey) }} 
+                  <span v-if="data.pointsScored" class="text-sm text-gray-500">
+                    ({{ $t('pointsScored', { count: data.pointsScored }) }})
+                  </span>
+                </td>
+                <td class="px-4 py-2 border border-gray-300">
+                  <div class="flex items-center">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                      <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${data.effectiveness}%` }"></div>
+                    </div>
+                    <span class="text-sm font-medium">{{ data.effectiveness.toFixed(1) }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script>
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import * as statsUtils from "./statsUtils";
+import StatCard from './StatCard.vue';
+
+export default {
+  components: { StatCard },
+  props: {
+    game: {
+      type: Object,
+      required: true,
+    },
+    currentSetNumber: {
+      type: Number,
+      required: true,
+    },
+    getPlayerName: {
+      type: Function,
+      required: true,
+    },
+  },
+  setup(props) {
+    const { t } = useI18n();
+    const isOpen = ref(true);
+
+    const teamStats = computed(() => [
+      { name: "totalPoints", value: statsUtils.getTeamTotalPoints(props.game, props.currentSetNumber), type: 'number' },
+      { name: "totalErrors", value: statsUtils.getTeamTotalErrors(props.game, props.currentSetNumber), type: 'number' },
+      { name: "serveErrorPercentage", value: statsUtils.getTeamServeErrorPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+      { name: "attackEfficiency", value: statsUtils.getTeamAttackEfficiency(props.game, props.currentSetNumber) * 100, type: 'percentage' },
+      { name: "blockErrorPercentage", value: statsUtils.getTeamBlockErrorPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+      { name: "sideOutPercentage", value: statsUtils.getTeamSideOutPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+      { name: "breakPointPercentage", value: statsUtils.getTeamBreakPointPercentage(props.game, props.currentSetNumber), type: 'percentage' },
+    ]);
+
+    const rotationEffectiveness = computed(() => 
+      statsUtils.getTeamRotationEffectiveness(props.game, props.currentSetNumber)
+    );
+
+    const toggleSection = () => {
+      isOpen.value = !isOpen.value;
+    };
+
+    const formatRotationKey = (rotationKey) => {
+      return rotationKey
+        .split('-')
+        .map((playerId, index) => `${t('position', { number: index + 1 })}: ${props.getPlayerName(parseInt(playerId))}`)
+        .join(', ');
+    };
+
+    const startTransition = (el) => {
+      el.style.height = 'auto';
+      let endHeight = getComputedStyle(el).height;
+      el.style.height = '0px';
+      el.offsetHeight; // force repaint
+      el.style.height = endHeight;
+    };
+
+    const endTransition = (el) => {
+      el.style.height = '';
+    };
+
+    return {
+      t,
+      isOpen,
+      teamStats,
+      rotationEffectiveness,
+      toggleSection,
+      formatRotationKey,
+      startTransition,
+      endTransition
+    };
+  }
+};
+</script>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition: height 0.3s ease-out;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  height: 0;
+}
+</style>
+
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\charts\BarChart.vue
+==================================================
+
+<template>
+    <div class="bar-chart-container bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+          <svg class="w-6 h-6 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          {{ chartTitle }}
+        </h2>
+        <div class="flex space-x-2">
+          <button @click="downloadCSV" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-200">
+            CSV
+          </button>
+          <button @click="downloadImage" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200">
+            PNG
+          </button>
+        </div>
+      </div>
+      <div class="chart-wrapper relative" :style="{ height: chartHeight }">
+        <canvas ref="chartCanvas"></canvas>
+        <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+          <div class="loader"></div>
+        </div>
+      </div>
+      <div v-if="error" class="mt-4 text-red-500 text-center">
+        {{ error }}
+      </div>
+    </div>
+  </template>
+  
+  <script>
+  import { defineComponent, onMounted, ref, watch, computed } from 'vue';
+  import { Chart as ChartJS, BarController, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+  
+  ChartJS.register(BarController, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+  
+  export default defineComponent({
+    name: 'BarChart',
+    props: {
+      chartData: {
+        type: Object,
+        required: true,
+      },
+      chartOptions: {
+        type: Object,
+        default: () => ({}),
+      },
+      chartTitle: {
+        type: String,
+        default: 'Bar Chart',
+      },
+      chartHeight: {
+        type: String,
+        default: '400px',
+      },
+    },
+    setup(props) {
+      const chartCanvas = ref(null);
+      let chartInstance = null;
+      const loading = ref(false);
+      const error = ref(null);
+  
+      const defaultOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: props.chartTitle,
+          },
+        },
+      };
+  
+      const mergedOptions = computed(() => ({
+        ...defaultOptions,
+        ...props.chartOptions,
+      }));
+  
+      const renderChart = () => {
+        loading.value = true;
+        error.value = null;
+  
+        try {
+          if (chartInstance) {
+            chartInstance.destroy();
+          }
+          chartInstance = new ChartJS(chartCanvas.value, {
+            type: 'bar',
+            data: props.chartData,
+            options: mergedOptions.value,
+          });
+        } catch (e) {
+          error.value = 'Error rendering chart. Please check your data.';
+        } finally {
+          loading.value = false;
+        }
+      };
+  
+      const downloadCSV = () => {
+        const csvContent = "data:text/csv;charset=utf-8," 
+          + props.chartData.labels.join(",") + "\n"
+          + props.chartData.datasets.map(ds => ds.data.join(",")).join("\n");
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "chart_data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+  
+      const downloadImage = () => {
+        const link = document.createElement('a');
+        link.download = 'chart.png';
+        link.href = chartCanvas.value.toDataURL('image/png');
+        link.click();
+      };
+  
+      onMounted(() => {
+        renderChart();
+      });
+  
+      watch(
+        () => props.chartData,
+        () => {
+          renderChart();
+        },
+        { deep: true }
+      );
+  
+      watch(
+        () => props.chartOptions,
+        () => {
+          renderChart();
+        },
+        { deep: true }
+      );
+  
+      return {
+        chartCanvas,
+        loading,
+        error,
+        downloadCSV,
+        downloadImage,
+      };
+    },
+  });
+  </script>
+  
+  <style scoped>
+  .loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  </style>
+
+==================================================
+File: C:\Users\SALAH\Desktop\Vue\volley-insights\src\components\StatScreen\charts\PieChart.vue
+==================================================
+
+<template>
+    <div class="pie-chart-container bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+          <svg class="w-6 h-6 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+          </svg>
+          {{ chartTitle }}
+        </h2>
+        <div class="flex space-x-2">
+          <button @click="downloadCSV" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-200">
+            CSV
+          </button>
+          <button @click="downloadImage" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200">
+            PNG
+          </button>
+        </div>
+      </div>
+      <div class="chart-wrapper relative" :style="{ height: chartHeight }">
+        <canvas ref="chartCanvas"></canvas>
+        <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+          <div class="loader"></div>
+        </div>
+      </div>
+      <div v-if="error" class="mt-4 text-red-500 text-center">
+        {{ error }}
+      </div>
+      <div v-if="showLegend" class="mt-4">
+        <ul class="flex flex-wrap justify-center">
+          <li v-for="(dataset, index) in chartData.datasets[0].data" :key="index" class="flex items-center mr-4 mb-2">
+            <span class="w-3 h-3 inline-block mr-1" :style="{ backgroundColor: chartData.datasets[0].backgroundColor[index] }"></span>
+            {{ chartData.labels[index] }}: {{ dataset }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+  import { defineComponent, onMounted, ref, watch, computed } from 'vue';
+  import { Chart as ChartJS, PieController, ArcElement, Tooltip, Legend } from 'chart.js';
+  
+  ChartJS.register(PieController, ArcElement, Tooltip, Legend);
+  
+  export default defineComponent({
+    name: 'PieChart',
+    props: {
+      chartData: {
+        type: Object,
+        required: true,
+      },
+      chartOptions: {
+        type: Object,
+        default: () => ({}),
+      },
+      chartTitle: {
+        type: String,
+        default: 'Pie Chart',
+      },
+      chartHeight: {
+        type: String,
+        default: '400px',
+      },
+      showLegend: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    setup(props) {
+      const chartCanvas = ref(null);
+      let chartInstance = null;
+      const loading = ref(false);
+      const error = ref(null);
+  
+      const defaultOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: props.chartTitle,
+          },
+        },
+      };
+  
+      const mergedOptions = computed(() => ({
+        ...defaultOptions,
+        ...props.chartOptions,
+      }));
+  
+      const renderChart = () => {
+        loading.value = true;
+        error.value = null;
+  
+        try {
+          if (chartInstance) {
+            chartInstance.destroy();
+          }
+          chartInstance = new ChartJS(chartCanvas.value, {
+            type: 'pie',
+            data: props.chartData,
+            options: mergedOptions.value,
+          });
+        } catch (e) {
+          error.value = 'Error rendering chart. Please check your data.';
+        } finally {
+          loading.value = false;
+        }
+      };
+  
+      const downloadCSV = () => {
+        const csvContent = "data:text/csv;charset=utf-8," 
+          + props.chartData.labels.join(",") + "\n"
+          + props.chartData.datasets[0].data.join(",");
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "pie_chart_data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+  
+      const downloadImage = () => {
+        const link = document.createElement('a');
+        link.download = 'pie_chart.png';
+        link.href = chartCanvas.value.toDataURL('image/png');
+        link.click();
+      };
+  
+      onMounted(() => {
+        renderChart();
+      });
+  
+      watch(
+        () => props.chartData,
+        () => {
+          renderChart();
+        },
+        { deep: true }
+      );
+  
+      watch(
+        () => props.chartOptions,
+        () => {
+          renderChart();
+        },
+        { deep: true }
+      );
+  
+      return {
+        chartCanvas,
+        loading,
+        error,
+        downloadCSV,
+        downloadImage,
+      };
+    },
+  });
+  </script>
+  
+  <style scoped>
+  .loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  </style>
