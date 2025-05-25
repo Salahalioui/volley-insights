@@ -76,7 +76,26 @@
           <StatCard :title="$t('topScorer')" :value="topScorer.name" color="red" />
         </div>
       </div>
+
+      <!-- Data Management -->
+      <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
+        <h3 class="text-lg md:text-xl font-semibold mb-4 text-blue-600">{{ $t('dataManagement') }}</h3>
+        <BaseButton @click="exportData" class="w-full bg-purple-500 hover:bg-purple-600 text-white mb-2">
+          {{ $t('exportAllData') }}
+        </BaseButton>
+        <BaseButton @click="triggerFileInput" class="w-full bg-orange-500 hover:bg-orange-600 text-white">
+          {{ $t('importData') }}
+        </BaseButton>
+        <input type="file" ref="fileInputRef" @change="handleFileSelected" accept=".json" style="display: none;" />
+      </div>
     </div>
+
+    <ConfirmationModal 
+      v-if="showImportConfirmModal" 
+      :message="importConfirmMessage" 
+      @confirm="proceedWithImport" 
+      @cancel="cancelImport" 
+    />
   </div>
 </template>
 
@@ -85,15 +104,21 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import BaseButton from '@/components/common/BaseButton.vue';
 import StatCard from '@/components/common/StatCard.vue';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
   name: 'HomeView',
   components: {
     BaseButton,
-    StatCard
+    StatCard,
+    ConfirmationModal
   },
   setup() {
     const router = useRouter();
+    const fileInputRef = ref(null);
+    const showImportConfirmModal = ref(false);
+    const importConfirmMessage = ref('');
+    const importedFileData = ref(null);
     const recentGames = ref([]);
     const totalGames = ref(0);
     const totalPlayers = ref(0);
@@ -157,6 +182,119 @@ export default {
       return new Date(dateString).toLocaleDateString();
     };
 
+    const exportData = () => {
+      const exportObject = {
+        players: JSON.parse(localStorage.getItem('players') || '[]'),
+        games: JSON.parse(localStorage.getItem('games') || '[]'),
+        gameDetails: {},
+        version: '1.0'
+      };
+
+      exportObject.games.forEach(g => {
+        exportObject.gameDetails[g.id] = {
+          serving: JSON.parse(localStorage.getItem(`game-${g.id}-serving`) || 'false'),
+          status: localStorage.getItem(`game-${g.id}-status`) || 'not_started',
+          rotation: JSON.parse(localStorage.getItem(`game-${g.id}-rotation`) || '[]'),
+          setsWon: JSON.parse(localStorage.getItem(`game-${g.id}-setsWon`) || '{}'),
+          sectionPreferences: JSON.parse(localStorage.getItem(`game-${g.id}-section-preferences`) || '{}')
+        };
+      });
+
+      const jsonString = JSON.stringify(exportObject, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'volley-insights-backup.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    const triggerFileInput = () => {
+      if (fileInputRef.value) {
+        fileInputRef.value.click();
+      }
+    };
+
+    const handleFileSelected = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsedData = JSON.parse(e.target.result);
+          // Validation
+          if (!parsedData || typeof parsedData !== 'object' || 
+              !parsedData.players || !Array.isArray(parsedData.players) ||
+              !parsedData.games || !Array.isArray(parsedData.games) || 
+              !parsedData.gameDetails || typeof parsedData.gameDetails !== 'object' || 
+              !parsedData.version) {
+            alert('Invalid backup file format. Please ensure the file includes players, games, gameDetails, and version.');
+            importedFileData.value = null;
+            return;
+          }
+          importedFileData.value = parsedData;
+          importConfirmMessage.value = 'Importing this file will overwrite ALL existing data. This action cannot be undone. Are you sure you want to continue?';
+          showImportConfirmModal.value = true;
+        } catch (error) {
+          console.error("Error parsing file:", error);
+          alert('Error reading or parsing file.');
+          importedFileData.value = null;
+        } finally {
+          if (event.target) {
+            event.target.value = null; // Reset file input
+          }
+        }
+      };
+      reader.onerror = () => {
+        alert('Error reading file.');
+        importedFileData.value = null;
+        if (event.target) {
+          event.target.value = null; // Reset file input
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    const proceedWithImport = () => {
+      if (!importedFileData.value) return;
+
+      const oldGames = JSON.parse(localStorage.getItem('games') || '[]');
+      oldGames.forEach(game => {
+        localStorage.removeItem(`game-${game.id}-serving`);
+        localStorage.removeItem(`game-${game.id}-status`);
+        localStorage.removeItem(`game-${game.id}-rotation`);
+        localStorage.removeItem(`game-${game.id}-setsWon`);
+        localStorage.removeItem(`game-${game.id}-section-preferences`);
+      });
+      localStorage.removeItem('players');
+      localStorage.removeItem('games');
+
+      localStorage.setItem('players', JSON.stringify(importedFileData.value.players || []));
+      localStorage.setItem('games', JSON.stringify(importedFileData.value.games || []));
+
+      Object.entries(importedFileData.value.gameDetails).forEach(([gameId, details]) => {
+        localStorage.setItem(`game-${gameId}-serving`, JSON.stringify(details.serving ?? false));
+        localStorage.setItem(`game-${gameId}-status`, details.status ?? 'not_started');
+        localStorage.setItem(`game-${gameId}-rotation`, JSON.stringify(details.rotation ?? []));
+        localStorage.setItem(`game-${gameId}-setsWon`, JSON.stringify(details.setsWon ?? {}));
+        localStorage.setItem(`game-${gameId}-section-preferences`, JSON.stringify(details.sectionPreferences ?? {}));
+      });
+
+      showImportConfirmModal.value = false;
+      importedFileData.value = null;
+      alert('Data imported successfully! The application will now reload.');
+      window.location.reload();
+    };
+
+    const cancelImport = () => {
+      showImportConfirmModal.value = false;
+      importedFileData.value = null;
+    };
+
     return {
       recentGames,
       totalGames,
@@ -168,12 +306,26 @@ export default {
       navigateToResults,
       viewGameStats,
       continueGame,
-      formatDate
+      formatDate,
+      // Data Management
+      fileInputRef,
+      showImportConfirmModal,
+      importConfirmMessage,
+      importedFileData,
+      exportData,
+      triggerFileInput,
+      handleFileSelected,
+      proceedWithImport,
+      cancelImport
     };
   }
 };
 </script>
 <style scoped>
+.home { /* Added to ensure the new card has a backdrop if needed, matching existing style */
+  padding-bottom: 2rem; /* Ensure space for content */
+}
+
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }
